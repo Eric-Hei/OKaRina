@@ -1,0 +1,464 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  /* Animations personnalisées */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-bounce-gentle {
+    animation: bounceGentle 2s infinite;
+  }
+  
+  /* Styles pour les scrollbars */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(156 163 175) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128);
+  }
+  
+  /* Styles pour les focus states */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  /* Styles pour les transitions */
+  .transition-all-300 {
+    transition: all 0.3s ease;
+  }
+  
+  /* Styles pour les gradients */
+  .gradient-primary {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  }
+  
+  .gradient-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+  
+  .gradient-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .gradient-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+}
+
+@layer utilities {
+  /* Utilitaires pour le texte */
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Utilitaires pour les conteneurs */
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Utilitaires pour les ombres */
+  .shadow-soft {
+    box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  }
+  
+  .shadow-strong {
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Utilitaires pour les bordures */
+  .border-gradient {
+    border: 1px solid;
+    border-image: linear-gradient(135deg, #0ea5e9, #3b82f6) 1;
+  }
+}
+
+/* Animations keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Styles pour les éléments interactifs */
+button:disabled {
+  @apply cursor-not-allowed opacity-50;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  @apply cursor-not-allowed bg-gray-50 text-gray-500;
+}
+
+/* Styles pour les liens */
+a {
+  @apply transition-colors duration-200;
+}
+
+/* Styles pour les formulaires */
+.form-group {
+  @apply space-y-1;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+.form-input {
+  @apply block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+}
+
+.form-error {
+  @apply text-sm text-red-600;
+}
+
+.form-help {
+  @apply text-sm text-gray-500;
+}
+
+/* Styles pour les cartes */
+.card {
+  @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+}
+
+.card-hover {
+  @apply transition-shadow duration-200 hover:shadow-md;
+}
+
+/* Styles pour les badges */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* Styles pour les boutons */
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500;
+}
+
+.btn-outline {
+  @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-500;
+}
+
+/* Styles pour les alertes */
+.alert {
+  @apply rounded-lg p-4 border;
+}
+
+.alert-success {
+  @apply bg-green-50 border-green-200 text-green-800;
+}
+
+.alert-warning {
+  @apply bg-yellow-50 border-yellow-200 text-yellow-800;
+}
+
+.alert-error {
+  @apply bg-red-50 border-red-200 text-red-800;
+}
+
+.alert-info {
+  @apply bg-blue-50 border-blue-200 text-blue-800;
+}
+
+/* Styles pour les modales */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-lg shadow-xl max-w-md w-full mx-4;
+}
+
+/* Styles pour les tooltips */
+.tooltip {
+  @apply absolute z-10 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg;
+}
+
+/* Styles pour les loaders */
+.spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary-600;
+}
+
+/* Styles pour les progress bars */
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-primary-600 transition-all duration-300 ease-out;
+}
+
+/* Styles pour les tableaux */
+.table {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+.table-header {
+  @apply bg-gray-50;
+}
+
+.table-cell {
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+
+/* Styles pour les onglets */
+.tab-list {
+  @apply flex space-x-8 border-b border-gray-200;
+}
+
+.tab {
+  @apply py-2 px-1 border-b-2 font-medium text-sm transition-colors;
+}
+
+.tab-active {
+  @apply border-primary-500 text-primary-600;
+}
+
+.tab-inactive {
+  @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300;
+}
+
+/* Styles pour les dropdowns */
+.dropdown {
+  @apply relative inline-block text-left;
+}
+
+.dropdown-menu {
+  @apply absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10;
+}
+
+.dropdown-item {
+  @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors;
+}
+
+/* Styles pour les sidebars */
+.sidebar {
+  @apply fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out;
+}
+
+.sidebar-open {
+  @apply translate-x-0;
+}
+
+.sidebar-closed {
+  @apply -translate-x-full;
+}
+
+/* Styles pour les breadcrumbs */
+.breadcrumb {
+  @apply flex items-center space-x-2 text-sm text-gray-500;
+}
+
+.breadcrumb-item {
+  @apply hover:text-gray-700 transition-colors;
+}
+
+.breadcrumb-separator {
+  @apply text-gray-300;
+}
+
+/* Styles pour les avatars */
+.avatar {
+  @apply inline-block rounded-full overflow-hidden;
+}
+
+.avatar-sm {
+  @apply h-6 w-6;
+}
+
+.avatar-md {
+  @apply h-8 w-8;
+}
+
+.avatar-lg {
+  @apply h-10 w-10;
+}
+
+.avatar-xl {
+  @apply h-12 w-12;
+}
+
+/* Styles pour les dividers */
+.divider {
+  @apply border-t border-gray-200 my-4;
+}
+
+.divider-vertical {
+  @apply border-l border-gray-200 mx-4;
+}
+
+/* Styles pour les empty states */
+.empty-state {
+  @apply text-center py-12;
+}
+
+.empty-state-icon {
+  @apply mx-auto h-12 w-12 text-gray-300 mb-4;
+}
+
+.empty-state-title {
+  @apply text-lg font-medium text-gray-900 mb-2;
+}
+
+.empty-state-description {
+  @apply text-gray-500 mb-4;
+}
+
+/* Styles pour les statistiques */
+.stat {
+  @apply text-center;
+}
+
+.stat-value {
+  @apply text-3xl font-bold text-gray-900;
+}
+
+.stat-label {
+  @apply text-sm font-medium text-gray-600;
+}
+
+.stat-change {
+  @apply text-sm font-medium;
+}
+
+.stat-change-positive {
+  @apply text-green-600;
+}
+
+.stat-change-negative {
+  @apply text-red-600;
+}
+
+/* Styles pour les timelines */
+.timeline {
+  @apply relative;
+}
+
+.timeline-item {
+  @apply relative pb-8;
+}
+
+.timeline-line {
+  @apply absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200;
+}
+
+.timeline-marker {
+  @apply relative flex h-8 w-8 items-center justify-center rounded-full bg-white border-2;
+}
+
+.timeline-content {
+  @apply ml-16;
+}
+
+/* Styles pour les steps */
+.steps {
+  @apply flex items-center;
+}
+
+.step {
+  @apply flex items-center;
+}
+
+.step-marker {
+  @apply flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium;
+}
+
+.step-active {
+  @apply border-primary-600 bg-primary-600 text-white;
+}
+
+.step-completed {
+  @apply border-green-600 bg-green-600 text-white;
+}
+
+.step-inactive {
+  @apply border-gray-300 bg-white text-gray-500;
+}
+
+.step-connector {
+  @apply flex-1 h-0.5 bg-gray-200 mx-4;
+}
+
+/* Styles pour les notifications */
+.notification {
+  @apply max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden;
+}
+
+.notification-success {
+  @apply border-l-4 border-green-400;
+}
+
+.notification-warning {
+  @apply border-l-4 border-yellow-400;
+}
+
+.notification-error {
+  @apply border-l-4 border-red-400;
+}
+
+.notification-info {
+  @apply border-l-4 border-blue-400;
+}
