@@ -14,13 +14,11 @@ import {
 import { Card, CardContent } from './Card';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
-import type { Ambition, KeyResult, OKR, Action, QuarterlyObjective, QuarterlyKeyResult } from '@/types';
+import type { Ambition, Action, QuarterlyObjective, QuarterlyKeyResult } from '@/types';
 import { Status, ActionStatus, Priority } from '@/types';
 
 interface PyramidViewProps {
   ambitions: Ambition[];
-  keyResults: KeyResult[];
-  okrs: OKR[];
   actions: Action[];
   quarterlyObjectives: QuarterlyObjective[];
   quarterlyKeyResults: QuarterlyKeyResult[];
@@ -28,7 +26,7 @@ interface PyramidViewProps {
 
 interface PyramidNode {
   id: string;
-  type: 'ambition' | 'keyResult' | 'okr' | 'action' | 'quarterlyObjective' | 'quarterlyKeyResult';
+  type: 'ambition' | 'action' | 'quarterlyObjective' | 'quarterlyKeyResult';
   title: string;
   description?: string;
   status: Status | ActionStatus;
@@ -41,8 +39,6 @@ interface PyramidNode {
 
 export const PyramidView: React.FC<PyramidViewProps> = ({
   ambitions,
-  keyResults,
-  okrs,
   actions,
   quarterlyObjectives,
   quarterlyKeyResults,
@@ -52,20 +48,7 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
   // Construction de la hiérarchie pyramidale
   const buildPyramidData = (): PyramidNode[] => {
     return ambitions.map(ambition => {
-      const ambitionKeyResults = keyResults.filter(kr => kr.ambitionId === ambition.id);
       const ambitionQuarterlyObjectives = quarterlyObjectives.filter(qo => qo.ambitionId === ambition.id);
-
-      const keyResultNodes: PyramidNode[] = ambitionKeyResults.map(kr => ({
-        id: kr.id,
-        type: 'keyResult',
-        title: kr.title,
-        description: kr.description,
-        status: kr.status,
-        progress: (kr.currentValue / kr.targetValue) * 100,
-        deadline: kr.deadline,
-        children: [],
-        data: kr,
-      }));
 
       const quarterlyObjectiveNodes: PyramidNode[] = ambitionQuarterlyObjectives.map(qo => {
         const qoKeyResults = quarterlyKeyResults.filter(qkr => qkr.quarterlyObjectiveId === qo.id);
@@ -112,7 +95,7 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
         title: ambition.title,
         description: ambition.description,
         status: ambition.status,
-        children: [...keyResultNodes, ...quarterlyObjectiveNodes],
+        children: quarterlyObjectiveNodes,
         data: ambition,
       };
     });
@@ -152,14 +135,12 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
     switch (type) {
       case 'ambition':
         return Target;
-      case 'keyResult':
-        return TrendingUp;
-      case 'okr':
+      case 'quarterlyObjective':
         return BarChart3;
+      case 'quarterlyKeyResult':
+        return TrendingUp;
       case 'action':
         return CheckCircle;
-      case 'task':
-        return Clock;
       default:
         return Target;
     }
@@ -169,14 +150,12 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
     switch (type) {
       case 'ambition':
         return 'Ambition';
-      case 'keyResult':
-        return 'Résultat Clé';
-      case 'okr':
-        return 'OKR';
+      case 'quarterlyObjective':
+        return 'Objectif Trimestriel';
+      case 'quarterlyKeyResult':
+        return 'Résultat Clé Trimestriel';
       case 'action':
         return 'Action';
-      case 'task':
-        return 'Tâche';
       default:
         return type;
     }

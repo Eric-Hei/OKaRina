@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAppStore } from '@/store/useAppStore';
 
 const PyramidPage: React.FC = () => {
-  const { ambitions, keyResults, okrs, actions, quarterlyObjectives, quarterlyKeyResults } = useAppStore();
+  const { ambitions, actions, quarterlyObjectives, quarterlyKeyResults } = useAppStore();
 
   const handleExport = () => {
     // TODO: Implémenter l'export de la vue pyramidale
@@ -17,8 +17,6 @@ const PyramidPage: React.FC = () => {
 
   const stats = {
     totalAmbitions: ambitions.length,
-    totalKeyResults: keyResults.length,
-    totalOKRs: okrs.length,
     totalActions: actions.length,
     totalQuarterlyObjectives: quarterlyObjectives.length,
     totalQuarterlyKeyResults: quarterlyKeyResults.length,
@@ -73,7 +71,7 @@ const PyramidPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           >
             <Card>
               <CardContent className="p-4 text-center">
@@ -83,26 +81,20 @@ const PyramidPage: React.FC = () => {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{stats.totalKeyResults}</div>
-                <div className="text-sm text-gray-600">Résultats Clés</div>
+                <div className="text-2xl font-bold text-green-600">{stats.totalQuarterlyObjectives}</div>
+                <div className="text-sm text-gray-600">Objectifs Trimestriels</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.totalOKRs}</div>
-                <div className="text-sm text-gray-600">OKRs</div>
+                <div className="text-2xl font-bold text-purple-600">{stats.totalQuarterlyKeyResults}</div>
+                <div className="text-sm text-gray-600">Résultats Clés Trimestriels</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-orange-600">{stats.totalActions}</div>
                 <div className="text-sm text-gray-600">Actions</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.totalQuarterlyObjectives}</div>
-                <div className="text-sm text-gray-600">Objectifs Trimestriels</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -115,8 +107,6 @@ const PyramidPage: React.FC = () => {
           >
             <PyramidView
               ambitions={ambitions}
-              keyResults={keyResults}
-              okrs={okrs}
               actions={actions}
               quarterlyObjectives={quarterlyObjectives}
               quarterlyKeyResults={quarterlyKeyResults}
