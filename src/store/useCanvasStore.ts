@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { aiCoachService } from '@/services/ai-coach';
+import { useAppStore } from './useAppStore';
 import type {
   CanvasStep,
   AmbitionFormData,
@@ -266,6 +267,7 @@ export const useCanvasStore = create<CanvasState>()(
       // Actions IA
       validateCurrentStep: async () => {
         const { currentStep, ambitionData, keyResultsData, okrData, actionsData } = get();
+        const { user } = useAppStore.getState();
         set({ isAIProcessing: true });
 
         try {
@@ -273,7 +275,8 @@ export const useCanvasStore = create<CanvasState>()(
 
           switch (currentStep) {
             case 1:
-              validation = aiCoachService.validateAmbition(ambitionData);
+              // Utiliser la méthode asynchrone avec Gemini AI
+              validation = await aiCoachService.validateAmbitionAsync(ambitionData, user?.companyProfile);
               break;
             case 2:
               // Valider le dernier résultat clé ajouté
@@ -284,7 +287,8 @@ export const useCanvasStore = create<CanvasState>()(
                   ...lastKR,
                   deadline: new Date(lastKR.deadline)
                 };
-                validation = aiCoachService.validateKeyResult(keyResultForValidation);
+                // Utiliser la méthode asynchrone avec Gemini AI
+                validation = await aiCoachService.validateKeyResultAsync(keyResultForValidation, user?.companyProfile);
               } else {
                 validation = {
                   isValid: false,

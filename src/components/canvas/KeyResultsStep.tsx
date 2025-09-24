@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { AICoachPanel } from '@/components/ui/AICoachPanel';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS, EXAMPLES } from '@/constants';
@@ -302,6 +303,19 @@ const KeyResultsStep: React.FC = () => {
             </form>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Panneau IA Coach */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <AICoachPanel
+          type="keyResult"
+          data={watch()}
+          className="max-w-md"
+        />
       </motion.div>
 
       {/* Liste des résultats clés */}
