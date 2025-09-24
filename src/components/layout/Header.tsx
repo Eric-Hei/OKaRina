@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Pyramid,
-  Building2
+  Building2,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -26,6 +27,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
   const router = useRouter();
   const { user, logout } = useAppStore();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
@@ -39,6 +42,20 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
     logout();
     router.push('/');
   };
+
+  // Fermer le menu utilisateur quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -80,30 +97,76 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                {/* Informations utilisateur */}
-                <div className="hidden sm:flex sm:items-center sm:space-x-2">
-                  <User className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm text-gray-700">{user.name}</span>
-                </div>
+                {/* Menu utilisateur avec dropdown */}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="hidden sm:flex sm:items-center sm:space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <User className="h-5 w-5 text-gray-400" />
+                    <span className="text-sm text-gray-700">{user.name}</span>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${
+                      isUserMenuOpen ? 'rotate-180' : ''
+                    }`} />
+                  </button>
 
-                {/* Menu utilisateur */}
-                <div className="hidden sm:flex sm:items-center sm:space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push('/company-profile')}
-                    leftIcon={<Building2 className="h-4 w-4" />}
-                  >
-                    Entreprise
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLogout}
-                    leftIcon={<LogOut className="h-4 w-4" />}
-                  >
-                    Déconnexion
-                  </Button>
+                  {/* Menu déroulant */}
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      {/* Informations utilisateur */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                            <p className="text-xs text-gray-500">{user.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Options du menu */}
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            router.push('/company-profile');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Building2 className="h-4 w-4 mr-3 text-gray-400" />
+                          Profil d'entreprise
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            router.push('/settings');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Settings className="h-4 w-4 mr-3 text-gray-400" />
+                          Paramètres
+                        </button>
+                      </div>
+
+                      {/* Séparateur */}
+                      <div className="border-t border-gray-100 my-1"></div>
+
+                      {/* Déconnexion */}
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4 mr-3" />
+                        Déconnexion
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bouton menu mobile */}
