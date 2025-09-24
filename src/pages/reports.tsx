@@ -26,10 +26,11 @@ const ReportsPage: React.FC = () => {
     user, 
     ambitions, 
     keyResults, 
-    okrs, 
-    actions, 
-    tasks,
-    setUser 
+    okrs,
+    actions,
+    quarterlyObjectives,
+    quarterlyKeyResults,
+    setUser
   } = useAppStore();
 
   const [selectedPeriod, setSelectedPeriod] = useState<ReportType>(ReportType.MONTHLY);
@@ -90,7 +91,7 @@ const ReportsPage: React.FC = () => {
 
   // Données de performance simulées
   const performanceData = {
-    objectivesCompleted: Math.round((actions.filter(a => a.status === 'completed').length / Math.max(actions.length, 1)) * 100),
+    objectivesCompleted: Math.round((actions.filter(a => a.status === 'done').length / Math.max(actions.length, 1)) * 100),
     onTimeDelivery: 85,
     teamEngagement: 78,
     customerSatisfaction: 92,

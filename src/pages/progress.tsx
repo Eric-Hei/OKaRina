@@ -25,9 +25,10 @@ const ProgressPage: React.FC = () => {
     user, 
     ambitions, 
     keyResults, 
-    okrs, 
-    actions, 
-    tasks,
+    okrs,
+    actions,
+    quarterlyObjectives,
+    quarterlyKeyResults,
     setUser,
     refreshMetrics 
   } = useAppStore();
@@ -77,13 +78,13 @@ const ProgressPage: React.FC = () => {
         daysOverdue: Math.abs(getDaysUntilDeadline(kr.deadline)),
       })),
     ...actions
-      .filter(action => getDaysUntilDeadline(action.deadline) < 0 && action.status !== 'completed')
+      .filter(action => action.deadline && getDaysUntilDeadline(action.deadline) < 0 && action.status !== 'done')
       .map(action => ({
         id: action.id,
         title: action.title,
         type: 'Action',
-        deadline: action.deadline,
-        daysOverdue: Math.abs(getDaysUntilDeadline(action.deadline)),
+        deadline: action.deadline!,
+        daysOverdue: Math.abs(getDaysUntilDeadline(action.deadline!)),
       })),
   ].sort((a, b) => b.daysOverdue - a.daysOverdue);
 
@@ -99,13 +100,13 @@ const ProgressPage: React.FC = () => {
         daysLeft: getDaysUntilDeadline(kr.deadline),
       })),
     ...actions
-      .filter(action => getDaysUntilDeadline(action.deadline) > 0 && getDaysUntilDeadline(action.deadline) <= 14 && action.status !== 'completed')
+      .filter(action => action.deadline && getDaysUntilDeadline(action.deadline) > 0 && getDaysUntilDeadline(action.deadline) <= 14 && action.status !== 'done')
       .map(action => ({
         id: action.id,
         title: action.title,
         type: 'Action',
-        deadline: action.deadline,
-        daysLeft: getDaysUntilDeadline(action.deadline),
+        deadline: action.deadline!,
+        daysLeft: getDaysUntilDeadline(action.deadline!),
       })),
   ].sort((a, b) => a.daysLeft - b.daysLeft);
 
@@ -338,7 +339,7 @@ const ProgressPage: React.FC = () => {
                 <CardContent>
                   {actions.length > 0 ? (
                     <div className="space-y-3">
-                      {actions.filter(a => a.status !== 'completed').slice(0, 5).map((action) => (
+                      {actions.filter(a => a.status !== 'done').slice(0, 5).map((action) => (
                         <div key={action.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
                             <h4 className="font-medium text-gray-900">{action.title}</h4>
@@ -350,9 +351,11 @@ const ProgressPage: React.FC = () => {
                               >
                                 {action.status}
                               </Badge>
-                              <span className="text-xs text-gray-500">
-                                Échéance: {formatDate(action.deadline)}
-                              </span>
+                              {action.deadline && (
+                                <span className="text-xs text-gray-500">
+                                  Échéance: {formatDate(action.deadline)}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <Button size="sm" variant="outline">

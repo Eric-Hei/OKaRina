@@ -8,7 +8,11 @@ import type {
   KeyResultFormData,
   OKRFormData,
   ActionFormData,
-  TaskFormData,
+  QuarterlyObjective,
+  QuarterlyKeyResult,
+  QuarterlyObjectiveFormData,
+  QuarterlyKeyResultFormData,
+  Quarter,
   AIValidation,
 } from '@/types';
 
@@ -24,7 +28,8 @@ interface CanvasState {
   keyResultsData: KeyResultFormData[];
   okrData: Partial<OKRFormData>;
   actionsData: ActionFormData[];
-  tasksData: { [actionIndex: number]: TaskFormData[] };
+  quarterlyObjectivesData: QuarterlyObjectiveFormData[];
+  quarterlyKeyResultsData: { [objectiveIndex: number]: QuarterlyKeyResultFormData[] };
   
   // État IA
   aiValidations: { [step: number]: AIValidation };
@@ -47,9 +52,15 @@ interface CanvasState {
   addAction: (action: ActionFormData) => void;
   updateAction: (index: number, action: ActionFormData) => void;
   removeAction: (index: number) => void;
-  addTask: (actionIndex: number, task: TaskFormData) => void;
-  updateTask: (actionIndex: number, taskIndex: number, task: TaskFormData) => void;
-  removeTask: (actionIndex: number, taskIndex: number) => void;
+
+  // Actions données - Objectifs trimestriels
+  addQuarterlyObjective: (objective: QuarterlyObjectiveFormData) => void;
+  updateQuarterlyObjective: (index: number, objective: QuarterlyObjectiveFormData) => void;
+  removeQuarterlyObjective: (index: number) => void;
+  addQuarterlyKeyResult: (objectiveIndex: number, keyResult: QuarterlyKeyResultFormData) => void;
+  updateQuarterlyKeyResult: (objectiveIndex: number, keyResultIndex: number, keyResult: QuarterlyKeyResultFormData) => void;
+  removeQuarterlyKeyResult: (objectiveIndex: number, keyResultIndex: number) => void;
+
   
   // Actions IA
   validateCurrentStep: () => Promise<void>;
@@ -113,7 +124,8 @@ export const useCanvasStore = create<CanvasState>()(
       keyResultsData: [],
       okrData: {},
       actionsData: [],
-      tasksData: {},
+      quarterlyObjectivesData: [],
+      quarterlyKeyResultsData: {},
       aiValidations: {},
       aiSuggestions: [],
       isAIProcessing: false,
@@ -169,7 +181,8 @@ export const useCanvasStore = create<CanvasState>()(
           keyResultsData: [],
           okrData: {},
           actionsData: [],
-          tasksData: {},
+          quarterlyObjectivesData: [],
+          quarterlyKeyResultsData: {},
           aiValidations: {},
           aiSuggestions: [],
           isAIProcessing: false,
@@ -221,48 +234,66 @@ export const useCanvasStore = create<CanvasState>()(
 
       removeAction: (index) => {
         const actionsData = get().actionsData.filter((_, i) => i !== index);
-        const tasksData = { ...get().tasksData };
-        delete tasksData[index];
-        
-        // Réindexer les tâches
-        const newTasksData: { [key: number]: TaskFormData[] } = {};
-        Object.entries(tasksData).forEach(([key, tasks]) => {
+        set({ actionsData });
+      },
+
+      // Actions données - Objectifs trimestriels
+      addQuarterlyObjective: (objective) => {
+        const quarterlyObjectivesData = [...get().quarterlyObjectivesData, objective];
+        set({ quarterlyObjectivesData });
+      },
+
+      updateQuarterlyObjective: (index, objective) => {
+        const quarterlyObjectivesData = [...get().quarterlyObjectivesData];
+        quarterlyObjectivesData[index] = objective;
+        set({ quarterlyObjectivesData });
+      },
+
+      removeQuarterlyObjective: (index) => {
+        const quarterlyObjectivesData = get().quarterlyObjectivesData.filter((_, i) => i !== index);
+        const quarterlyKeyResultsData = { ...get().quarterlyKeyResultsData };
+        delete quarterlyKeyResultsData[index];
+
+        // Réindexer les KR trimestriels
+        const newQuarterlyKeyResultsData: { [key: number]: QuarterlyKeyResultFormData[] } = {};
+        Object.entries(quarterlyKeyResultsData).forEach(([key, keyResults]) => {
           const numKey = parseInt(key);
           if (numKey > index) {
-            newTasksData[numKey - 1] = tasks;
+            newQuarterlyKeyResultsData[numKey - 1] = keyResults;
           } else {
-            newTasksData[numKey] = tasks;
+            newQuarterlyKeyResultsData[numKey] = keyResults;
           }
         });
-        
-        set({ actionsData, tasksData: newTasksData });
+
+        set({ quarterlyObjectivesData, quarterlyKeyResultsData: newQuarterlyKeyResultsData });
       },
 
-      // Actions données - Tâches
-      addTask: (actionIndex, task) => {
-        const tasksData = { ...get().tasksData };
-        if (!tasksData[actionIndex]) {
-          tasksData[actionIndex] = [];
+      addQuarterlyKeyResult: (objectiveIndex, keyResult) => {
+        const quarterlyKeyResultsData = { ...get().quarterlyKeyResultsData };
+        if (!quarterlyKeyResultsData[objectiveIndex]) {
+          quarterlyKeyResultsData[objectiveIndex] = [];
         }
-        tasksData[actionIndex].push(task);
-        set({ tasksData });
+        quarterlyKeyResultsData[objectiveIndex].push(keyResult);
+        set({ quarterlyKeyResultsData });
       },
 
-      updateTask: (actionIndex, taskIndex, task) => {
-        const tasksData = { ...get().tasksData };
-        if (tasksData[actionIndex]) {
-          tasksData[actionIndex][taskIndex] = task;
-          set({ tasksData });
+      updateQuarterlyKeyResult: (objectiveIndex, keyResultIndex, keyResult) => {
+        const quarterlyKeyResultsData = { ...get().quarterlyKeyResultsData };
+        if (quarterlyKeyResultsData[objectiveIndex]) {
+          quarterlyKeyResultsData[objectiveIndex][keyResultIndex] = keyResult;
+          set({ quarterlyKeyResultsData });
         }
       },
 
-      removeTask: (actionIndex, taskIndex) => {
-        const tasksData = { ...get().tasksData };
-        if (tasksData[actionIndex]) {
-          tasksData[actionIndex] = tasksData[actionIndex].filter((_, i) => i !== taskIndex);
-          set({ tasksData });
+      removeQuarterlyKeyResult: (objectiveIndex, keyResultIndex) => {
+        const quarterlyKeyResultsData = { ...get().quarterlyKeyResultsData };
+        if (quarterlyKeyResultsData[objectiveIndex]) {
+          quarterlyKeyResultsData[objectiveIndex] = quarterlyKeyResultsData[objectiveIndex].filter((_, i) => i !== keyResultIndex);
+          set({ quarterlyKeyResultsData });
         }
       },
+
+
 
       // Actions IA
       validateCurrentStep: async () => {
@@ -318,7 +349,8 @@ export const useCanvasStore = create<CanvasState>()(
                 // Convertir les données du formulaire en format Action
                 const actionForValidation = {
                   ...lastAction,
-                  deadline: new Date(lastAction.deadline)
+                  deadline: lastAction.deadline ? new Date(lastAction.deadline) : undefined,
+                  labels: lastAction.labels ? lastAction.labels.split(',').map(l => l.trim()) : []
                 };
                 validation = aiCoachService.validateAction(actionForValidation);
               } else {

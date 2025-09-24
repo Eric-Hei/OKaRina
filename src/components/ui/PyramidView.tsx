@@ -14,7 +14,7 @@ import {
 import { Card, CardContent } from './Card';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
-import type { Ambition, KeyResult, OKR, Action, Task } from '@/types';
+import type { Ambition, KeyResult, OKR, Action, QuarterlyObjective, QuarterlyKeyResult } from '@/types';
 import { Status, ActionStatus, Priority } from '@/types';
 
 interface PyramidViewProps {
@@ -22,12 +22,13 @@ interface PyramidViewProps {
   keyResults: KeyResult[];
   okrs: OKR[];
   actions: Action[];
-  tasks: Task[];
+  quarterlyObjectives: QuarterlyObjective[];
+  quarterlyKeyResults: QuarterlyKeyResult[];
 }
 
 interface PyramidNode {
   id: string;
-  type: 'ambition' | 'keyResult' | 'okr' | 'action' | 'task';
+  type: 'ambition' | 'keyResult' | 'okr' | 'action' | 'quarterlyObjective' | 'quarterlyKeyResult';
   title: string;
   description?: string;
   status: Status | ActionStatus;
@@ -43,7 +44,8 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
   keyResults,
   okrs,
   actions,
-  tasks,
+  quarterlyObjectives,
+  quarterlyKeyResults,
 }) => {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
@@ -51,62 +53,56 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
   const buildPyramidData = (): PyramidNode[] => {
     return ambitions.map(ambition => {
       const ambitionKeyResults = keyResults.filter(kr => kr.ambitionId === ambition.id);
-      
-      const keyResultNodes: PyramidNode[] = ambitionKeyResults.map(kr => {
-        const krOkrs = okrs.filter(okr => okr.keyResultId === kr.id);
-        
-        const okrNodes: PyramidNode[] = krOkrs.map(okr => {
-          const okrActions = actions.filter(action => action.okrId === okr.id);
-          
-          const actionNodes: PyramidNode[] = okrActions.map(action => {
-            const actionTasks = tasks.filter(task => task.actionId === action.id);
-            
-            const taskNodes: PyramidNode[] = actionTasks.map(task => ({
-              id: task.id,
-              type: 'task',
-              title: task.title,
-              description: task.description,
-              status: task.completed ? ActionStatus.COMPLETED : ActionStatus.TODO,
-              deadline: task.dueDate,
-              priority: task.priority,
-              children: [],
-              data: task,
-            }));
+      const ambitionQuarterlyObjectives = quarterlyObjectives.filter(qo => qo.ambitionId === ambition.id);
 
-            return {
-              id: action.id,
-              type: 'action',
-              title: action.title,
-              description: action.description,
-              status: action.status,
-              deadline: action.deadline,
-              priority: action.priority,
-              children: taskNodes,
-              data: action,
-            };
-          });
+      const keyResultNodes: PyramidNode[] = ambitionKeyResults.map(kr => ({
+        id: kr.id,
+        type: 'keyResult',
+        title: kr.title,
+        description: kr.description,
+        status: kr.status,
+        progress: (kr.currentValue / kr.targetValue) * 100,
+        deadline: kr.deadline,
+        children: [],
+        data: kr,
+      }));
 
-          return {
-            id: okr.id,
-            type: 'okr',
-            title: okr.objective,
-            status: okr.status,
-            progress: okr.progress,
-            children: actionNodes,
-            data: okr,
-          };
-        });
+      const quarterlyObjectiveNodes: PyramidNode[] = ambitionQuarterlyObjectives.map(qo => {
+        const qoKeyResults = quarterlyKeyResults.filter(qkr => qkr.quarterlyObjectiveId === qo.id);
+        const qoActions = actions.filter(action => action.quarterlyObjectiveId === qo.id);
+
+        const qoKeyResultNodes: PyramidNode[] = qoKeyResults.map(qkr => ({
+          id: qkr.id,
+          type: 'quarterlyKeyResult',
+          title: qkr.title,
+          description: qkr.description,
+          status: qkr.status,
+          progress: (qkr.currentValue / qkr.targetValue) * 100,
+          deadline: qkr.deadline,
+          children: [],
+          data: qkr,
+        }));
+
+        const actionNodes: PyramidNode[] = qoActions.map(action => ({
+          id: action.id,
+          type: 'action',
+          title: action.title,
+          description: action.description,
+          status: action.status,
+          deadline: action.deadline,
+          priority: action.priority,
+          children: [],
+          data: action,
+        }));
 
         return {
-          id: kr.id,
-          type: 'keyResult',
-          title: kr.title,
-          description: kr.description,
-          status: kr.status,
-          progress: (kr.currentValue / kr.targetValue) * 100,
-          deadline: kr.deadline,
-          children: okrNodes,
-          data: kr,
+          id: qo.id,
+          type: 'quarterlyObjective',
+          title: qo.title,
+          description: qo.description,
+          status: qo.status,
+          children: [...qoKeyResultNodes, ...actionNodes],
+          data: qo,
         };
       });
 
@@ -116,7 +112,7 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
         title: ambition.title,
         description: ambition.description,
         status: ambition.status,
-        children: keyResultNodes,
+        children: [...keyResultNodes, ...quarterlyObjectiveNodes],
         data: ambition,
       };
     });
@@ -135,7 +131,7 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
   const getStatusColor = (status: Status | ActionStatus) => {
     switch (status) {
       case Status.COMPLETED:
-      case ActionStatus.COMPLETED:
+      case ActionStatus.DONE:
         return 'text-green-600 bg-green-100';
       case Status.ON_TRACK:
         return 'text-blue-600 bg-blue-100';
@@ -145,8 +141,8 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
         return 'text-red-600 bg-red-100';
       case ActionStatus.IN_PROGRESS:
         return 'text-blue-600 bg-blue-100';
-      case ActionStatus.BLOCKED:
-        return 'text-red-600 bg-red-100';
+      case ActionStatus.TODO:
+        return 'text-gray-600 bg-gray-100';
       default:
         return 'text-gray-600 bg-gray-100';
     }
@@ -262,8 +258,8 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
                 </div>
               </div>
               
-              <Badge 
-                variant={node.status === Status.COMPLETED || node.status === ActionStatus.COMPLETED ? 'success' : 'info'}
+              <Badge
+                variant={node.status === Status.COMPLETED || node.status === ActionStatus.DONE ? 'success' : 'info'}
                 size="sm"
               >
                 {node.status}

@@ -77,31 +77,47 @@ export interface OKRKeyResult {
   weight: number; // Pondération sur 100
 }
 
+// Types pour les actions (remplacent les tâches)
 export interface Action {
   id: string;
-  okrId: string;
   title: string;
-  description: string;
-  deadline: Date;
-  assignee?: string;
+  description?: string;
+  quarterlyObjectiveId: string;
   status: ActionStatus;
   priority: Priority;
-  estimatedHours?: number;
-  actualHours?: number;
+  labels: string[];
+  deadline?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+}
+
+// Types pour les objectifs trimestriels
+export interface QuarterlyObjective {
+  id: string;
+  title: string;
+  description: string;
+  ambitionId: string; // Rattachement à l'ambition
+  quarter: Quarter;
+  year: number;
+  keyResults: QuarterlyKeyResult[];
+  actions: Action[];
+  status: Status;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface Task {
+// Types pour les Key Results trimestriels (différents des KR d'ambition)
+export interface QuarterlyKeyResult {
   id: string;
-  actionId: string;
   title: string;
-  description?: string;
-  dueDate?: Date;
-  completed: boolean;
-  completedAt?: Date;
-  priority: Priority;
-  estimatedMinutes?: number;
+  description: string;
+  quarterlyObjectiveId: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  deadline: Date;
+  status: Status;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -173,20 +189,22 @@ export enum Status {
   CANCELLED = 'cancelled'
 }
 
-export enum ActionStatus {
-  TODO = 'todo',
-  IN_PROGRESS = 'in_progress',
-  BLOCKED = 'blocked',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
-}
-
+// Enum pour les trimestres
 export enum Quarter {
   Q1 = 'Q1',
   Q2 = 'Q2',
   Q3 = 'Q3',
   Q4 = 'Q4'
 }
+
+// Enum pour le statut des actions dans le kanban
+export enum ActionStatus {
+  TODO = 'todo',
+  IN_PROGRESS = 'in_progress',
+  DONE = 'done'
+}
+
+
 
 export enum CompanySize {
   STARTUP = 'startup',
@@ -210,7 +228,8 @@ export enum EntityType {
   KEY_RESULT = 'key_result',
   OKR = 'okr',
   ACTION = 'action',
-  TASK = 'task'
+  QUARTERLY_OBJECTIVE = 'quarterly_objective',
+  QUARTERLY_KEY_RESULT = 'quarterly_key_result'
 }
 
 export enum ValidationCategory {
@@ -218,7 +237,8 @@ export enum ValidationCategory {
   OBJECTIVE = 'objective',
   KEY_RESULT = 'key_result',
   ACTION = 'action',
-  TASK = 'task'
+  QUARTERLY_OBJECTIVE = 'quarterly_objective',
+  QUARTERLY_KEY_RESULT = 'quarterly_key_result'
 }
 
 export enum ReportType {
@@ -292,18 +312,49 @@ export interface OKRFormData {
   keyResults: Omit<OKRKeyResult, 'id'>[];
 }
 
-export interface ActionFormData {
+
+
+// Types pour les formulaires des objectifs trimestriels
+export interface QuarterlyObjectiveFormData {
   title: string;
   description: string;
-  deadline: string;
-  priority: Priority;
-  estimatedHours?: number;
+  ambitionId: string;
+  quarter: Quarter;
+  year: number;
 }
 
-export interface TaskFormData {
+// Types pour les formulaires des KR trimestriels
+export interface QuarterlyKeyResultFormData {
+  title: string;
+  description: string;
+  targetValue: number;
+  unit: string;
+  deadline: string;
+}
+
+// Types pour les formulaires des actions
+export interface ActionFormData {
   title: string;
   description?: string;
-  dueDate?: string;
   priority: Priority;
-  estimatedMinutes?: number;
+  labels: string; // Chaîne séparée par des virgules
+  deadline?: string;
+}
+
+// Types pour les formulaires des objectifs trimestriels
+export interface QuarterlyObjectiveFormData {
+  title: string;
+  description: string;
+  ambitionId: string;
+  quarter: Quarter;
+  year: number;
+}
+
+export interface QuarterlyKeyResultFormData {
+  title: string;
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  deadline: string; // ISO string in form
 }

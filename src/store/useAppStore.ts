@@ -8,10 +8,13 @@ import type {
   KeyResult,
   OKR,
   Action,
-  Task,
+  QuarterlyObjective,
+  QuarterlyKeyResult,
   Progress,
   DashboardMetrics,
   CompanyProfile,
+  ActionStatus,
+  Quarter,
 } from '@/types';
 
 // Interface du store principal
@@ -25,7 +28,8 @@ interface AppState {
   keyResults: KeyResult[];
   okrs: OKR[];
   actions: Action[];
-  tasks: Task[];
+  quarterlyObjectives: QuarterlyObjective[];
+  quarterlyKeyResults: QuarterlyKeyResult[];
   progress: Progress[];
   
   // Métriques
@@ -65,11 +69,18 @@ interface AppState {
   updateAction: (id: string, updates: Partial<Action>) => void;
   deleteAction: (id: string) => void;
   
-  // Actions tâches
-  addTask: (task: Task) => void;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  toggleTask: (id: string) => void;
+  // Actions objectifs trimestriels
+  addQuarterlyObjective: (objective: QuarterlyObjective) => void;
+  updateQuarterlyObjective: (id: string, updates: Partial<QuarterlyObjective>) => void;
+  deleteQuarterlyObjective: (id: string) => void;
+
+  // Actions KR trimestriels
+  addQuarterlyKeyResult: (keyResult: QuarterlyKeyResult) => void;
+  updateQuarterlyKeyResult: (id: string, updates: Partial<QuarterlyKeyResult>) => void;
+  deleteQuarterlyKeyResult: (id: string) => void;
+
+  // Actions kanban
+  moveAction: (actionId: string, newStatus: ActionStatus) => void;
   
   // Actions progrès
   addProgress: (progress: Progress) => void;
@@ -102,7 +113,8 @@ export const useAppStore = create<AppState>()(
         keyResults: [],
         okrs: [],
         actions: [],
-        tasks: [],
+        quarterlyObjectives: [],
+        quarterlyKeyResults: [],
         progress: [],
         metrics: null,
         isLoading: false,
@@ -139,7 +151,8 @@ export const useAppStore = create<AppState>()(
             const keyResults = storageService.getKeyResults();
             const okrs = storageService.getOKRs();
             const actions = storageService.getActions();
-            const tasks = storageService.getTasks();
+            const quarterlyObjectives = storageService.getQuarterlyObjectives();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
             const progress = storageService.getProgress();
             const metrics = analyticsService.getDashboardMetrics();
 
@@ -150,7 +163,8 @@ export const useAppStore = create<AppState>()(
               keyResults,
               okrs,
               actions,
-              tasks,
+              quarterlyObjectives,
+              quarterlyKeyResults,
               progress,
               metrics,
               isLoading: false,
@@ -275,12 +289,10 @@ export const useAppStore = create<AppState>()(
           const okr = get().okrs.find(o => o.id === id);
           const okrs = get().okrs.filter(o => o.id !== id);
           
-          // Supprimer aussi les actions associées
-          const actions = get().actions.filter(a => a.okrId !== id);
-          
-          set({ okrs, actions });
+          // Les actions sont maintenant liées aux objectifs trimestriels, pas aux OKRs
+
+          set({ okrs });
           storageService.deleteOKR(id);
-          storageService.saveActions(actions);
           get().refreshMetrics();
           
           if (okr) {
@@ -318,12 +330,10 @@ export const useAppStore = create<AppState>()(
           const action = get().actions.find(a => a.id === id);
           const actions = get().actions.filter(a => a.id !== id);
           
-          // Supprimer aussi les tâches associées
-          const tasks = get().tasks.filter(t => t.actionId !== id);
-          
-          set({ actions, tasks });
+          // Les tâches n'existent plus dans la nouvelle architecture
+
+          set({ actions });
           storageService.deleteAction(id);
-          storageService.saveTasks(tasks);
           get().refreshMetrics();
           
           if (action) {
@@ -335,43 +345,90 @@ export const useAppStore = create<AppState>()(
           }
         },
 
-        // Actions tâches
-        addTask: (task) => {
-          const tasks = [...get().tasks, task];
-          set({ tasks });
-          storageService.addTask(task);
+        // Actions objectifs trimestriels
+        addQuarterlyObjective: (objective) => {
+          const quarterlyObjectives = [...get().quarterlyObjectives, objective];
+          set({ quarterlyObjectives });
+          storageService.addQuarterlyObjective(objective);
           get().refreshMetrics();
+          get().addNotification({
+            type: 'success',
+            title: 'Objectif trimestriel ajouté',
+            message: `L'objectif "${objective.title}" a été créé pour ${objective.quarter} ${objective.year}.`,
+          });
         },
 
-        updateTask: (id, updates) => {
-          const tasks = get().tasks.map(t => 
-            t.id === id ? { ...t, ...updates, updatedAt: new Date() } : t
+        updateQuarterlyObjective: (id, updates) => {
+          const quarterlyObjectives = get().quarterlyObjectives.map(obj =>
+            obj.id === id ? { ...obj, ...updates, updatedAt: new Date() } : obj
           );
-          set({ tasks });
-          storageService.updateTask(id, updates);
+          set({ quarterlyObjectives });
+          storageService.updateQuarterlyObjective(id, updates);
           get().refreshMetrics();
         },
 
-        deleteTask: (id) => {
-          const tasks = get().tasks.filter(t => t.id !== id);
-          set({ tasks });
-          storageService.deleteTask(id);
-          get().refreshMetrics();
-        },
+        deleteQuarterlyObjective: (id) => {
+          const objective = get().quarterlyObjectives.find(obj => obj.id === id);
+          if (objective) {
+            const quarterlyObjectives = get().quarterlyObjectives.filter(obj => obj.id !== id);
+            set({ quarterlyObjectives });
+            storageService.deleteQuarterlyObjective(id);
+            get().refreshMetrics();
 
-        toggleTask: (id) => {
-          const task = get().tasks.find(t => t.id === id);
-          if (task) {
-            const updates = {
-              completed: !task.completed,
-              completedAt: !task.completed ? new Date() : undefined,
-            };
-            get().updateTask(id, updates);
-            
             get().addNotification({
               type: 'success',
-              title: task.completed ? 'Tâche réouverte' : 'Tâche terminée',
-              message: `La tâche "${task.title}" a été ${task.completed ? 'réouverte' : 'marquée comme terminée'}.`,
+              title: 'Objectif supprimé',
+              message: `L'objectif "${objective.title}" a été supprimé.`,
+            });
+          }
+        },
+
+        // Actions KR trimestriels
+        addQuarterlyKeyResult: (keyResult) => {
+          const quarterlyKeyResults = [...get().quarterlyKeyResults, keyResult];
+          set({ quarterlyKeyResults });
+          storageService.addQuarterlyKeyResult(keyResult);
+          get().refreshMetrics();
+        },
+
+        updateQuarterlyKeyResult: (id, updates) => {
+          const quarterlyKeyResults = get().quarterlyKeyResults.map(kr =>
+            kr.id === id ? { ...kr, ...updates, updatedAt: new Date() } : kr
+          );
+          set({ quarterlyKeyResults });
+          storageService.updateQuarterlyKeyResult(id, updates);
+          get().refreshMetrics();
+        },
+
+        deleteQuarterlyKeyResult: (id) => {
+          const quarterlyKeyResults = get().quarterlyKeyResults.filter(kr => kr.id !== id);
+          set({ quarterlyKeyResults });
+          storageService.deleteQuarterlyKeyResult(id);
+          get().refreshMetrics();
+        },
+
+        // Actions kanban
+        moveAction: (actionId, newStatus) => {
+          const actions = get().actions.map(action =>
+            action.id === actionId
+              ? { ...action, status: newStatus, updatedAt: new Date() }
+              : action
+          );
+          set({ actions });
+          storageService.updateAction(actionId, { status: newStatus });
+
+          const action = actions.find(a => a.id === actionId);
+          if (action) {
+            const statusLabels = {
+              todo: 'À faire',
+              in_progress: 'En cours',
+              done: 'Terminé'
+            };
+
+            get().addNotification({
+              type: 'success',
+              title: 'Action déplacée',
+              message: `"${action.title}" → ${statusLabels[newStatus]}`,
             });
           }
         },

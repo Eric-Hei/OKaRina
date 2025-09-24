@@ -19,7 +19,7 @@ import { AmbitionStep } from '@/components/canvas/AmbitionStep';
 import { KeyResultsStep } from '@/components/canvas/KeyResultsStep';
 import { OKRStep } from '@/components/canvas/OKRStep';
 import { ActionsStep } from '@/components/canvas/ActionsStep';
-import { TasksStep } from '@/components/canvas/TasksStep';
+
 
 const CanvasPage: React.FC = () => {
   const { user, setUser } = useAppStore();
@@ -65,7 +65,7 @@ const CanvasPage: React.FC = () => {
       case 4:
         return <ActionsStep />;
       case 5:
-        return <TasksStep />;
+        return <div>Étape supprimée - Les tâches sont maintenant gérées dans le kanban</div>;
       default:
         return <AmbitionStep />;
     }

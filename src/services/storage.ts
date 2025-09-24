@@ -5,7 +5,8 @@ import type {
   KeyResult,
   OKR,
   Action,
-  Task,
+  QuarterlyObjective,
+  QuarterlyKeyResult,
   Progress,
 } from '@/types';
 
@@ -190,34 +191,64 @@ export class StorageService {
     this.saveActions(actions);
   }
 
-  // Gestion des tâches
-  public saveTasks(tasks: Task[]): void {
-    this.setItem(STORAGE_KEYS.TASKS, tasks);
+  // Gestion des objectifs trimestriels
+  public saveQuarterlyObjectives(objectives: QuarterlyObjective[]): void {
+    this.setItem(STORAGE_KEYS.QUARTERLY_OBJECTIVES, objectives);
   }
 
-  public getTasks(): Task[] {
-    return this.getItem<Task[]>(STORAGE_KEYS.TASKS) || [];
+  public getQuarterlyObjectives(): QuarterlyObjective[] {
+    return this.getItem<QuarterlyObjective[]>(STORAGE_KEYS.QUARTERLY_OBJECTIVES) || [];
   }
 
-  public addTask(task: Task): void {
-    const tasks = this.getTasks();
-    tasks.push(task);
-    this.saveTasks(tasks);
+  public addQuarterlyObjective(objective: QuarterlyObjective): void {
+    const objectives = this.getQuarterlyObjectives();
+    objectives.push(objective);
+    this.saveQuarterlyObjectives(objectives);
   }
 
-  public updateTask(taskId: string, updates: Partial<Task>): void {
-    const tasks = this.getTasks();
-    const index = tasks.findIndex(t => t.id === taskId);
-    
+  public updateQuarterlyObjective(objectiveId: string, updates: Partial<QuarterlyObjective>): void {
+    const objectives = this.getQuarterlyObjectives();
+    const index = objectives.findIndex(obj => obj.id === objectiveId);
+
     if (index !== -1) {
-      tasks[index] = { ...tasks[index], ...updates, updatedAt: new Date() };
-      this.saveTasks(tasks);
+      objectives[index] = { ...objectives[index], ...updates, updatedAt: new Date() };
+      this.saveQuarterlyObjectives(objectives);
     }
   }
 
-  public deleteTask(taskId: string): void {
-    const tasks = this.getTasks().filter(t => t.id !== taskId);
-    this.saveTasks(tasks);
+  public deleteQuarterlyObjective(objectiveId: string): void {
+    const objectives = this.getQuarterlyObjectives().filter(obj => obj.id !== objectiveId);
+    this.saveQuarterlyObjectives(objectives);
+  }
+
+  // Gestion des KR trimestriels
+  public saveQuarterlyKeyResults(keyResults: QuarterlyKeyResult[]): void {
+    this.setItem(STORAGE_KEYS.QUARTERLY_KEY_RESULTS, keyResults);
+  }
+
+  public getQuarterlyKeyResults(): QuarterlyKeyResult[] {
+    return this.getItem<QuarterlyKeyResult[]>(STORAGE_KEYS.QUARTERLY_KEY_RESULTS) || [];
+  }
+
+  public addQuarterlyKeyResult(keyResult: QuarterlyKeyResult): void {
+    const keyResults = this.getQuarterlyKeyResults();
+    keyResults.push(keyResult);
+    this.saveQuarterlyKeyResults(keyResults);
+  }
+
+  public updateQuarterlyKeyResult(keyResultId: string, updates: Partial<QuarterlyKeyResult>): void {
+    const keyResults = this.getQuarterlyKeyResults();
+    const index = keyResults.findIndex(kr => kr.id === keyResultId);
+
+    if (index !== -1) {
+      keyResults[index] = { ...keyResults[index], ...updates, updatedAt: new Date() };
+      this.saveQuarterlyKeyResults(keyResults);
+    }
+  }
+
+  public deleteQuarterlyKeyResult(keyResultId: string): void {
+    const keyResults = this.getQuarterlyKeyResults().filter(kr => kr.id !== keyResultId);
+    this.saveQuarterlyKeyResults(keyResults);
   }
 
   // Gestion du progrès
@@ -249,11 +280,12 @@ export class StorageService {
       keyResults: this.getKeyResults(),
       okrs: this.getOKRs(),
       actions: this.getActions(),
-      tasks: this.getTasks(),
+      quarterlyObjectives: this.getQuarterlyObjectives(),
+      quarterlyKeyResults: this.getQuarterlyKeyResults(),
       progress: this.getProgress(),
       exportedAt: new Date().toISOString(),
     };
-    
+
     return JSON.stringify(data, null, 2);
   }
 
@@ -266,7 +298,8 @@ export class StorageService {
       if (data.keyResults) this.saveKeyResults(data.keyResults);
       if (data.okrs) this.saveOKRs(data.okrs);
       if (data.actions) this.saveActions(data.actions);
-      if (data.tasks) this.saveTasks(data.tasks);
+      if (data.quarterlyObjectives) this.saveQuarterlyObjectives(data.quarterlyObjectives);
+      if (data.quarterlyKeyResults) this.saveQuarterlyKeyResults(data.quarterlyKeyResults);
       if (data.progress) this.saveProgress(data.progress);
       
     } catch (error) {

@@ -38,7 +38,7 @@ const ActionsStep: React.FC = () => {
       description: '',
       deadline: '',
       priority: Priority.MEDIUM,
-      estimatedHours: 0,
+      labels: '',
     },
   });
 
@@ -53,13 +53,13 @@ const ActionsStep: React.FC = () => {
       if (okrs.length > 0) {
         const newAction = {
           id: generateId(),
-          okrId: okrs[0].id,
+          quarterlyObjectiveId: '', // TODO: À connecter avec les objectifs trimestriels
           title: data.title,
           description: data.description,
-          deadline: new Date(data.deadline),
+          deadline: data.deadline ? new Date(data.deadline) : undefined,
           priority: data.priority,
           status: ActionStatus.TODO,
-          estimatedHours: data.estimatedHours,
+          labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -81,7 +81,7 @@ const ActionsStep: React.FC = () => {
     setValue('description', action.description);
     setValue('deadline', action.deadline);
     setValue('priority', action.priority);
-    setValue('estimatedHours', action.estimatedHours);
+    setValue('labels', Array.isArray(action.labels) ? action.labels.join(', ') : action.labels);
     setEditingIndex(index);
     setIsEditing(true);
   };
@@ -187,11 +187,10 @@ const ActionsStep: React.FC = () => {
 
                 <div>
                   <Input
-                    label="Estimation (heures)"
-                    type="number"
-                    min={0}
-                    placeholder="8"
-                    {...register('estimatedHours', { valueAsNumber: true })}
+                    label="Labels (séparés par des virgules)"
+                    type="text"
+                    placeholder="urgent, marketing, développement"
+                    {...register('labels')}
                   />
                 </div>
               </div>
@@ -245,23 +244,28 @@ const ActionsStep: React.FC = () => {
                           {action.description}
                         </p>
                         <div className="flex items-center space-x-4 text-sm">
-                          <span className="text-gray-500 flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {formatDate(new Date(action.deadline))}
-                          </span>
-                          {action.estimatedHours && action.estimatedHours > 0 && (
+                          {action.deadline && (
                             <span className="text-gray-500 flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {action.estimatedHours}h
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {formatDate(new Date(action.deadline))}
                             </span>
                           )}
-                          <Badge 
-                            variant={action.priority === 'critical' ? 'danger' : 
-                                   action.priority === 'high' ? 'warning' : 'secondary'} 
+                          <Badge
+                            variant={action.priority === 'critical' ? 'danger' :
+                                   action.priority === 'high' ? 'warning' : 'secondary'}
                             size="sm"
                           >
                             {FORM_OPTIONS.PRIORITIES.find(p => p.value === action.priority)?.label}
                           </Badge>
+                          {action.labels && Array.isArray(action.labels) && action.labels.length > 0 && (
+                            <div className="flex space-x-1">
+                              {action.labels.map((label, idx) => (
+                                <Badge key={idx} variant="secondary" size="sm">
+                                  {label}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex space-x-2 ml-4">

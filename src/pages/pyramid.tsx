@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAppStore } from '@/store/useAppStore';
 
 const PyramidPage: React.FC = () => {
-  const { ambitions, keyResults, okrs, actions, tasks } = useAppStore();
+  const { ambitions, keyResults, okrs, actions, quarterlyObjectives, quarterlyKeyResults } = useAppStore();
 
   const handleExport = () => {
     // TODO: Implémenter l'export de la vue pyramidale
@@ -20,7 +20,8 @@ const PyramidPage: React.FC = () => {
     totalKeyResults: keyResults.length,
     totalOKRs: okrs.length,
     totalActions: actions.length,
-    totalTasks: tasks.length,
+    totalQuarterlyObjectives: quarterlyObjectives.length,
+    totalQuarterlyKeyResults: quarterlyKeyResults.length,
   };
 
   return (
@@ -100,8 +101,8 @@ const PyramidPage: React.FC = () => {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-red-600">{stats.totalTasks}</div>
-                <div className="text-sm text-gray-600">Tâches</div>
+                <div className="text-2xl font-bold text-purple-600">{stats.totalQuarterlyObjectives}</div>
+                <div className="text-sm text-gray-600">Objectifs Trimestriels</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -117,7 +118,8 @@ const PyramidPage: React.FC = () => {
               keyResults={keyResults}
               okrs={okrs}
               actions={actions}
-              tasks={tasks}
+              quarterlyObjectives={quarterlyObjectives}
+              quarterlyKeyResults={quarterlyKeyResults}
             />
           </motion.div>
 

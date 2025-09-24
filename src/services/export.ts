@@ -295,18 +295,18 @@ export class ExportService {
     // Feuille 5: Actions
     const actions = storageService.getActions();
     const actionsData = [
-      ['Titre', 'Description', 'Échéance', 'Statut', 'Priorité', 'Heures Estimées', 'Heures Réelles']
+      ['Titre', 'Description', 'Échéance', 'Statut', 'Priorité', 'Labels', 'Date de Création']
     ];
 
     actions.forEach(action => {
       actionsData.push([
         action.title,
-        action.description,
-        new Date(action.deadline).toLocaleDateString('fr-FR'),
+        action.description || '',
+        action.deadline ? new Date(action.deadline).toLocaleDateString('fr-FR') : '',
         action.status,
         action.priority,
-        (action.estimatedHours || 0).toString(),
-        (action.actualHours || 0).toString()
+        action.labels.join(', '),
+        action.createdAt.toLocaleDateString('fr-FR')
       ]);
     });
 

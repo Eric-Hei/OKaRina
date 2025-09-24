@@ -29,9 +29,10 @@ const DashboardPage: React.FC = () => {
     user, 
     ambitions, 
     keyResults, 
-    okrs, 
-    actions, 
-    tasks, 
+    okrs,
+    actions,
+    quarterlyObjectives,
+    quarterlyKeyResults,
     metrics,
     refreshMetrics,
     setUser 
@@ -90,19 +91,19 @@ const DashboardPage: React.FC = () => {
         daysLeft: getDaysUntilDeadline(kr.deadline),
       })),
     ...actions
-      .filter(action => getDaysUntilDeadline(action.deadline) <= 7 && getDaysUntilDeadline(action.deadline) > 0)
+      .filter(action => action.deadline && getDaysUntilDeadline(action.deadline) <= 7 && getDaysUntilDeadline(action.deadline) > 0)
       .map(action => ({
         id: action.id,
         title: action.title,
         type: 'Action',
-        deadline: action.deadline,
-        daysLeft: getDaysUntilDeadline(action.deadline),
+        deadline: action.deadline!,
+        daysLeft: getDaysUntilDeadline(action.deadline!),
       })),
   ].sort((a, b) => a.daysLeft - b.daysLeft);
 
   // Actions récentes
   const recentActions = actions
-    .filter(action => action.status === 'completed')
+    .filter(action => action.status === 'done')
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 

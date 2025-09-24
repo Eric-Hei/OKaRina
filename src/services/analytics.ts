@@ -4,7 +4,8 @@ import type {
   KeyResult,
   OKR,
   Action,
-  Task,
+  QuarterlyObjective,
+  QuarterlyKeyResult,
   Progress,
   DashboardMetrics,
   ChartData,
@@ -29,11 +30,12 @@ export class AnalyticsService {
     const ambitions = storageService.getAmbitions();
     const okrs = storageService.getOKRs();
     const actions = storageService.getActions();
-    const tasks = storageService.getTasks();
+    const quarterlyObjectives = storageService.getQuarterlyObjectives();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
 
     const totalAmbitions = ambitions.length;
     const activeOKRs = okrs.filter(okr => okr.status === Status.ACTIVE).length;
-    const completedActions = actions.filter(action => action.status === 'completed').length;
+    const completedActions = actions.filter(action => action.status === 'done').length;
     
     const overallProgress = this.calculateOverallProgress();
     const monthlyProgress = this.calculateMonthlyProgress();
@@ -121,7 +123,7 @@ export class AnalyticsService {
 
     const keyResults = storageService.getKeyResults();
     const actions = storageService.getActions();
-    const tasks = storageService.getTasks();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
 
     let count = 0;
 
@@ -131,15 +133,15 @@ export class AnalyticsService {
     });
 
     actions.forEach(action => {
-      const deadline = new Date(action.deadline);
-      if (deadline >= now && deadline <= nextWeek) count++;
-    });
-
-    tasks.forEach(task => {
-      if (task.dueDate) {
-        const deadline = new Date(task.dueDate);
+      if (action.deadline) {
+        const deadline = new Date(action.deadline);
         if (deadline >= now && deadline <= nextWeek) count++;
       }
+    });
+
+    quarterlyKeyResults.forEach(qkr => {
+      const deadline = new Date(qkr.deadline);
+      if (deadline >= now && deadline <= nextWeek) count++;
     });
 
     return count;
@@ -277,7 +279,8 @@ export class AnalyticsService {
     const keyResults = storageService.getKeyResults();
     const okrs = storageService.getOKRs();
     const actions = storageService.getActions();
-    const tasks = storageService.getTasks();
+    const quarterlyObjectives = storageService.getQuarterlyObjectives();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
 
     return {
       ambitions: {
@@ -297,13 +300,17 @@ export class AnalyticsService {
       },
       actions: {
         total: actions.length,
-        completed: actions.filter(a => a.status === 'completed').length,
+        completed: actions.filter(a => a.status === 'done').length,
         overdue: this.getOverdueActions().length,
       },
-      tasks: {
-        total: tasks.length,
-        completed: tasks.filter(t => t.completed).length,
-        overdue: this.getOverdueTasks().length,
+      quarterlyObjectives: {
+        total: quarterlyObjectives.length,
+        byStatus: this.groupByStatus(quarterlyObjectives),
+      },
+      quarterlyKeyResults: {
+        total: quarterlyKeyResults.length,
+        completed: quarterlyKeyResults.filter(qkr => qkr.currentValue >= qkr.targetValue).length,
+        averageProgress: this.calculateAverageKRProgress(),
       },
     };
   }
@@ -369,14 +376,7 @@ export class AnalyticsService {
   private getOverdueActions(): Action[] {
     const now = new Date();
     return storageService.getActions().filter(action => {
-      return new Date(action.deadline) < now && action.status !== 'completed';
-    });
-  }
-
-  private getOverdueTasks(): Task[] {
-    const now = new Date();
-    return storageService.getTasks().filter(task => {
-      return task.dueDate && new Date(task.dueDate) < now && !task.completed;
+      return action.deadline && new Date(action.deadline) < now && action.status !== 'done';
     });
   }
 }
