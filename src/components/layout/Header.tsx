@@ -13,7 +13,8 @@ import {
   X,
   Pyramid,
   Building2,
-  ChevronDown
+  ChevronDown,
+  FolderKanban,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -33,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Canvas', href: '/canvas', icon: Target },
+    { name: 'Gestion', href: '/management', icon: FolderKanban },
     { name: 'Pyramide', href: '/pyramid', icon: Pyramid },
     { name: 'Suivi', href: '/progress', icon: Calendar },
     { name: 'Rapports', href: '/reports', icon: FileText },

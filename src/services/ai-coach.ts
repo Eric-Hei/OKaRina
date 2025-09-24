@@ -301,19 +301,43 @@ export class AICoachService {
       confidence -= 20;
     }
 
-    if (!action.deadline) {
-      suggestions.push("Définissez une date limite pour cette action");
-      confidence -= 25;
-    }
-
-    if (action.deadline && new Date(action.deadline) < new Date()) {
-      warnings.push("La date limite est dans le passé");
-      confidence -= 30;
-    }
-
     if (!action.description || action.description.length < 10) {
-      suggestions.push("Ajoutez une description plus détaillée de l'action");
+      suggestions.push("Ajoutez une description pour clarifier cette action");
       confidence -= 15;
+    }
+
+    if (!action.deadline) {
+      warnings.push("Considérez ajouter une échéance pour cette action");
+      confidence -= 10;
+    }
+
+    if (!action.priority) {
+      suggestions.push("Définissez une priorité pour cette action");
+      confidence -= 15;
+    }
+
+    if (!action.quarterlyObjectiveId) {
+      suggestions.push("Rattachez cette action à un objectif trimestriel");
+      confidence -= 20;
+    }
+
+    if (action.labels && action.labels.length === 0) {
+      suggestions.push("Ajoutez des labels pour mieux organiser vos actions");
+      confidence -= 5;
+    }
+
+    if (action.deadline) {
+      const deadline = new Date(action.deadline);
+      const now = new Date();
+      const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        warnings.push("Cette action est en retard");
+        confidence -= 25;
+      } else if (diffDays < 3) {
+        warnings.push("Cette action arrive à échéance très bientôt");
+        confidence -= 10;
+      }
     }
 
     const isValid = confidence >= 70;
@@ -324,6 +348,138 @@ export class AICoachService {
       suggestions,
       warnings,
       category: ValidationCategory.ACTION,
+      validatedAt: new Date(),
+    };
+  }
+
+  // Validation des objectifs trimestriels
+  public validateQuarterlyObjective(objective: Partial<QuarterlyObjective>, companyProfile?: CompanyProfile): AIValidation {
+    const suggestions: string[] = [];
+    const warnings: string[] = [];
+    let confidence = 100;
+
+    if (!objective.title || objective.title.length < 10) {
+      suggestions.push("Le titre de l'objectif trimestriel devrait être plus descriptif (minimum 10 caractères)");
+      confidence -= 20;
+    }
+
+    if (!objective.description || objective.description.length < 20) {
+      suggestions.push("Ajoutez une description détaillée de cet objectif trimestriel");
+      confidence -= 15;
+    }
+
+    if (!objective.quarter) {
+      suggestions.push("Sélectionnez un trimestre pour cet objectif");
+      confidence -= 25;
+    }
+
+    if (!objective.year || objective.year < new Date().getFullYear()) {
+      warnings.push("Vérifiez l'année de cet objectif trimestriel");
+      confidence -= 15;
+    }
+
+    if (!objective.ambitionId) {
+      suggestions.push("Rattachez cet objectif à une ambition existante");
+      confidence -= 20;
+    }
+
+    // Suggestions contextuelles basées sur le profil d'entreprise
+    if (companyProfile) {
+      if (companyProfile.stage === CompanyStage.EARLY_STAGE && objective.title && !objective.title.toLowerCase().includes('croissance')) {
+        suggestions.push("En tant que startup, considérez des objectifs axés sur la croissance");
+        confidence -= 5;
+      }
+
+      if (companyProfile.size === CompanySize.SMALL && objective.description && objective.description.length > 200) {
+        warnings.push("Pour une petite entreprise, des objectifs plus simples peuvent être plus efficaces");
+        confidence -= 5;
+      }
+    }
+
+    const isValid = confidence >= 70;
+
+    return {
+      isValid,
+      confidence,
+      suggestions,
+      warnings,
+      category: ValidationCategory.QUARTERLY_OBJECTIVE,
+      validatedAt: new Date(),
+    };
+  }
+
+  // Validation des résultats clés trimestriels
+  public validateQuarterlyKeyResult(keyResult: Partial<QuarterlyKeyResult>): AIValidation {
+    const suggestions: string[] = [];
+    const warnings: string[] = [];
+    let confidence = 100;
+
+    if (!keyResult.title || keyResult.title.length < 5) {
+      suggestions.push("Le titre du résultat clé devrait être plus descriptif");
+      confidence -= 20;
+    }
+
+    if (!keyResult.description || keyResult.description.length < 10) {
+      suggestions.push("Ajoutez une description pour clarifier ce résultat clé");
+      confidence -= 15;
+    }
+
+    if (keyResult.targetValue === undefined || keyResult.targetValue <= 0) {
+      suggestions.push("Définissez une valeur cible positive et mesurable");
+      confidence -= 25;
+    }
+
+    if (keyResult.currentValue === undefined || keyResult.currentValue < 0) {
+      suggestions.push("Définissez une valeur actuelle valide");
+      confidence -= 15;
+    }
+
+    if (!keyResult.unit || keyResult.unit.length === 0) {
+      suggestions.push("Spécifiez l'unité de mesure (€, %, unités, etc.)");
+      confidence -= 15;
+    }
+
+    if (!keyResult.deadline) {
+      warnings.push("Considérez ajouter une échéance pour ce résultat clé");
+      confidence -= 10;
+    }
+
+    if (keyResult.deadline) {
+      const deadline = new Date(keyResult.deadline);
+      const now = new Date();
+      const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        warnings.push("Ce résultat clé est en retard");
+        confidence -= 25;
+      } else if (diffDays > 120) {
+        warnings.push("L'échéance semble très éloignée pour un objectif trimestriel");
+        confidence -= 10;
+      }
+    }
+
+    // Vérification de la cohérence des valeurs
+    if (keyResult.currentValue !== undefined && keyResult.targetValue !== undefined) {
+      if (keyResult.currentValue > keyResult.targetValue) {
+        warnings.push("La valeur actuelle dépasse déjà la cible - considérez réviser l'objectif");
+        confidence -= 5;
+      }
+
+      const progress = (keyResult.currentValue / keyResult.targetValue) * 100;
+      if (progress === 0) {
+        suggestions.push("Commencez par définir une valeur de départ réaliste");
+        confidence -= 5;
+      }
+    }
+
+    const isValid = confidence >= 70;
+
+    return {
+      isValid,
+      confidence,
+      suggestions,
+      warnings,
+      category: ValidationCategory.QUARTERLY_KEY_RESULT,
       validatedAt: new Date(),
     };
   }
