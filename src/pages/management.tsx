@@ -112,8 +112,8 @@ const ManagementPage: React.FC = () => {
     setFormMode('quarterly-key-result');
   };
 
-  const handleAddAction = (objectiveId: string) => {
-    setSelectedObjectiveId(objectiveId);
+  const handleAddAction = (objectiveId?: string) => {
+    setSelectedObjectiveId(objectiveId || null);
     setEditingItem(null);
     setFormMode('action');
   };
@@ -181,11 +181,14 @@ const ManagementPage: React.FC = () => {
         labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
         updatedAt: new Date(),
       });
-    } else if (selectedObjectiveId) {
+    } else {
+      // Utiliser l'objectif du formulaire, ou celui présélectionné, ou le premier disponible
+      const objectiveId = data.quarterlyObjectiveId || selectedObjectiveId || quarterlyObjectives[0]?.id || '';
+
       const newAction: Action = {
         ...data,
         id: generateId(),
-        quarterlyObjectiveId: selectedObjectiveId,
+        quarterlyObjectiveId: objectiveId,
         status: ActionStatus.TODO,
         deadline: data.deadline ? new Date(data.deadline) : undefined,
         labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
@@ -257,6 +260,8 @@ const ManagementPage: React.FC = () => {
             <ActionForm
               initialData={editingItem}
               quarterlyObjectiveTitle={selectedObjective?.title}
+              quarterlyObjectives={quarterlyObjectives}
+              allowObjectiveSelection={!selectedObjectiveId}
               onSubmit={handleActionSubmit}
               onCancel={handleCancelForm}
             />
@@ -278,7 +283,7 @@ const ManagementPage: React.FC = () => {
                   Gestion des Objectifs
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  Organisez vos ambitions, objectifs trimestriels et actions
+                  Gérez votre hiérarchie OKR et organisez vos actions
                 </p>
               </div>
               
@@ -315,7 +320,7 @@ const ManagementPage: React.FC = () => {
                   }`}
                 >
                   <List className="h-4 w-4 mr-2" />
-                  Vue Arborescente
+                  Hiérarchie OKR
                 </button>
                 <button
                   onClick={() => setViewMode('kanban')}
@@ -326,7 +331,7 @@ const ManagementPage: React.FC = () => {
                   }`}
                 >
                   <LayoutGrid className="h-4 w-4 mr-2" />
-                  Kanban
+                  Kanban Actions
                 </button>
               </div>
 
@@ -361,37 +366,60 @@ const ManagementPage: React.FC = () => {
         {/* Contenu principal */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {viewMode === 'tree' ? (
-            <HierarchicalTreeView
-              ambitions={filteredAmbitions}
-              quarterlyObjectives={filteredQuarterlyObjectives}
-              quarterlyKeyResults={quarterlyKeyResults}
-              actions={filteredActions}
-              onAddAmbition={() => {}} // TODO: Implémenter
-              onEditAmbition={() => {}} // TODO: Implémenter
-              onDeleteAmbition={() => {}} // TODO: Implémenter
-              onAddQuarterlyObjective={handleAddQuarterlyObjective}
-              onEditQuarterlyObjective={handleEditQuarterlyObjective}
-              onDeleteQuarterlyObjective={(id) => deleteQuarterlyObjective(id)}
-              onAddQuarterlyKeyResult={handleAddQuarterlyKeyResult}
-              onEditQuarterlyKeyResult={handleEditQuarterlyKeyResult}
-              onDeleteQuarterlyKeyResult={(id) => deleteQuarterlyKeyResult(id)}
-              onAddAction={handleAddAction}
-              onEditAction={handleEditAction}
-              onDeleteAction={(id) => deleteAction(id)}
-              onViewKanban={handleViewKanban}
-            />
+            <div className="space-y-6">
+              {/* Vue hiérarchique : Ambitions → Objectifs Trimestriels → KR Trimestriels */}
+              <HierarchicalTreeView
+                ambitions={filteredAmbitions}
+                quarterlyObjectives={filteredQuarterlyObjectives}
+                quarterlyKeyResults={quarterlyKeyResults}
+                actions={[]} // Pas d'actions dans la vue hiérarchique
+                onAddAmbition={() => {}} // TODO: Implémenter
+                onEditAmbition={() => {}} // TODO: Implémenter
+                onDeleteAmbition={() => {}} // TODO: Implémenter
+                onAddQuarterlyObjective={handleAddQuarterlyObjective}
+                onEditQuarterlyObjective={handleEditQuarterlyObjective}
+                onDeleteQuarterlyObjective={(id) => deleteQuarterlyObjective(id)}
+                onAddQuarterlyKeyResult={handleAddQuarterlyKeyResult}
+                onEditQuarterlyKeyResult={handleEditQuarterlyKeyResult}
+                onDeleteQuarterlyKeyResult={(id) => deleteQuarterlyKeyResult(id)}
+                onAddAction={handleAddAction}
+                onEditAction={handleEditAction}
+                onDeleteAction={(id) => deleteAction(id)}
+                onViewKanban={handleViewKanban}
+              />
+            </div>
           ) : (
-            <KanbanBoard
-              actions={filteredActions}
-              onActionMove={handleActionMove}
-              onActionEdit={handleEditAction}
-              onActionDelete={(id) => deleteAction(id)}
-              onAddAction={() => handleAddQuarterlyObjective()}
-              quarterlyObjectives={quarterlyObjectives}
-              selectedAmbition={filters.ambitionIds[0]}
-              selectedQuarter={filters.quarters[0]}
-              selectedYear={filters.years[0]}
-            />
+            <div className="space-y-6">
+              {/* Kanban unique pour toutes les actions */}
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Kanban des Actions
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      Organisez toutes vos actions par statut
+                    </p>
+                  </div>
+                  <Button onClick={() => handleAddAction()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle Action
+                  </Button>
+                </div>
+
+                <KanbanBoard
+                  actions={filteredActions}
+                  onActionMove={handleActionMove}
+                  onActionEdit={handleEditAction}
+                  onActionDelete={(id) => deleteAction(id)}
+                  onAddAction={() => handleAddAction()}
+                  quarterlyObjectives={quarterlyObjectives}
+                  selectedAmbition={filters.ambitionIds[0]}
+                  selectedQuarter={filters.quarters[0]}
+                  selectedYear={filters.years[0]}
+                />
+              </div>
+            </div>
           )}
         </div>
 

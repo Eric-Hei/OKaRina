@@ -339,6 +339,7 @@ export interface ActionFormData {
   priority: Priority;
   labels: string; // Chaîne séparée par des virgules
   deadline?: string;
+  quarterlyObjectiveId?: string;
 }
 
 // Types pour les formulaires des objectifs trimestriels

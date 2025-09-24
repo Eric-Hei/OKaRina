@@ -7,7 +7,7 @@ import { Zap, Calendar, Tag, AlertTriangle, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ActionFormData, Priority } from '@/types';
+import { ActionFormData, Priority, QuarterlyObjective } from '@/types';
 
 // Schéma de validation
 const actionSchema = z.object({
@@ -16,6 +16,7 @@ const actionSchema = z.object({
   priority: z.nativeEnum(Priority),
   labels: z.string().optional(),
   deadline: z.string().optional(),
+  quarterlyObjectiveId: z.string().optional(),
 });
 
 interface ActionFormProps {
@@ -24,6 +25,8 @@ interface ActionFormProps {
   onCancel: () => void;
   isLoading?: boolean;
   quarterlyObjectiveTitle?: string;
+  quarterlyObjectives?: QuarterlyObjective[];
+  allowObjectiveSelection?: boolean;
 }
 
 export const ActionForm: React.FC<ActionFormProps> = ({
@@ -32,6 +35,8 @@ export const ActionForm: React.FC<ActionFormProps> = ({
   onCancel,
   isLoading = false,
   quarterlyObjectiveTitle,
+  quarterlyObjectives = [],
+  allowObjectiveSelection = false,
 }) => {
   const {
     register,
@@ -47,6 +52,7 @@ export const ActionForm: React.FC<ActionFormProps> = ({
       priority: initialData?.priority || Priority.MEDIUM,
       labels: initialData?.labels || '',
       deadline: initialData?.deadline || '',
+      quarterlyObjectiveId: initialData?.quarterlyObjectiveId || quarterlyObjectives[0]?.id || '',
     },
     mode: 'onChange',
   });
@@ -110,6 +116,29 @@ export const ActionForm: React.FC<ActionFormProps> = ({
                 <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
               )}
             </div>
+
+            {/* Sélection d'objectif trimestriel */}
+            {allowObjectiveSelection && quarterlyObjectives.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Objectif trimestriel *
+                </label>
+                <select
+                  {...register('quarterlyObjectiveId')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Sélectionner un objectif trimestriel</option>
+                  {quarterlyObjectives.map((objective) => (
+                    <option key={objective.id} value={objective.id}>
+                      {objective.title} ({objective.quarter} {objective.year})
+                    </option>
+                  ))}
+                </select>
+                {errors.quarterlyObjectiveId && (
+                  <p className="mt-1 text-sm text-red-600">{errors.quarterlyObjectiveId.message}</p>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <div>
