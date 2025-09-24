@@ -75,7 +75,7 @@ export class AnalyticsService {
 
     let totalProgress = 0;
     keyResults.forEach(kr => {
-      const progress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
+      const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
       totalProgress += Math.min(progress, 100);
     });
 
@@ -91,7 +91,7 @@ export class AnalyticsService {
     let totalWeight = 0;
 
     okr.keyResults.forEach(kr => {
-      const progress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
+      const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
       const weight = kr.weight / 100;
       totalProgress += Math.min(progress, 100) * weight;
       totalWeight += weight;
@@ -290,7 +290,7 @@ export class AnalyticsService {
       },
       keyResults: {
         total: keyResults.length,
-        completed: keyResults.filter(kr => kr.currentValue >= kr.targetValue).length,
+        completed: keyResults.filter(kr => kr.current >= kr.target).length,
         averageProgress: this.calculateAverageKRProgress(),
       },
       okrs: {
@@ -355,7 +355,7 @@ export class AnalyticsService {
     if (keyResults.length === 0) return 0;
 
     const totalProgress = keyResults.reduce((sum, kr) => {
-      const progress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
+      const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
       return sum + Math.min(progress, 100);
     }, 0);
 

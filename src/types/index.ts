@@ -42,12 +42,11 @@ export interface KeyResult {
   ambitionId: string;
   title: string;
   description: string;
-  targetValue: number;
-  currentValue: number;
+  target: number;
+  current: number;
   unit: string;
   deadline: Date;
-  isSmartCompliant: boolean;
-  smartAnalysis?: SmartAnalysis;
+  priority: Priority;
   status: Status;
   createdAt: Date;
   updatedAt: Date;
@@ -71,8 +70,8 @@ export interface OKR {
 export interface OKRKeyResult {
   id: string;
   title: string;
-  targetValue: number;
-  currentValue: number;
+  target: number;
+  current: number;
   unit: string;
   weight: number; // Pondération sur 100
 }
@@ -300,9 +299,10 @@ export interface AmbitionFormData {
 export interface KeyResultFormData {
   title: string;
   description: string;
-  targetValue: number;
+  target: number;
   unit: string;
   deadline: string;
+  priority: Priority;
 }
 
 export interface OKRFormData {

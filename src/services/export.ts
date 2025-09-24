@@ -138,8 +138,8 @@ export class ExportService {
         yPosition += lineHeight * 1.5;
 
         okr.keyResults.forEach((kr, krIndex) => {
-          const krProgress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
-          doc.text(`  • ${kr.title}: ${kr.currentValue}/${kr.targetValue} ${kr.unit} (${Math.round(krProgress)}%)`, margin + 5, yPosition);
+          const krProgress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
+          doc.text(`  • ${kr.title}: ${kr.current}/${kr.target} ${kr.unit} (${Math.round(krProgress)}%)`, margin + 5, yPosition);
           yPosition += lineHeight;
         });
         yPosition += lineHeight;
@@ -233,15 +233,15 @@ export class ExportService {
     ];
 
     keyResults.forEach(kr => {
-      const progress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
+      const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
       keyResultsData.push([
         kr.title,
-        kr.currentValue.toString(),
-        kr.targetValue.toString(),
+        kr.current.toString(),
+        kr.target.toString(),
         kr.unit,
         Math.round(progress).toString(),
         new Date(kr.deadline).toLocaleDateString('fr-FR'),
-        kr.isSmartCompliant ? 'Oui' : 'Non'
+        'N/A' // isSmartCompliant removed
       ]);
     });
 

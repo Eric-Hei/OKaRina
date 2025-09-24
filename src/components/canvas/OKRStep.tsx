@@ -54,8 +54,8 @@ const OKRStep: React.FC = () => {
         const validKeyResults = value.keyResults.filter(kr =>
           kr &&
           typeof kr.title === 'string' &&
-          typeof kr.targetValue === 'number' &&
-          typeof kr.currentValue === 'number' &&
+          typeof kr.target === 'number' &&
+          typeof kr.current === 'number' &&
           typeof kr.unit === 'string' &&
           typeof kr.weight === 'number'
         ) as Omit<OKRKeyResult, 'id'>[];
@@ -80,8 +80,8 @@ const OKRStep: React.FC = () => {
       keyResults: keyResultsData.map((kr, index) => ({
         id: generateId(),
         title: kr.title,
-        targetValue: kr.targetValue,
-        currentValue: 0,
+        target: kr.target,
+        current: 0,
         unit: kr.unit,
         weight: Math.round(100 / keyResultsData.length),
       })),
@@ -139,7 +139,7 @@ const OKRStep: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-gray-900">{kr.title}</h4>
                       <p className="text-sm text-gray-600">
-                        Cible: {kr.targetValue.toLocaleString()} {kr.unit}
+                        Cible: {kr.target.toLocaleString()} {kr.unit}
                       </p>
                     </div>
                     <Badge variant="info" size="sm">

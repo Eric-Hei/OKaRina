@@ -280,13 +280,13 @@ const ProgressPage: React.FC = () => {
                               <div className="space-y-2">
                                 <h5 className="text-sm font-medium text-gray-700">Résultats clés :</h5>
                                 {relatedKRs.map((kr) => {
-                                  const krProgress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
+                                  const krProgress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
                                   return (
                                     <div key={kr.id} className="flex items-center justify-between text-sm">
                                       <span className="text-gray-600">{kr.title}</span>
                                       <div className="flex items-center space-x-2">
                                         <span className="text-gray-500">
-                                          {kr.currentValue}/{kr.targetValue} {kr.unit}
+                                          {kr.current}/{kr.target} {kr.unit}
                                         </span>
                                         <span className={`font-medium ${
                                           krProgress >= 100 ? 'text-green-600' :

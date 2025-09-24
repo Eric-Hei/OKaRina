@@ -135,7 +135,7 @@ Donnez vos conseils sous forme de liste numérotée, en étant spécifique et ac
 
 Résultat clé : "${keyResult.title || 'Non défini'}"
 Description : "${keyResult.description || 'Non définie'}"
-Valeur cible : ${keyResult.targetValue || 'Non définie'}
+Valeur cible : ${keyResult.target || 'Non définie'}
 Unité : ${keyResult.unit || 'Non définie'}
 Échéance : ${keyResult.deadline ? new Date(keyResult.deadline).toLocaleDateString() : 'Non définie'}`;
 

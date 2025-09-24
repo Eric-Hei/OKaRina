@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit2, Trash2, Target, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Target, Sparkles, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -28,8 +28,9 @@ const ambitionSchema = z.object({
 const AmbitionStep: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  
-  const { ambitionData, updateAmbitionData, completeStep } = useCanvasStore();
+  const [ambitionsList, setAmbitionsList] = useState<AmbitionFormData[]>([]);
+
+  const { completeStep } = useCanvasStore();
   const { addAmbition, ambitions } = useAppStore();
 
   const {
@@ -42,40 +43,54 @@ const AmbitionStep: React.FC = () => {
   } = useForm<AmbitionFormData>({
     resolver: zodResolver(ambitionSchema),
     defaultValues: {
-      title: ambitionData.title || '',
-      description: ambitionData.description || '',
-      category: ambitionData.category || AmbitionCategory.REVENUE,
-      priority: ambitionData.priority || Priority.HIGH,
-      year: ambitionData.year || new Date().getFullYear(),
+      title: '',
+      description: '',
+      category: AmbitionCategory.REVENUE,
+      priority: Priority.HIGH,
+      year: new Date().getFullYear(),
     },
   });
 
-  // Mettre à jour les données du store en temps réel
-  React.useEffect(() => {
-    const subscription = watch((value) => {
-      updateAmbitionData(value);
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, updateAmbitionData]);
-
   const onSubmit = (data: AmbitionFormData) => {
-    const newAmbition = {
-      id: generateId(),
-      userId: 'demo-user',
-      title: data.title,
-      description: data.description,
-      year: data.year,
-      category: data.category,
-      priority: data.priority,
-      status: Status.ACTIVE,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    if (editingIndex !== null) {
+      // Modification d'une ambition existante
+      const updatedList = [...ambitionsList];
+      updatedList[editingIndex] = data;
+      setAmbitionsList(updatedList);
+      setEditingIndex(null);
+    } else {
+      // Ajout d'une nouvelle ambition
+      setAmbitionsList([...ambitionsList, data]);
+    }
 
-    addAmbition(newAmbition);
-    completeStep(1);
     reset();
     setIsEditing(false);
+  };
+
+  const handleDeleteAmbition = (index: number) => {
+    const updatedList = ambitionsList.filter((_, i) => i !== index);
+    setAmbitionsList(updatedList);
+  };
+
+  const handleFinishStep = () => {
+    // Sauvegarder toutes les ambitions dans le store
+    ambitionsList.forEach(data => {
+      const newAmbition = {
+        id: generateId(),
+        userId: 'demo-user',
+        title: data.title,
+        description: data.description,
+        year: data.year,
+        category: data.category,
+        priority: data.priority,
+        status: Status.ACTIVE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      addAmbition(newAmbition);
+    });
+
+    completeStep(1);
   };
 
   const handleUseExample = (example: typeof EXAMPLES.AMBITIONS[0]) => {
@@ -84,7 +99,7 @@ const AmbitionStep: React.FC = () => {
     setValue('category', example.category);
   };
 
-  const handleEdit = (ambition: any, index: number) => {
+  const handleEdit = (ambition: AmbitionFormData, index: number) => {
     setValue('title', ambition.title);
     setValue('description', ambition.description);
     setValue('category', ambition.category);
@@ -97,6 +112,7 @@ const AmbitionStep: React.FC = () => {
   const handleCancel = () => {
     reset();
     setIsEditing(false);
+    setEditingIndex(null);
     setEditingIndex(null);
   };
 
@@ -157,6 +173,83 @@ const AmbitionStep: React.FC = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Liste des ambitions existantes */}
+      {ambitionsList.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Vos ambitions ({ambitionsList.length})</span>
+                {ambitionsList.length >= 3 && (
+                  <Badge variant="warning" className="flex items-center">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Limite recommandée atteinte
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {ambitionsList.length >= 3 && (
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
+                    <div className="text-sm text-amber-800">
+                      <strong>Attention :</strong> Vous avez {ambitionsList.length} ambitions.
+                      Il est recommandé de ne pas dépasser 3 ambitions pour rester focus et efficace.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {ambitionsList.map((ambition, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 mb-1">{ambition.title}</h4>
+                        <p className="text-sm text-gray-600 mb-2">{ambition.description}</p>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="info" size="sm">
+                            {FORM_OPTIONS.AMBITION_CATEGORIES.find(cat => cat.value === ambition.category)?.label}
+                          </Badge>
+                          <Badge variant="secondary" size="sm">
+                            {FORM_OPTIONS.PRIORITIES.find(p => p.value === ambition.priority)?.label}
+                          </Badge>
+                          <Badge variant="secondary" size="sm">
+                            {ambition.year}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(ambition, index)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteAmbition(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Formulaire */}
       <motion.div
@@ -276,69 +369,26 @@ const AmbitionStep: React.FC = () => {
         />
       </motion.div>
 
-      {/* Liste des ambitions créées */}
-      {ambitions.length > 0 && (
+      {/* Bouton pour terminer l'étape */}
+      {ambitionsList.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="flex justify-center pt-6"
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>Mes ambitions ({ambitions.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {ambitions.map((ambition, index) => (
-                  <div
-                    key={ambition.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          {ambition.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {ambition.description}
-                        </p>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="info" size="sm">
-                            {FORM_OPTIONS.AMBITION_CATEGORIES.find(cat => cat.value === ambition.category)?.label}
-                          </Badge>
-                          <Badge 
-                            variant={ambition.priority === 'critical' ? 'danger' : 
-                                   ambition.priority === 'high' ? 'warning' : 'secondary'} 
-                            size="sm"
-                          >
-                            {FORM_OPTIONS.PRIORITIES.find(p => p.value === ambition.priority)?.label}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            {ambition.year}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2 ml-4">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(ambition, index)}
-                          leftIcon={<Edit2 className="h-3 w-3" />}
-                        >
-                          Modifier
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <Button
+            onClick={handleFinishStep}
+            size="lg"
+            className="px-8"
+          >
+            Continuer avec {ambitionsList.length} ambition{ambitionsList.length > 1 ? 's' : ''}
+          </Button>
         </motion.div>
       )}
 
       {/* Message d'encouragement */}
-      {ambitions.length === 0 && (
+      {ambitionsList.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -350,7 +400,7 @@ const AmbitionStep: React.FC = () => {
             Commencez par définir votre première ambition
           </h3>
           <p className="text-gray-500">
-            Une ambition claire est le premier pas vers le succès. 
+            Une ambition claire est le premier pas vers le succès.
             Prenez le temps de bien la formuler !
           </p>
         </motion.div>

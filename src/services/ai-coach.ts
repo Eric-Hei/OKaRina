@@ -495,12 +495,12 @@ export class AICoachService {
     else recommendations.push("Soyez plus spécifique dans la description");
 
     // Measurable
-    const measurable = !!(keyResult.targetValue && keyResult.unit);
+    const measurable = !!(keyResult.target && keyResult.unit);
     if (measurable) score += 20;
     else recommendations.push("Ajoutez une valeur cible et une unité de mesure");
 
     // Achievable
-    const achievable = keyResult.targetValue ? keyResult.targetValue > 0 && keyResult.targetValue < 1000000 : false;
+    const achievable = keyResult.target ? keyResult.target > 0 && keyResult.target < 1000000 : false;
     if (achievable) score += 20;
     else recommendations.push("Vérifiez que l'objectif est réaliste et atteignable");
 

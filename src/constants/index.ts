@@ -141,18 +141,27 @@ export const EXAMPLES = {
   KEY_RESULTS: [
     {
       title: "Atteindre 1M€ de chiffre d'affaires",
-      targetValue: 1000000,
+      description: "Générer un million d'euros de revenus grâce à nos produits et services",
+      target: 1000000,
       unit: "€",
     },
     {
       title: "Acquérir 500 nouveaux clients",
-      targetValue: 500,
+      description: "Développer notre base client avec 500 nouveaux comptes actifs",
+      target: 500,
       unit: "clients",
     },
     {
       title: "Augmenter la satisfaction client à 95%",
-      targetValue: 95,
+      description: "Atteindre un taux de satisfaction client de 95% selon nos enquêtes",
+      target: 95,
       unit: "%",
+    },
+    {
+      title: "Réduire le temps de réponse à 2h",
+      description: "Améliorer notre service client avec un temps de réponse moyen de 2 heures",
+      target: 2,
+      unit: "heures",
     },
   ],
 };
