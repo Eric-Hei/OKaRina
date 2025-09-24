@@ -45,17 +45,42 @@ OKaRina transforme vos ambitions en résultats concrets grâce à une approche g
 ## 📦 Installation
 
 ### Prérequis
-- Node.js 18+ 
+- Node.js 18+
 - npm ou yarn
+- Clé API Google Gemini (optionnelle, pour l'IA avancée)
 
-### Installation des dépendances
+### Étapes d'installation
+
+1. **Cloner le projet**
+```bash
+git clone https://github.com/votre-username/okarina.git
+cd okarina
+```
+
+2. **Installer les dépendances**
 ```bash
 npm install
 # ou
 yarn install
 ```
 
-### Démarrage en développement
+3. **Configuration des variables d'environnement**
+```bash
+# Copier le fichier d'exemple
+cp .env.example .env
+
+# Éditer le fichier .env et ajouter votre clé API Gemini
+# NEXT_PUBLIC_GEMINI_API_KEY=votre_clé_api_ici
+```
+
+**Pour obtenir une clé API Gemini :**
+- Rendez-vous sur [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Créez une nouvelle clé API
+- Copiez-la dans votre fichier `.env`
+
+⚠️ **Important :** Ne jamais commiter le fichier `.env` avec vos vraies clés API !
+
+4. **Démarrage en développement**
 ```bash
 npm run dev
 # ou

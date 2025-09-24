@@ -8,10 +8,10 @@ export class GeminiService {
   private model?: any;
 
   private constructor() {
-    // En développement, on utilise directement la clé (attention en production !)
-    const apiKey = 'AIzaSyD5zwI-BB8C6dXbC2SJoODqzjX0eKozoSo';
+    // Récupération sécurisée de la clé API depuis les variables d'environnement
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn('Clé API Gemini non trouvée. Utilisation du mode simulation.');
+      console.warn('Clé API Gemini non trouvée dans les variables d\'environnement. Utilisation du mode simulation.');
       return;
     }
 
