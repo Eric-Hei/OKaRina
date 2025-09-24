@@ -19,6 +19,7 @@ import { AmbitionStep } from '@/components/canvas/AmbitionStep';
 import { KeyResultsStep } from '@/components/canvas/KeyResultsStep';
 import { OKRStep } from '@/components/canvas/OKRStep';
 import { ActionsStep } from '@/components/canvas/ActionsStep';
+import QuarterlyObjectivesStep from '@/components/canvas/QuarterlyObjectivesStep';
 
 
 const CanvasPage: React.FC = () => {
@@ -61,11 +62,9 @@ const CanvasPage: React.FC = () => {
       case 2:
         return <KeyResultsStep />;
       case 3:
-        return <OKRStep />;
+        return <QuarterlyObjectivesStep />;
       case 4:
         return <ActionsStep />;
-      case 5:
-        return <div>Étape supprimée - Les tâches sont maintenant gérées dans le kanban</div>;
       default:
         return <AmbitionStep />;
     }
@@ -102,7 +101,7 @@ const CanvasPage: React.FC = () => {
                   Canvas Guidé OKaRina
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  Transformez vos ambitions en objectifs mesurables en 5 étapes
+                  Transformez vos ambitions en objectifs mesurables en 4 étapes
                 </p>
               </div>
               
