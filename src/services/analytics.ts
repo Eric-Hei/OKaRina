@@ -309,7 +309,7 @@ export class AnalyticsService {
       },
       quarterlyKeyResults: {
         total: quarterlyKeyResults.length,
-        completed: quarterlyKeyResults.filter(qkr => qkr.currentValue >= qkr.targetValue).length,
+        completed: quarterlyKeyResults.filter(qkr => qkr.current >= qkr.target).length,
         averageProgress: this.calculateAverageKRProgress(),
       },
     };

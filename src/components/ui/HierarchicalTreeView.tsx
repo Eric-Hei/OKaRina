@@ -322,7 +322,7 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                               <TrendingUp className="h-3 w-3 text-green-600" />
                                               <span className="text-sm font-medium text-green-900">{kr.title}</span>
                                               <span className="text-xs text-green-700">
-                                                {kr.currentValue}/{kr.targetValue} {kr.unit}
+                                                {kr.current}/{kr.target} {kr.unit}
                                               </span>
                                             </div>
                                             <div className="flex items-center space-x-1">

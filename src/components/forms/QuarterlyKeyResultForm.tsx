@@ -12,8 +12,8 @@ import { QuarterlyKeyResultFormData } from '@/types';
 const quarterlyKeyResultSchema = z.object({
   title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
   description: z.string().min(5, 'La description doit contenir au moins 5 caractères'),
-  targetValue: z.number().min(0, 'La valeur cible doit être positive'),
-  currentValue: z.number().min(0, 'La valeur actuelle doit être positive'),
+  target: z.number().min(0, 'La valeur cible doit être positive'),
+  current: z.number().min(0, 'La valeur actuelle doit être positive'),
   unit: z.string().min(1, 'L\'unité est requise'),
   deadline: z.string().min(1, 'La date d\'échéance est requise'),
 });
@@ -43,16 +43,16 @@ export const QuarterlyKeyResultForm: React.FC<QuarterlyKeyResultFormProps> = ({
     defaultValues: {
       title: initialData?.title || '',
       description: initialData?.description || '',
-      targetValue: initialData?.targetValue || 0,
-      currentValue: initialData?.currentValue || 0,
+      target: initialData?.target || 0,
+      current: initialData?.current || 0,
       unit: initialData?.unit || '',
       deadline: initialData?.deadline || '',
     },
     mode: 'onChange',
   });
 
-  const currentValue = watch('currentValue');
-  const targetValue = watch('targetValue');
+  const currentValue = watch('current');
+  const targetValue = watch('target');
   const progressPercentage = targetValue > 0 ? Math.min((currentValue / targetValue) * 100, 100) : 0;
 
   // Suggestions d'unités communes
@@ -125,11 +125,11 @@ export const QuarterlyKeyResultForm: React.FC<QuarterlyKeyResultFormProps> = ({
                 <input
                   type="number"
                   step="0.01"
-                  {...register('currentValue', { valueAsNumber: true })}
+                  {...register('current', { valueAsNumber: true })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {errors.currentValue && (
-                  <p className="mt-1 text-sm text-red-600">{errors.currentValue.message}</p>
+                {errors.current && (
+                  <p className="mt-1 text-sm text-red-600">{errors.current.message}</p>
                 )}
               </div>
 
@@ -140,11 +140,11 @@ export const QuarterlyKeyResultForm: React.FC<QuarterlyKeyResultFormProps> = ({
                 <input
                   type="number"
                   step="0.01"
-                  {...register('targetValue', { valueAsNumber: true })}
+                  {...register('target', { valueAsNumber: true })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {errors.targetValue && (
-                  <p className="mt-1 text-sm text-red-600">{errors.targetValue.message}</p>
+                {errors.target && (
+                  <p className="mt-1 text-sm text-red-600">{errors.target.message}</p>
                 )}
               </div>
 

@@ -424,12 +424,12 @@ export class AICoachService {
       confidence -= 15;
     }
 
-    if (keyResult.targetValue === undefined || keyResult.targetValue <= 0) {
+    if (keyResult.target === undefined || keyResult.target <= 0) {
       suggestions.push("Définissez une valeur cible positive et mesurable");
       confidence -= 25;
     }
 
-    if (keyResult.currentValue === undefined || keyResult.currentValue < 0) {
+    if (keyResult.current === undefined || keyResult.current < 0) {
       suggestions.push("Définissez une valeur actuelle valide");
       confidence -= 15;
     }
@@ -459,13 +459,13 @@ export class AICoachService {
     }
 
     // Vérification de la cohérence des valeurs
-    if (keyResult.currentValue !== undefined && keyResult.targetValue !== undefined) {
-      if (keyResult.currentValue > keyResult.targetValue) {
+    if (keyResult.current !== undefined && keyResult.target !== undefined) {
+      if (keyResult.current > keyResult.target) {
         warnings.push("La valeur actuelle dépasse déjà la cible - considérez réviser l'objectif");
         confidence -= 5;
       }
 
-      const progress = (keyResult.currentValue / keyResult.targetValue) * 100;
+      const progress = (keyResult.current / keyResult.target) * 100;
       if (progress === 0) {
         suggestions.push("Commencez par définir une valeur de départ réaliste");
         confidence -= 5;

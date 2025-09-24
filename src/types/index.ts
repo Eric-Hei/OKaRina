@@ -112,8 +112,8 @@ export interface QuarterlyKeyResult {
   title: string;
   description: string;
   quarterlyObjectiveId: string;
-  targetValue: number;
-  currentValue: number;
+  target: number;
+  current: number;
   unit: string;
   deadline: Date;
   status: Status;
@@ -323,15 +323,6 @@ export interface QuarterlyObjectiveFormData {
   year: number;
 }
 
-// Types pour les formulaires des KR trimestriels
-export interface QuarterlyKeyResultFormData {
-  title: string;
-  description: string;
-  targetValue: number;
-  unit: string;
-  deadline: string;
-}
-
 // Types pour les formulaires des actions
 export interface ActionFormData {
   title: string;
@@ -351,11 +342,12 @@ export interface QuarterlyObjectiveFormData {
   year: number;
 }
 
+// Types pour les formulaires des KR trimestriels
 export interface QuarterlyKeyResultFormData {
   title: string;
   description: string;
-  targetValue: number;
-  currentValue: number;
+  target: number;
+  current: number;
   unit: string;
   deadline: string; // ISO string in form
 }

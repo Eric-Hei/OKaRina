@@ -60,7 +60,7 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
           title: qkr.title,
           description: qkr.description,
           status: qkr.status,
-          progress: (qkr.currentValue / qkr.targetValue) * 100,
+          progress: (qkr.current / qkr.target) * 100,
           deadline: qkr.deadline,
           children: [],
           data: qkr,
