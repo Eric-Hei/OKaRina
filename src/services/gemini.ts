@@ -16,7 +16,7 @@ export class GeminiService {
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   }
 
   public static getInstance(): GeminiService {
