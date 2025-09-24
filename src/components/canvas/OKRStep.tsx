@@ -10,7 +10,8 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS } from '@/constants';
 import { generateId, getCurrentQuarter } from '@/utils';
-import type { OKRFormData, Quarter } from '@/types';
+import type { OKRFormData, OKRKeyResult } from '@/types';
+import { Quarter, Status } from '@/types';
 
 const OKRStep: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -39,11 +40,35 @@ const OKRStep: React.FC = () => {
     },
   });
 
-  const watchedValues = watch();
-
   React.useEffect(() => {
-    updateOKRData(watchedValues);
-  }, [watchedValues, updateOKRData]);
+    const subscription = watch((value) => {
+      // Mettre à jour seulement les champs définis
+      const cleanedValue: Partial<OKRFormData> = {};
+
+      if (value.quarter !== undefined) cleanedValue.quarter = value.quarter;
+      if (value.year !== undefined) cleanedValue.year = value.year;
+      if (value.objective !== undefined) cleanedValue.objective = value.objective;
+
+      // Pour keyResults, on ne met à jour que si on a des données complètes
+      if (value.keyResults && Array.isArray(value.keyResults)) {
+        const validKeyResults = value.keyResults.filter(kr =>
+          kr &&
+          typeof kr.title === 'string' &&
+          typeof kr.targetValue === 'number' &&
+          typeof kr.currentValue === 'number' &&
+          typeof kr.unit === 'string' &&
+          typeof kr.weight === 'number'
+        ) as Omit<OKRKeyResult, 'id'>[];
+
+        if (validKeyResults.length > 0) {
+          cleanedValue.keyResults = validKeyResults;
+        }
+      }
+
+      updateOKRData(cleanedValue);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, updateOKRData]);
 
   const onSubmit = (data: OKRFormData) => {
     const newOKR = {
@@ -60,7 +85,7 @@ const OKRStep: React.FC = () => {
         unit: kr.unit,
         weight: Math.round(100 / keyResultsData.length),
       })),
-      status: 'active' as const,
+      status: Status.ACTIVE,
       progress: 0,
       createdAt: new Date(),
       updatedAt: new Date(),

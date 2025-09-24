@@ -14,6 +14,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS, EXAMPLES } from '@/constants';
 import { generateId, formatDate } from '@/utils';
 import type { KeyResultFormData } from '@/types';
+import { Status } from '@/types';
 
 // Schéma de validation
 const keyResultSchema = z.object({
@@ -76,7 +77,7 @@ const KeyResultsStep: React.FC = () => {
           unit: data.unit,
           deadline: new Date(data.deadline),
           isSmartCompliant: true, // Sera calculé par l'IA
-          status: 'active' as const,
+          status: Status.ACTIVE,
           createdAt: new Date(),
           updatedAt: new Date(),
         };

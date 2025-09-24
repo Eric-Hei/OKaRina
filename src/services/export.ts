@@ -1,8 +1,9 @@
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import { storageService } from './storage';
 import { analyticsService } from './analytics';
-import type { ReportType, ReportFormat } from '@/types';
+import { ReportType } from '@/types';
+import type { ReportFormat } from '@/types';
 
 // Service d'export et de génération de rapports
 export class ExportService {
@@ -18,7 +19,7 @@ export class ExportService {
   }
 
   // Export PDF
-  public async exportToPDF(reportType: ReportType = 'monthly'): Promise<void> {
+  public async exportToPDF(reportType: ReportType = ReportType.MONTHLY): Promise<void> {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
@@ -161,8 +162,14 @@ export class ExportService {
   }
 
   // Export Excel
-  public async exportToExcel(reportType: ReportType = 'monthly'): Promise<void> {
-    const workbook = XLSX.utils.book_new();
+  public async exportToExcel(reportType: ReportType = ReportType.MONTHLY): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+
+    // Configuration du workbook
+    workbook.creator = 'OKaRina';
+    workbook.lastModifiedBy = 'OKaRina';
+    workbook.created = new Date();
+    workbook.modified = new Date();
 
     // Feuille 1: Métriques
     const metrics = analyticsService.getDashboardMetrics();
@@ -175,15 +182,22 @@ export class ExportService {
       ['Progrès mensuel (%)', metrics.monthlyProgress],
       ['Échéances à venir', metrics.upcomingDeadlines],
     ];
-    const metricsSheet = XLSX.utils.aoa_to_sheet(metricsData);
-    XLSX.utils.book_append_sheet(workbook, metricsSheet, 'Métriques');
+    const metricsSheet = workbook.addWorksheet('Métriques');
+    metricsSheet.addRows(metricsData);
+
+    // Formatage de l'en-tête
+    metricsSheet.getRow(1).font = { bold: true };
+    metricsSheet.columns = [
+      { width: 25 },
+      { width: 15 }
+    ];
 
     // Feuille 2: Ambitions
     const ambitions = storageService.getAmbitions();
     const ambitionsData = [
       ['Titre', 'Description', 'Catégorie', 'Priorité', 'Statut', 'Progrès (%)', 'Créé le']
     ];
-    
+
     ambitions.forEach(ambition => {
       const progress = analyticsService.calculateAmbitionProgress(ambition.id);
       ambitionsData.push([
@@ -192,63 +206,98 @@ export class ExportService {
         ambition.category,
         ambition.priority,
         ambition.status,
-        progress,
+        progress.toString(),
         new Date(ambition.createdAt).toLocaleDateString('fr-FR')
       ]);
     });
-    
-    const ambitionsSheet = XLSX.utils.aoa_to_sheet(ambitionsData);
-    XLSX.utils.book_append_sheet(workbook, ambitionsSheet, 'Ambitions');
+
+    const ambitionsSheet = workbook.addWorksheet('Ambitions');
+    ambitionsSheet.addRows(ambitionsData);
+
+    // Formatage de l'en-tête
+    ambitionsSheet.getRow(1).font = { bold: true };
+    ambitionsSheet.columns = [
+      { width: 20 }, // Titre
+      { width: 30 }, // Description
+      { width: 15 }, // Catégorie
+      { width: 12 }, // Priorité
+      { width: 12 }, // Statut
+      { width: 12 }, // Progrès
+      { width: 12 }  // Créé le
+    ];
 
     // Feuille 3: Résultats Clés
     const keyResults = storageService.getKeyResults();
     const keyResultsData = [
       ['Titre', 'Valeur Actuelle', 'Valeur Cible', 'Unité', 'Progrès (%)', 'Échéance', 'SMART']
     ];
-    
+
     keyResults.forEach(kr => {
       const progress = kr.targetValue > 0 ? (kr.currentValue / kr.targetValue) * 100 : 0;
       keyResultsData.push([
         kr.title,
-        kr.currentValue,
-        kr.targetValue,
+        kr.currentValue.toString(),
+        kr.targetValue.toString(),
         kr.unit,
-        Math.round(progress),
+        Math.round(progress).toString(),
         new Date(kr.deadline).toLocaleDateString('fr-FR'),
         kr.isSmartCompliant ? 'Oui' : 'Non'
       ]);
     });
-    
-    const keyResultsSheet = XLSX.utils.aoa_to_sheet(keyResultsData);
-    XLSX.utils.book_append_sheet(workbook, keyResultsSheet, 'Résultats Clés');
+
+    const keyResultsSheet = workbook.addWorksheet('Résultats Clés');
+    keyResultsSheet.addRows(keyResultsData);
+
+    // Formatage de l'en-tête
+    keyResultsSheet.getRow(1).font = { bold: true };
+    keyResultsSheet.columns = [
+      { width: 25 }, // Titre
+      { width: 15 }, // Valeur Actuelle
+      { width: 15 }, // Valeur Cible
+      { width: 10 }, // Unité
+      { width: 12 }, // Progrès
+      { width: 12 }, // Échéance
+      { width: 8 }   // SMART
+    ];
 
     // Feuille 4: OKRs
     const okrs = storageService.getOKRs();
     const okrsData = [
       ['Objectif', 'Trimestre', 'Année', 'Progrès (%)', 'Statut', 'Nb KRs']
     ];
-    
+
     okrs.forEach(okr => {
       const progress = analyticsService.calculateOKRProgress(okr.id);
       okrsData.push([
         okr.objective,
         okr.quarter,
-        okr.year,
-        progress,
+        okr.year.toString(),
+        progress.toString(),
         okr.status,
-        okr.keyResults.length
+        okr.keyResults.length.toString()
       ]);
     });
-    
-    const okrsSheet = XLSX.utils.aoa_to_sheet(okrsData);
-    XLSX.utils.book_append_sheet(workbook, okrsSheet, 'OKRs');
+
+    const okrsSheet = workbook.addWorksheet('OKRs');
+    okrsSheet.addRows(okrsData);
+
+    // Formatage de l'en-tête
+    okrsSheet.getRow(1).font = { bold: true };
+    okrsSheet.columns = [
+      { width: 30 }, // Objectif
+      { width: 12 }, // Trimestre
+      { width: 8 },  // Année
+      { width: 12 }, // Progrès
+      { width: 12 }, // Statut
+      { width: 8 }   // Nb KRs
+    ];
 
     // Feuille 5: Actions
     const actions = storageService.getActions();
     const actionsData = [
       ['Titre', 'Description', 'Échéance', 'Statut', 'Priorité', 'Heures Estimées', 'Heures Réelles']
     ];
-    
+
     actions.forEach(action => {
       actionsData.push([
         action.title,
@@ -256,17 +305,44 @@ export class ExportService {
         new Date(action.deadline).toLocaleDateString('fr-FR'),
         action.status,
         action.priority,
-        action.estimatedHours || 0,
-        action.actualHours || 0
+        (action.estimatedHours || 0).toString(),
+        (action.actualHours || 0).toString()
       ]);
     });
-    
-    const actionsSheet = XLSX.utils.aoa_to_sheet(actionsData);
-    XLSX.utils.book_append_sheet(workbook, actionsSheet, 'Actions');
 
-    // Téléchargement
+    const actionsSheet = workbook.addWorksheet('Actions');
+    actionsSheet.addRows(actionsData);
+
+    // Formatage de l'en-tête
+    actionsSheet.getRow(1).font = { bold: true };
+    actionsSheet.columns = [
+      { width: 25 }, // Titre
+      { width: 30 }, // Description
+      { width: 12 }, // Échéance
+      { width: 12 }, // Statut
+      { width: 12 }, // Priorité
+      { width: 15 }, // Heures Estimées
+      { width: 15 }  // Heures Réelles
+    ];
+
+    // Génération et téléchargement du fichier
     const fileName = `okarina-donnees-${reportType}-${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Création du blob et téléchargement
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
   }
 
   // Export JSON (données complètes)
@@ -331,10 +407,10 @@ export class ExportService {
   // Méthodes utilitaires privées
   private getReportTypeLabel(type: ReportType): string {
     const labels = {
-      monthly: 'Mensuel',
-      quarterly: 'Trimestriel',
-      annual: 'Annuel',
-      custom: 'Personnalisé'
+      [ReportType.MONTHLY]: 'Mensuel',
+      [ReportType.QUARTERLY]: 'Trimestriel',
+      [ReportType.ANNUAL]: 'Annuel',
+      [ReportType.CUSTOM]: 'Personnalisé'
     };
     return labels[type] || type;
   }
@@ -349,12 +425,12 @@ export class ExportService {
 
   private generateCustomPDF(options: any): void {
     // Implémentation simplifiée pour le PDF personnalisé
-    this.exportToPDF('custom');
+    this.exportToPDF(ReportType.CUSTOM);
   }
 
   private generateCustomExcel(options: any): void {
     // Implémentation simplifiée pour l'Excel personnalisé
-    this.exportToExcel('custom');
+    this.exportToExcel(ReportType.CUSTOM);
   }
 
   private generateCustomJSON(options: any): void {

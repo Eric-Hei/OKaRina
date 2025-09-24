@@ -8,9 +8,8 @@ import type {
   Progress,
   DashboardMetrics,
   ChartData,
-  Status,
-  Quarter,
 } from '@/types';
+import { Status, Quarter } from '@/types';
 
 // Service d'analytics et de calcul des métriques
 export class AnalyticsService {
@@ -334,14 +333,14 @@ export class AnalyticsService {
     return ambitions.reduce((acc, ambition) => {
       acc[ambition.category] = (acc[ambition.category] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as { [key: string]: number });
   }
 
   private groupOKRsByQuarter(okrs: OKR[]): { [key: string]: number } {
     return okrs.reduce((acc, okr) => {
       acc[okr.quarter] = (acc[okr.quarter] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as { [key: string]: number });
   }
 
   private calculateAverageKRProgress(): number {

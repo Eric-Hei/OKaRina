@@ -1,25 +1,40 @@
 [build]
-  publish = ".next"
-  command = "npm run build"
+  publish = "out"
+  command = "echo 'Skipping build, using pre-built files'"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+
+
+
 
 [dev]
   command = "npm run dev"
   port = 3000
-  publish = ".next"
+  publish = "out"
 
-# Redirections pour SPA
+# Redirections pour SPA - exclure les assets statiques
+# Servir les assets statiques directement
+[[redirects]]
+  from = "/_next/static/*"
+  to = "/_next/static/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+  force = true
+
+# Redirection SPA pour les pages seulement
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  conditions = {Role = ["admin"]}
+  force = false
 
 # Headers de sécurité
 [[headers]]
@@ -29,6 +44,8 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    # Empêcher la mise en cache agressive des pages HTML pour éviter les références vers d'anciens bundles
+    Cache-Control = "public, max-age=0, must-revalidate"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self';"
 
 # Cache des assets statiques
@@ -38,14 +55,26 @@
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
+  for = "/_next/static/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "text/css"
+
+[[headers]]
+  for = "/_next/static/chunks/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "application/javascript"
+
+[[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
 # Configuration des fonctions (pour future utilisation)
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
+# [functions]
+#   directory = "netlify/functions"
+#   node_bundler = "esbuild"
 
 # Variables d'environnement pour la production
 [context.production.environment]

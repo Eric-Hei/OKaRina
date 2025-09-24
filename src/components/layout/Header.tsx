@@ -1,16 +1,18 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { 
-  Target, 
-  BarChart3, 
-  Calendar, 
-  FileText, 
-  Settings, 
+import {
+  Target,
+  BarChart3,
+  Calendar,
+  FileText,
+  Settings,
   User,
   LogOut,
   Menu,
-  X
+  X,
+  Pyramid,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -28,6 +30,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Canvas', href: '/canvas', icon: Target },
+    { name: 'Pyramide', href: '/pyramid', icon: Pyramid },
     { name: 'Suivi', href: '/progress', icon: Calendar },
     { name: 'Rapports', href: '/reports', icon: FileText },
   ];
@@ -84,13 +87,20 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                 </div>
 
                 {/* Menu utilisateur */}
-                <div className="relative">
+                <div className="hidden sm:flex sm:items-center sm:space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push('/company-profile')}
+                    leftIcon={<Building2 className="h-4 w-4" />}
+                  >
+                    Entreprise
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
                     leftIcon={<LogOut className="h-4 w-4" />}
-                    className="hidden sm:inline-flex"
                   >
                     Déconnexion
                   </Button>

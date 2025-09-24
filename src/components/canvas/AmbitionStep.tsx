@@ -12,7 +12,8 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS, EXAMPLES } from '@/constants';
 import { generateId } from '@/utils';
-import type { AmbitionFormData, AmbitionCategory, Priority } from '@/types';
+import type { AmbitionFormData } from '@/types';
+import { AmbitionCategory, Priority, Status } from '@/types';
 
 // Schéma de validation
 const ambitionSchema = z.object({
@@ -48,12 +49,13 @@ const AmbitionStep: React.FC = () => {
     },
   });
 
-  const watchedValues = watch();
-
   // Mettre à jour les données du store en temps réel
   React.useEffect(() => {
-    updateAmbitionData(watchedValues);
-  }, [watchedValues, updateAmbitionData]);
+    const subscription = watch((value) => {
+      updateAmbitionData(value);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, updateAmbitionData]);
 
   const onSubmit = (data: AmbitionFormData) => {
     const newAmbition = {
@@ -64,7 +66,7 @@ const AmbitionStep: React.FC = () => {
       year: data.year,
       category: data.category,
       priority: data.priority,
-      status: 'active' as const,
+      status: Status.ACTIVE,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
+  output: 'export',
+  trailingSlash: true,
+  basePath: '',
+  assetPrefix: '',
   images: {
     domains: [],
+    unoptimized: true,
   },
   env: {
     CUSTOM_KEY: 'okarina-app',

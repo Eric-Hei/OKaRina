@@ -10,7 +10,8 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS } from '@/constants';
 import { generateId, formatDate } from '@/utils';
-import type { TaskFormData, Priority } from '@/types';
+import type { TaskFormData } from '@/types';
+import { Priority } from '@/types';
 
 const TasksStep: React.FC = () => {
   const [selectedActionIndex, setSelectedActionIndex] = useState<number>(0);

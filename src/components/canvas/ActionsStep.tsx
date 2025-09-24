@@ -10,7 +10,8 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS } from '@/constants';
 import { generateId, formatDate } from '@/utils';
-import type { ActionFormData, Priority } from '@/types';
+import type { ActionFormData } from '@/types';
+import { Priority, ActionStatus } from '@/types';
 
 const ActionsStep: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -57,7 +58,7 @@ const ActionsStep: React.FC = () => {
           description: data.description,
           deadline: new Date(data.deadline),
           priority: data.priority,
-          status: 'todo' as const,
+          status: ActionStatus.TODO,
           estimatedHours: data.estimatedHours,
           createdAt: new Date(),
           updatedAt: new Date(),

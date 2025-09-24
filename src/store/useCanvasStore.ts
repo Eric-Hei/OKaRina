@@ -279,7 +279,12 @@ export const useCanvasStore = create<CanvasState>()(
               // Valider le dernier résultat clé ajouté
               if (keyResultsData.length > 0) {
                 const lastKR = keyResultsData[keyResultsData.length - 1];
-                validation = aiCoachService.validateKeyResult(lastKR);
+                // Convertir les données du formulaire en format KeyResult
+                const keyResultForValidation = {
+                  ...lastKR,
+                  deadline: new Date(lastKR.deadline)
+                };
+                validation = aiCoachService.validateKeyResult(keyResultForValidation);
               } else {
                 validation = {
                   isValid: false,
@@ -292,13 +297,26 @@ export const useCanvasStore = create<CanvasState>()(
               }
               break;
             case 3:
-              validation = aiCoachService.validateOKR(okrData);
+              // Convertir les données du formulaire en format OKR
+              const okrForValidation = {
+                ...okrData,
+                keyResults: okrData.keyResults?.map((kr, index) => ({
+                  ...kr,
+                  id: `temp-kr-${index}`
+                }))
+              };
+              validation = aiCoachService.validateOKR(okrForValidation);
               break;
             case 4:
               // Valider la dernière action ajoutée
               if (actionsData.length > 0) {
                 const lastAction = actionsData[actionsData.length - 1];
-                validation = aiCoachService.validateAction(lastAction);
+                // Convertir les données du formulaire en format Action
+                const actionForValidation = {
+                  ...lastAction,
+                  deadline: new Date(lastAction.deadline)
+                };
+                validation = aiCoachService.validateAction(actionForValidation);
               } else {
                 validation = {
                   isValid: false,

@@ -101,7 +101,7 @@ const HomePage: React.FC = () => {
               <Button
                 size="lg"
                 variant="secondary"
-                onClick={() => router.push('/canvas')}
+                onClick={() => router.push('/onboarding')}
                 rightIcon={<ArrowRight className="h-5 w-5" />}
                 className="text-primary-700 hover:text-primary-800"
               >

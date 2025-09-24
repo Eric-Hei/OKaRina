@@ -2,7 +2,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { format, formatDistanceToNow, isAfter, isBefore, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { Priority, Status, Quarter } from '@/types';
+import type { Priority, Status } from '@/types';
+import { Quarter } from '@/types';
 
 // Utilitaire pour combiner les classes CSS
 export function cn(...inputs: ClassValue[]) {

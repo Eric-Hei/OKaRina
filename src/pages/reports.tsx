@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { analyticsService } from '@/services/analytics';
 import { exportService } from '@/services/export';
+import { ReportType } from '@/types';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils';
 
 const ReportsPage: React.FC = () => {
@@ -31,7 +32,7 @@ const ReportsPage: React.FC = () => {
     setUser 
   } = useAppStore();
 
-  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
+  const [selectedPeriod, setSelectedPeriod] = useState<ReportType>(ReportType.MONTHLY);
   const [isExporting, setIsExporting] = useState(false);
   const [detailedStats, setDetailedStats] = useState<any>(null);
 
@@ -131,12 +132,12 @@ const ReportsPage: React.FC = () => {
                 <Filter className="h-4 w-4 text-gray-500" />
                 <select
                   value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value as any)}
+                  onChange={(e) => setSelectedPeriod(e.target.value as ReportType)}
                   className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 >
-                  <option value="monthly">Mensuel</option>
-                  <option value="quarterly">Trimestriel</option>
-                  <option value="annual">Annuel</option>
+                  <option value={ReportType.MONTHLY}>Mensuel</option>
+                  <option value={ReportType.QUARTERLY}>Trimestriel</option>
+                  <option value={ReportType.ANNUAL}>Annuel</option>
                 </select>
               </div>
 

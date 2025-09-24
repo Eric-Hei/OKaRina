@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { Header } from './Header';
 import { NotificationContainer } from '@/components/ui/Notification';
 import { useAppStore } from '@/store/useAppStore';
@@ -10,6 +11,7 @@ interface LayoutProps {
   title?: string;
   description?: string;
   requireAuth?: boolean;
+  skipOnboarding?: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -17,23 +19,44 @@ const Layout: React.FC<LayoutProps> = ({
   title,
   description,
   requireAuth = false,
+  skipOnboarding = false,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, loadData } = useAppStore();
+  const router = useRouter();
+  const { isAuthenticated, user, loadData, setUser } = useAppStore();
 
   // Charger les données au montage du composant
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Redirection si authentification requise
+  // Créer un utilisateur par défaut si aucun n'existe
   useEffect(() => {
-    if (requireAuth && !isAuthenticated) {
-      // En production, on redirigerait vers la page de connexion
-      // Pour la démo, on simule un utilisateur connecté
-      console.log('Authentification requise - simulation d\'un utilisateur connecté');
+    if (requireAuth && !user) {
+      const defaultUser = {
+        id: 'demo-user',
+        name: 'Utilisateur Demo',
+        email: 'demo@okarina.com',
+        createdAt: new Date(),
+        lastLoginAt: new Date(),
+      };
+      setUser(defaultUser);
     }
-  }, [requireAuth, isAuthenticated]);
+  }, [requireAuth, user, setUser]);
+
+  // Redirection vers onboarding si profil d'entreprise manquant
+  useEffect(() => {
+    if (
+      requireAuth &&
+      user &&
+      !user.companyProfile &&
+      !skipOnboarding &&
+      router.pathname !== '/onboarding' &&
+      router.pathname !== '/'
+    ) {
+      router.push('/onboarding');
+    }
+  }, [requireAuth, user, skipOnboarding, router]);
 
   const pageTitle = title ? `${title} - ${APP_CONFIG.name}` : APP_CONFIG.name;
 

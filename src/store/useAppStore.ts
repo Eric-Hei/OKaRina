@@ -11,6 +11,7 @@ import type {
   Task,
   Progress,
   DashboardMetrics,
+  CompanyProfile,
 } from '@/types';
 
 // Interface du store principal
@@ -37,6 +38,7 @@ interface AppState {
   
   // Actions utilisateur
   setUser: (user: User) => void;
+  updateCompanyProfile: (companyProfile: CompanyProfile) => void;
   logout: () => void;
   
   // Actions données
@@ -111,6 +113,15 @@ export const useAppStore = create<AppState>()(
         setUser: (user) => {
           set({ user, isAuthenticated: true });
           storageService.saveUser(user);
+        },
+
+        updateCompanyProfile: (companyProfile) => {
+          const currentUser = get().user;
+          if (currentUser) {
+            const updatedUser = { ...currentUser, companyProfile };
+            set({ user: updatedUser });
+            storageService.saveUser(updatedUser);
+          }
         },
 
         logout: () => {

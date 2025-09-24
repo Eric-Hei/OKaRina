@@ -8,6 +8,19 @@ export interface User {
   role?: string;
   createdAt: Date;
   lastLoginAt: Date;
+  companyProfile?: CompanyProfile;
+}
+
+export interface CompanyProfile {
+  name: string;
+  industry: string;
+  size: CompanySize;
+  stage: CompanyStage;
+  mainChallenges: string[];
+  currentGoals: string[];
+  marketPosition: string;
+  targetMarket: string;
+  businessModel: string;
 }
 
 export interface Ambition {
@@ -173,6 +186,23 @@ export enum Quarter {
   Q2 = 'Q2',
   Q3 = 'Q3',
   Q4 = 'Q4'
+}
+
+export enum CompanySize {
+  STARTUP = 'startup',
+  SMALL = 'small',
+  MEDIUM = 'medium',
+  LARGE = 'large',
+  ENTERPRISE = 'enterprise'
+}
+
+export enum CompanyStage {
+  IDEA = 'idea',
+  PROTOTYPE = 'prototype',
+  EARLY_STAGE = 'early_stage',
+  GROWTH = 'growth',
+  MATURE = 'mature',
+  SCALE_UP = 'scale_up'
 }
 
 export enum EntityType {
