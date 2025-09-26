@@ -1,109 +1,102 @@
-# Changelog
+# Changelog - OKaRina 🎯
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Non publié]
+---
 
-### Ajouté
-- Authentification réelle avec Auth0
-- Mode collaboration en équipe
-- Notifications push
-- Synchronisation cloud
+## [1.0.0] - 2024-12-26 🚀
 
-### Modifié
-- Amélioration des performances du dashboard
-- Interface utilisateur plus intuitive
+### ✨ Ajouté
+- **Canvas Guidé Multi-Entités** avec système d'alerte intelligent
+  - Support de plusieurs ambitions avec alerte au-delà de 3
+  - Plusieurs Key Results par ambition avec alerte au-delà de 3
+  - Plusieurs objectifs trimestriels par ambition avec alerte au-delà de 3
+  - Création d'actions liées aux objectifs trimestriels
 
-### Corrigé
-- Problèmes de responsive sur mobile
-- Bugs d'export PDF
+- **IA Coach Contextuelle** avec Google Gemini AI
+  - Profil d'entreprise pour suggestions personnalisées
+  - Validation SMART automatique des objectifs
+  - Suggestions basées sur secteur et taille d'entreprise
+  - Mode fallback gracieux si API indisponible
 
-## [1.0.0] - 2024-01-15
+- **Architecture OKR Moderne**
+  - Hiérarchie : Ambitions → KR → Objectifs Trimestriels → KR Trimestriels → Actions
+  - Séparation claire entre structure stratégique et opérationnelle
+  - Kanban unique pour toutes les actions
 
-### Ajouté
-- 🎨 **Canvas guidé en 5 étapes**
-  - Définition des ambitions annuelles
-  - Création de résultats clés SMART
-  - Déclinaison en OKRs trimestriels
-  - Planification d'actions concrètes
-  - Organisation en tâches quotidiennes
+- **Interface de Gestion Avancée**
+  - Vue hiérarchique avec arborescence expandable
+  - Kanban des actions avec drag & drop (@dnd-kit)
+  - Filtrage intelligent par ambition, statut, priorité
+  - Vue pyramide pour visualisation globale
 
-- 🤖 **IA Coach intégrée**
-  - Validation intelligente des objectifs
-  - Suggestions personnalisées en temps réel
-  - Analyse SMART automatique
-  - Conseils d'optimisation contextuels
+### 🌐 Déploiement
+- **Production** : https://recette-okarina.netlify.app
+- **Build automatisé** : Netlify avec export statique
+- **Performance** : First Load JS ~114 kB
 
-- 📊 **Dashboard et suivi**
-  - Métriques de progression en temps réel
-  - Visualisations interactives
-  - Alertes sur les échéances importantes
-  - Analyse des tendances
+### 🔧 Technique
+- **Stack Moderne** : Next.js 15.5.3, React 19, TypeScript
+- **Migration** : react-beautiful-dnd → @dnd-kit (React 19 compatible)
+- **Architecture** : Types unifiés target/current au lieu de targetValue/currentValue
 
-- 📈 **Système de rapports**
-  - Export PDF avec graphiques
-  - Export Excel pour analyse
-  - Backup JSON complet
-  - Rapports personnalisables par période
+## [Non publié] - Roadmap
 
-- 🎯 **Gestion complète des objectifs**
-  - Ambitions avec catégorisation
-  - Résultats clés mesurables
-  - OKRs trimestriels
-  - Actions et tâches
-  - Suivi des progrès
+### 🔄 Version 1.1 (Q1 2025)
+- [ ] Authentification réelle avec Auth0/Firebase
+- [ ] Mode collaboration en équipe
+- [ ] Notifications push et rappels
+- [ ] Templates d'objectifs par secteur
 
-- 💾 **Stockage local**
-  - Sauvegarde automatique dans localStorage
-  - Système de backup et restauration
-  - Import/export de données
-  - Persistance des données
+### 🎯 Version 1.2 (Q2 2025)
+- [ ] Intégration calendrier (Google, Outlook)
+- [ ] API REST publique
+- [ ] Application mobile (React Native)
+- [ ] Intégrations tierces (Slack, Teams)
 
-- 🎨 **Interface utilisateur**
-  - Design moderne et responsive
-  - Animations fluides avec Framer Motion
-  - Thème cohérent avec Tailwind CSS
-  - Composants UI réutilisables
+### 📊 Dashboard et Analytics
+- **Métriques en temps réel** : Progression globale et par ambition
+- **Graphiques interactifs** : Tendances, répartition, évolution
+- **Alertes automatiques** : Échéances, retards, recommandations
+- **Vue pyramide** : Visualisation hiérarchique complète
 
-- 🧪 **Tests et qualité**
-  - Tests unitaires avec Jest
-  - Tests de composants avec React Testing Library
-  - Couverture de code > 80%
-  - Linting avec ESLint
+### 📈 Export et Rapports
+- **PDF avec graphiques** : Rapports complets haute qualité
+- **Excel pour analyse** : Données structurées pour analyse approfondie
+- **JSON backup** : Sauvegarde complète de toutes les données
+- **Rapports personnalisables** : Par période et critères
 
-- 🚀 **Déploiement**
-  - Configuration Netlify
-  - Scripts de déploiement automatisés
-  - Environnements de recette et production
-  - CI/CD avec GitHub Actions
+### 💾 Persistance et Performance
+- **localStorage** : Sauvegarde automatique côté client
+- **Export statique** : Performance optimale avec Next.js
+- **Bundle optimisé** : First Load JS ~114 kB
+- **Build rapide** : ~4 secondes de compilation
 
-### Détails techniques
-- **Frontend** : Next.js 14, React 18, TypeScript
-- **Styling** : Tailwind CSS, Framer Motion
-- **State Management** : Zustand
-- **Forms** : React Hook Form, Zod
-- **Icons** : Lucide React
-- **Export** : jsPDF, SheetJS
-- **Testing** : Jest, React Testing Library
+### 🎨 Interface et UX
+- **Design moderne** : Interface responsive avec Tailwind CSS
+- **Animations fluides** : Framer Motion pour les transitions
+- **Drag & Drop** : @dnd-kit pour manipulation intuitive
+- **Composants réutilisables** : System design cohérent
 
-### Fonctionnalités principales
-1. **Canvas Guidé** : Processus en 5 étapes pour transformer les ambitions en actions
-2. **IA Coach** : Assistant intelligent pour valider et optimiser les objectifs
-3. **Suivi en Temps Réel** : Dashboard avec métriques et visualisations
-4. **Rapports Automatiques** : Export multi-format pour partage et analyse
-5. **Interface Intuitive** : Design moderne et expérience utilisateur optimisée
+### 🔧 Architecture Technique
+- **Next.js 15.5.3** : Framework React avec export statique
+- **React 19** : Dernière version avec nouvelles fonctionnalités
+- **TypeScript** : Typage strict pour la robustesse
+- **Zustand** : State management avec persistance
+- **React Hook Form + Zod** : Validation de formulaires robuste
 
-### Métriques de la v1.0.0
-- 📁 **50+ composants** React réutilisables
-- 🧪 **100+ tests** unitaires et d'intégration
-- 📊 **5 pages** principales avec navigation fluide
-- 🎯 **4 services** métier pour la logique applicative
+### 📊 Métriques de la v1.0.0
+- 📁 **60+ composants** React réutilisables
+- 🎯 **4 étapes** de Canvas guidé multi-entités
+- 📊 **8 pages** principales avec navigation fluide
+- 🎯 **6 services** métier pour la logique applicative
 - 💾 **Stockage local** avec backup automatique
-- 🤖 **IA Coach** avec 20+ règles de validation
+- 🤖 **IA Coach** avec profil d'entreprise contextuel
 - 📈 **Export** en 3 formats (PDF, Excel, JSON)
+- 🚨 **Système d'alertes** pour éviter la surcharge cognitive
 
 ---
 

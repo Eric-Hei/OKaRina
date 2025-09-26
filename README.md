@@ -2,44 +2,62 @@
 
 **L'outil de gestion d'objectifs avec IA coach intégrée pour entrepreneurs et dirigeants de PME**
 
-OKaRina transforme vos ambitions en résultats concrets grâce à une approche guidée en 5 étapes et un accompagnement IA personnalisé.
+OKaRina transforme vos ambitions en résultats concrets grâce à une approche guidée multi-entités et un accompagnement IA personnalisé basé sur votre profil d'entreprise.
+
+🌐 **Application déployée :** [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app)
 
 ## ✨ Fonctionnalités Principales
 
-### 🎨 Canvas Guidé en 5 Étapes
-- **Étape 1** : Définition des ambitions annuelles
-- **Étape 2** : Création de résultats clés mesurables (SMART)
-- **Étape 3** : Déclinaison en OKRs trimestriels
-- **Étape 4** : Planification d'actions concrètes
-- **Étape 5** : Organisation en tâches quotidiennes
+### 🎨 Canvas Guidé Multi-Entités
+- **Étape 1** : Définition de **plusieurs ambitions** annuelles (alerte >3)
+- **Étape 2** : Création de **plusieurs Key Results** par ambition (alerte >3)
+- **Étape 3** : Déclinaison en **objectifs trimestriels** multiples (alerte >3)
+- **Étape 4** : Planification d'**actions concrètes** avec Kanban
 
-### 🤖 IA Coach Intégrée
-- Validation intelligente de vos objectifs
-- Suggestions personnalisées en temps réel
-- Analyse SMART automatique
-- Conseils d'optimisation contextuels
+**🚨 Système d'Alerte Intelligent :** Recommandations automatiques pour éviter la surcharge cognitive au-delà de 3 éléments par niveau.
 
-### 📊 Suivi et Analytics
-- Dashboard interactif avec métriques clés
-- Visualisation des progrès en temps réel
-- Alertes sur les échéances importantes
-- Analyse des tendances et recommandations
+### 🤖 IA Coach Contextuelle (Gemini AI)
+- **Validation intelligente** basée sur votre profil d'entreprise
+- **Suggestions personnalisées** selon votre secteur et taille
+- **Analyse SMART** automatique des objectifs
+- **Conseils d'optimisation** contextuels et pertinents
+- **Fallback gracieux** si l'API n'est pas disponible
 
-### 📈 Rapports Automatiques
-- Export PDF avec graphiques
-- Données Excel pour analyse approfondie
-- Backup JSON complet
-- Rapports personnalisables
+### 🏗️ Architecture OKR Moderne
+```
+Ambitions (multiples)
+├── Key Results d'Ambition (multiples par ambition)
+├── Objectifs Trimestriels (multiples par ambition)
+│   ├── Key Results Trimestriels (multiples par objectif)
+│   └── Actions (plan d'actions par objectif)
+└── Kanban Unique (toutes les actions organisées par statut)
+```
+
+### 📊 Gestion Avancée
+- **Vue Hiérarchique** : Structure complète des OKR
+- **Kanban des Actions** : Gestion opérationnelle (À faire | En cours | Terminé)
+- **Filtrage intelligent** : Par ambition, statut, priorité
+- **Dashboard interactif** avec métriques en temps réel
+- **Vue Pyramide** : Visualisation de la hiérarchie complète
+
+### 📈 Rapports et Analytics
+- **Export PDF** avec graphiques détaillés
+- **Données Excel** pour analyse approfondie
+- **Backup JSON** complet de toutes les données
+- **Analytics avancées** : progression, tendances, prédictions
 
 ## 🚀 Technologies Utilisées
 
-- **Frontend** : Next.js 14, React 18, TypeScript
+- **Frontend** : Next.js 15.5.3, React 19, TypeScript
 - **Styling** : Tailwind CSS, Framer Motion
-- **State Management** : Zustand
-- **Forms** : React Hook Form, Zod
+- **State Management** : Zustand avec persistance
+- **Forms** : React Hook Form, Zod validation
+- **Drag & Drop** : @dnd-kit (compatible React 19)
 - **Icons** : Lucide React
 - **Charts** : Recharts
 - **Export** : jsPDF, SheetJS
+- **IA** : Google Generative AI (Gemini)
+- **Déploiement** : Netlify avec export statique
 - **Testing** : Jest, React Testing Library
 
 ## 📦 Installation
@@ -47,7 +65,7 @@ OKaRina transforme vos ambitions en résultats concrets grâce à une approche g
 ### Prérequis
 - Node.js 18+
 - npm ou yarn
-- Clé API Google Gemini (optionnelle, pour l'IA avancée)
+- Clé API Google Gemini (recommandée pour l'IA contextuelle)
 
 ### Étapes d'installation
 
@@ -66,19 +84,22 @@ yarn install
 
 3. **Configuration des variables d'environnement**
 ```bash
-# Copier le fichier d'exemple
-cp .env.example .env
+# Créer le fichier .env à la racine du projet
+touch .env
 
-# Éditer le fichier .env et ajouter votre clé API Gemini
-# NEXT_PUBLIC_GEMINI_API_KEY=votre_clé_api_ici
+# Ajouter votre clé API Gemini
+echo "NEXT_PUBLIC_GEMINI_API_KEY=votre_clé_api_ici" > .env
 ```
 
 **Pour obtenir une clé API Gemini :**
-- Rendez-vous sur [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Rendez-vous sur [Google AI Studio](https://aistudio.google.com/app/apikey)
 - Créez une nouvelle clé API
 - Copiez-la dans votre fichier `.env`
 
-⚠️ **Important :** Ne jamais commiter le fichier `.env` avec vos vraies clés API !
+⚠️ **Important :**
+- Ne jamais commiter le fichier `.env` avec vos vraies clés API !
+- L'application fonctionne sans clé API (mode fallback)
+- La clé API améliore les suggestions contextuelles
 
 4. **Démarrage en développement**
 ```bash
@@ -94,43 +115,68 @@ L'application sera accessible sur [http://localhost:3000](http://localhost:3000)
 ```
 src/
 ├── components/          # Composants React réutilisables
-│   ├── ui/             # Composants UI de base
+│   ├── ui/             # Composants UI de base (Button, Card, Badge, etc.)
+│   │   ├── HierarchicalTreeView.tsx  # Vue arborescente des OKR
+│   │   ├── KanbanBoard.tsx          # Tableau Kanban des actions
+│   │   └── PyramidView.tsx          # Visualisation pyramidale
 │   ├── canvas/         # Composants du canvas guidé
+│   │   ├── AmbitionStep.tsx         # Étape ambitions (multi-entités)
+│   │   ├── KeyResultsStep.tsx       # Étape KR (multi par ambition)
+│   │   ├── QuarterlyObjectivesStep.tsx # Objectifs trimestriels
+│   │   └── ActionsStep.tsx          # Planification des actions
+│   ├── forms/          # Formulaires avec validation Zod
 │   └── layout/         # Composants de mise en page
 ├── pages/              # Pages Next.js
+│   ├── canvas.tsx      # Canvas guidé multi-étapes
+│   ├── management.tsx  # Gestion OKR + Kanban
+│   ├── dashboard.tsx   # Tableau de bord
+│   └── company-profile.tsx # Profil d'entreprise pour l'IA
 ├── services/           # Services métier
 │   ├── storage.ts      # Gestion du localStorage
-│   ├── ai-coach.ts     # Service IA coach
-│   ├── analytics.ts    # Calculs et métriques
-│   └── export.ts       # Export de données
-├── store/              # Stores Zustand
-├── types/              # Types TypeScript
-├── utils/              # Utilitaires
-├── constants/          # Constantes de l'app
+│   ├── ai-coach.ts     # Service IA coach contextuel
+│   ├── gemini.ts       # Intégration Google Gemini AI
+│   ├── analytics.ts    # Calculs et métriques avancées
+│   └── export.ts       # Export PDF/Excel/JSON
+├── store/              # Stores Zustand avec persistance
+│   ├── useAppStore.ts  # Store principal de l'application
+│   └── useCanvasStore.ts # Store du canvas guidé
+├── types/              # Types TypeScript complets
+├── utils/              # Utilitaires et helpers
+├── constants/          # Constantes et exemples
 ├── hooks/              # Hooks personnalisés
-└── styles/             # Styles globaux
+└── styles/             # Styles globaux Tailwind
 ```
 
 ## 🎯 Guide d'Utilisation
 
-### 1. Première Connexion
+### 1. Configuration Initiale
+- **Profil d'Entreprise** : Renseignez votre secteur, taille, et objectifs pour des suggestions IA personnalisées
 - L'application simule automatiquement un utilisateur connecté
 - Accédez au dashboard pour voir vos métriques
 
-### 2. Créer vos Objectifs
-- Cliquez sur "Canvas" dans la navigation
-- Suivez les 5 étapes guidées
-- Laissez l'IA vous conseiller à chaque étape
+### 2. Canvas Guidé Multi-Entités
+- **Étape 1** : Créez plusieurs ambitions (recommandation : max 3)
+- **Étape 2** : Définissez plusieurs Key Results par ambition (max 3 recommandés)
+- **Étape 3** : Déclinez en objectifs trimestriels (max 3 recommandés)
+- **Étape 4** : Planifiez vos actions concrètes
+- L'IA vous guide à chaque étape avec des suggestions contextuelles
 
-### 3. Suivre vos Progrès
-- Consultez la page "Suivi" pour voir votre progression
-- Mettez à jour vos résultats régulièrement
-- Surveillez les alertes d'échéances
+### 3. Gestion Opérationnelle
+- **Vue Hiérarchique** : Visualisez la structure complète de vos OKR
+- **Kanban des Actions** : Organisez vos actions par statut (À faire | En cours | Terminé)
+- **Filtrage Intelligent** : Filtrez par ambition, statut, priorité
+- **Mise à jour en temps réel** : Suivez vos progrès instantanément
 
-### 4. Générer des Rapports
-- Accédez à la page "Rapports"
-- Choisissez votre période (mensuel, trimestriel, annuel)
-- Exportez en PDF, Excel ou JSON
+### 4. Suivi et Analytics
+- **Dashboard** : Métriques clés et tendances
+- **Vue Pyramide** : Visualisation hiérarchique complète
+- **Alertes automatiques** : Échéances et recommandations
+- **Progression en temps réel** : Calculs automatiques des pourcentages
+
+### 5. Rapports et Export
+- **Export PDF** : Rapports complets avec graphiques
+- **Export Excel** : Données pour analyse approfondie
+- **Backup JSON** : Sauvegarde complète de vos données
 
 ## 🧪 Tests
 
@@ -172,11 +218,20 @@ yarn start
 ```
 
 ### Déploiement
-Le projet est optimisé pour le déploiement sur :
+
+**🌐 Application en ligne :** [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app)
+
+Le projet est optimisé pour le déploiement statique sur :
+- **Netlify** (actuellement déployé)
 - **Vercel** (recommandé pour Next.js)
-- **Netlify**
 - **AWS Amplify**
-- Tout hébergeur supportant Node.js
+- **GitHub Pages**
+
+```bash
+# Déploiement sur Netlify
+npm run build
+netlify deploy --prod --dir=out
+```
 
 ## 🎨 Personnalisation
 
@@ -216,23 +271,35 @@ Modifiez `src/constants/index.ts` pour :
 
 ## 📝 Roadmap
 
+### ✅ Version 1.0 (Actuelle)
+- [x] Canvas guidé multi-entités avec alertes intelligentes
+- [x] IA Coach contextuelle avec profil d'entreprise
+- [x] Architecture OKR moderne (Ambitions → Objectifs → Actions)
+- [x] Kanban des actions avec drag & drop
+- [x] Vue hiérarchique et pyramidale
+- [x] Export PDF/Excel/JSON complet
+- [x] Déploiement Netlify avec export statique
+
 ### Version 1.1
 - [ ] Authentification réelle (Auth0/Firebase)
-- [ ] Collaboration en équipe
-- [ ] Notifications push
-- [ ] Mode hors ligne
+- [ ] Collaboration en équipe multi-utilisateurs
+- [ ] Notifications push et rappels
+- [ ] Mode hors ligne avec synchronisation
+- [ ] Templates d'objectifs par secteur
 
 ### Version 1.2
 - [ ] Intégration calendrier (Google, Outlook)
-- [ ] API REST complète
+- [ ] API REST complète pour intégrations
 - [ ] Application mobile (React Native)
-- [ ] Intégrations tierces (Slack, Teams)
+- [ ] Intégrations tierces (Slack, Teams, Notion)
+- [ ] Tableaux de bord personnalisables
 
 ### Version 2.0
-- [ ] IA avancée avec GPT-4
-- [ ] Analyse prédictive
-- [ ] Recommandations automatiques
-- [ ] Coaching personnalisé
+- [ ] IA avancée multi-modèles (GPT-4, Claude)
+- [ ] Analyse prédictive des performances
+- [ ] Recommandations automatiques basées sur l'historique
+- [ ] Coaching personnalisé avec sessions guidées
+- [ ] Analytics avancées avec machine learning
 
 ## 🐛 Signaler un Bug
 
