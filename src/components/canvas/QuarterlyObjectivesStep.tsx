@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { generateId } from '@/utils';
-import type { QuarterlyObjectiveFormData, Quarter } from '@/types';
+import type { QuarterlyObjectiveFormData, Quarter, QuarterlyKeyResult } from '@/types';
 import { Status } from '@/types';
 import { QuarterlyObjectiveForm } from '@/components/forms/QuarterlyObjectiveForm';
 import { QuarterlyKeyResultForm } from '@/components/forms/QuarterlyKeyResultForm';
@@ -19,17 +19,21 @@ const QuarterlyObjectivesStep: React.FC = () => {
   const [showKRForm, setShowKRForm] = useState(false);
   const [selectedObjectiveIndex, setSelectedObjectiveIndex] = useState<number | null>(null);
   
-  const { 
-    quarterlyObjectivesData, 
+  const {
+    quarterlyObjectivesData,
     quarterlyKeyResultsData,
-    addQuarterlyObjective, 
-    updateQuarterlyObjective, 
+    addQuarterlyObjective,
+    updateQuarterlyObjective,
     removeQuarterlyObjective,
     addQuarterlyKeyResult,
-    completeStep 
+    completeStep
   } = useCanvasStore();
-  
-  const { ambitions, addQuarterlyObjective: addQuarterlyObjectiveToStore } = useAppStore();
+
+  const {
+    ambitions,
+    addQuarterlyObjective: addQuarterlyObjectiveToStore,
+    addQuarterlyKeyResult: addQuarterlyKeyResultToStore
+  } = useAppStore();
 
   const quarterLabels = {
     Q1: 'T1 (Jan-Mar)',
@@ -63,7 +67,28 @@ const QuarterlyObjectivesStep: React.FC = () => {
 
   const onSubmitKeyResult = (data: any) => {
     if (selectedObjectiveIndex !== null) {
+      // Ajouter au store Canvas
       addQuarterlyKeyResult(selectedObjectiveIndex, data);
+
+      // Ajouter aussi au store principal
+      const selectedObjective = quarterlyObjectivesData[selectedObjectiveIndex];
+      if (selectedObjective) {
+        const newKeyResult = {
+          id: generateId(),
+          quarterlyObjectiveId: selectedObjective.id || generateId(),
+          title: data.title,
+          description: data.description,
+          target: data.target,
+          current: data.current || 0,
+          unit: data.unit,
+          deadline: new Date(data.deadline),
+          status: Status.DRAFT,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        addQuarterlyKeyResultToStore(newKeyResult);
+        console.log('✅ Résultat clé trimestriel ajouté:', newKeyResult.title);
+      }
     }
     setShowKRForm(false);
     setSelectedObjectiveIndex(null);

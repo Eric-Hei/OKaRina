@@ -4,13 +4,19 @@ import Head from 'next/head';
 import { useAppStore } from '@/store/useAppStore';
 import '@/styles/globals.css';
 
+// Importer les fonctions de débogage (disponibles dans la console)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  import('@/utils/debugDataSync');
+}
+
 export default function App({ Component, pageProps }: AppProps) {
-  const { loadData } = useAppStore();
+  const loadData = useAppStore((state) => state.loadData);
 
   // Charger les données au démarrage de l'application
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Exécuter une seule fois au montage
 
   return (
     <>

@@ -16,7 +16,7 @@ export class GeminiService {
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   public static getInstance(): GeminiService {
@@ -108,23 +108,28 @@ Catégorie : ${ambition.category || 'Non définie'}`;
     if (companyProfile) {
       prompt += `
 
-Contexte entreprise :
-- Nom : ${companyProfile.name}
-- Secteur : ${companyProfile.industry}
-- Taille : ${companyProfile.size}
-- Stade : ${companyProfile.stage}
-- Défis principaux : ${companyProfile.mainChallenges?.join(', ') || 'Non définis'}
-- Marché cible : ${companyProfile.targetMarket || 'Non défini'}`;
+CONTEXTE ENTREPRISE (IMPORTANT - Tenez compte de ces informations pour personnaliser vos conseils) :
+- Nom de l'entreprise : ${companyProfile.name}
+- Secteur d'activité : ${companyProfile.industry}
+- Taille de l'entreprise : ${companyProfile.size}
+- Stade de développement : ${companyProfile.stage}
+- Modèle économique : ${companyProfile.businessModel || 'Non défini'}
+- Position sur le marché : ${companyProfile.marketPosition || 'Non définie'}
+- Marché cible : ${companyProfile.targetMarket || 'Non défini'}
+- Objectifs actuels : ${companyProfile.currentGoals?.join(', ') || 'Non définis'}
+- Défis principaux : ${companyProfile.mainChallenges?.join(', ') || 'Non définis'}`;
     }
 
     prompt += `
 
-Donnez vos conseils sous forme de liste numérotée, en étant spécifique et actionnable. Concentrez-vous sur :
+Donnez vos conseils sous forme de liste numérotée, en étant spécifique et actionnable.
+${companyProfile ? 'IMPORTANT : Adaptez vos conseils au contexte spécifique de cette entreprise (secteur, taille, stade, défis).' : ''}
+Concentrez-vous sur :
 1. La clarté et la mesurabilité de l'ambition
-2. L'alignement avec le contexte business
-3. La faisabilité et les risques
-4. Les métriques de succès
-5. Les étapes clés pour l'atteindre`;
+2. L'alignement avec le contexte business et les objectifs de l'entreprise
+3. La faisabilité compte tenu du stade et de la taille de l'entreprise
+4. Les métriques de succès adaptées au secteur
+5. Les étapes clés pour l'atteindre en tenant compte des défis identifiés`;
 
     return prompt;
   }
@@ -142,22 +147,27 @@ Unité : ${keyResult.unit || 'Non définie'}
     if (companyProfile) {
       prompt += `
 
-Contexte entreprise :
-- Secteur : ${companyProfile.industry}
+CONTEXTE ENTREPRISE (Adaptez vos conseils à ce contexte) :
+- Nom : ${companyProfile.name}
+- Secteur d'activité : ${companyProfile.industry}
 - Taille : ${companyProfile.size}
-- Stade : ${companyProfile.stage}`;
+- Stade de développement : ${companyProfile.stage}
+- Modèle économique : ${companyProfile.businessModel || 'Non défini'}
+- Marché cible : ${companyProfile.targetMarket || 'Non défini'}
+- Défis principaux : ${companyProfile.mainChallenges?.join(', ') || 'Non définis'}`;
     }
 
     prompt += `
 
 Évaluez selon les critères SMART et donnez des conseils pour :
-1. Spécificité (Specific)
-2. Mesurabilité (Measurable) 
-3. Atteignabilité (Achievable)
-4. Pertinence (Relevant)
-5. Temporalité (Time-bound)
+1. Spécificité (Specific) - Le résultat est-il clair et précis ?
+2. Mesurabilité (Measurable) - Peut-on facilement mesurer la progression ?
+3. Atteignabilité (Achievable) - Est-ce réaliste compte tenu du contexte de l'entreprise ?
+4. Pertinence (Relevant) - Est-ce aligné avec les objectifs et défis de l'entreprise ?
+5. Temporalité (Time-bound) - L'échéance est-elle appropriée ?
 
-Répondez sous forme de liste numérotée avec des conseils concrets.`;
+${companyProfile ? 'IMPORTANT : Tenez compte du secteur, de la taille et des défis de l\'entreprise dans vos recommandations.' : ''}
+Répondez sous forme de liste numérotée avec des conseils concrets et actionnables.`;
 
     return prompt;
   }
@@ -169,14 +179,18 @@ Répondez sous forme de liste numérotée avec des conseils concrets.`;
     if (existingProfile) {
       prompt += `
 
-Informations déjà connues :
+Informations déjà connues sur l'entreprise :
 - Nom : ${existingProfile.name || 'Non défini'}
-- Secteur : ${existingProfile.industry || 'Non défini'}
+- Secteur d'activité : ${existingProfile.industry || 'Non défini'}
 - Taille : ${existingProfile.size || 'Non définie'}
-- Stade : ${existingProfile.stage || 'Non défini'}
-- Défis : ${existingProfile.mainChallenges?.join(', ') || 'Non définis'}
+- Stade de développement : ${existingProfile.stage || 'Non défini'}
+- Modèle économique : ${existingProfile.businessModel || 'Non défini'}
+- Position sur le marché : ${existingProfile.marketPosition || 'Non définie'}
+- Marché cible : ${existingProfile.targetMarket || 'Non défini'}
+- Objectifs actuels : ${existingProfile.currentGoals?.join(', ') || 'Non définis'}
+- Défis principaux : ${existingProfile.mainChallenges?.join(', ') || 'Non définis'}
 
-Générez des questions complémentaires qui ne répètent pas ces informations.`;
+Générez des questions complémentaires qui approfondissent ces informations ou explorent des aspects non encore couverts.`;
     }
 
     prompt += `

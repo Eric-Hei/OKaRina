@@ -7,6 +7,105 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.1.0] - 2025-09-30 🎉
+
+### ✨ Ajouté
+
+#### RGPD et Conformité Légale
+- **4 pages légales complètes** :
+  - `/legal/privacy-policy` - Politique de confidentialité (RGPD)
+  - `/legal/terms-of-service` - Conditions générales d'utilisation
+  - `/legal/cookies-policy` - Politique de cookies détaillée
+  - `/legal/gdpr` - Gestion des droits RGPD avec fonctionnalités interactives
+
+- **Composant `CookieBanner`** :
+  - Bannière de consentement des cookies
+  - Mode simple (Accepter tout / Refuser tout / Personnaliser)
+  - Panneau de paramètres détaillés avec toggles
+  - Sauvegarde des préférences dans localStorage
+  - Hook `useCookieConsent()` pour vérifier le consentement
+
+- **Composant `Footer`** :
+  - Liens vers toutes les pages légales
+  - Réseaux sociaux (GitHub, Twitter, LinkedIn)
+  - Bouton "Paramètres des cookies"
+  - Contact email et copyright
+
+- **Fonctionnalités RGPD** :
+  - Export de données (JSON complet)
+  - Suppression de données (avec confirmation)
+  - Vue d'ensemble des données stockées
+  - Statistiques par type de données
+
+#### PWA (Progressive Web App)
+- **Configuration PWA** :
+  - Installation de `next-pwa`
+  - Configuration `next.config.js` avec stratégies de cache
+  - Service worker activé (désactivé en dev)
+
+- **Manifest PWA** :
+  - `manifest.json` complet avec métadonnées
+  - 8 tailles d'icônes (72x72 à 512x512)
+  - 3 raccourcis (Dashboard, Canvas, Gestion)
+  - Share target configuré
+
+- **Icônes PWA** :
+  - Script `scripts/generate-pwa-icons.js` pour génération automatique
+  - 8 icônes SVG générées avec design "OK" + "R"
+  - Favicon SVG et Apple touch icon
+
+- **Fonctionnalités PWA** :
+  - Installation sur écran d'accueil (iOS + Android)
+  - Mode standalone (sans barre d'adresse)
+  - Mode offline (cache intelligent)
+  - Raccourcis vers pages principales
+
+#### Collaboration d'Équipe (Fondations)
+- **Nouveaux types** dans `src/types/index.ts` :
+  - `Team`, `TeamMember`, `Invitation`
+  - `SharedObjective`, `Comment`, `Notification`
+  - Enums : `TeamRole`, `InvitationStatus`, `SharePermission`, `NotificationType`
+
+- **Service de collaboration** `src/services/collaboration.ts` :
+  - `teamService` : Gestion des équipes
+  - `teamMemberService` : Gestion des membres
+  - `invitationService` : Gestion des invitations
+  - `sharedObjectiveService` : Partage d'objectifs
+  - `commentService` : Commentaires et discussions
+  - `notificationService` : Notifications
+
+#### Documentation
+- **Nouveaux documents** :
+  - `docs/PWA_SETUP.md` - Guide complet PWA
+  - `docs/IMPLEMENTATION_RGPD_PWA_COLLAB.md` - Détails techniques
+  - `docs/ROADMAP_PRIORITAIRE.md` - Roadmap priorisée
+  - `docs/ANALYSE_GLOBALE.md` - Analyse complète de l'application
+  - `docs/RESUME_FINAL.md` - Résumé des travaux
+
+### 🔧 Modifié
+
+- **`src/components/layout/Layout.tsx`** : Ajout Footer + CookieBanner
+- **`src/pages/_document.tsx`** : Meta tags PWA et favicons
+- **`next.config.js`** : Configuration next-pwa
+- **`src/types/index.ts`** : 6 nouveaux types pour collaboration
+- **`README.md`** : Mise à jour avec nouvelles fonctionnalités
+- **`PRD.md`** : Ajout section "Nouvelles Fonctionnalités"
+
+### 📦 Dépendances
+
+- **Ajouté** :
+  - `next-pwa@^5.6.0` - Support PWA
+  - `react-cookie-consent@^9.0.0` - Gestion des cookies
+
+### 🎯 Impact
+
+- ✅ **Conformité RGPD 100%** : Application légale pour opérer en Europe
+- ✅ **PWA fonctionnelle** : Installation sur mobile, mode offline
+- ✅ **Fondations collaboration** : Backend prêt pour UI (à implémenter)
+- ✅ **Documentation complète** : 6 nouveaux documents techniques
+
+---
+
 ## [1.0.0] - 2024-12-26 🚀
 
 ### ✨ Ajouté

@@ -351,3 +351,106 @@ export interface QuarterlyKeyResultFormData {
   unit: string;
   deadline: string; // ISO string in form
 }
+
+// ============================================
+// TYPES POUR LA COLLABORATION D'ÉQUIPE
+// ============================================
+
+export enum TeamRole {
+  OWNER = 'owner',
+  ADMIN = 'admin',
+  MEMBER = 'member',
+  VIEWER = 'viewer',
+}
+
+export enum InvitationStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  DECLINED = 'declined',
+  EXPIRED = 'expired',
+}
+
+export enum SharePermission {
+  VIEW = 'view',
+  EDIT = 'edit',
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description?: string;
+  ownerId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  user?: User; // Populated user data
+  role: TeamRole;
+  joinedAt: Date;
+}
+
+export interface Invitation {
+  id: string;
+  teamId: string;
+  team?: Team; // Populated team data
+  email: string;
+  role: TeamRole;
+  invitedBy: string;
+  invitedByUser?: User; // Populated user data
+  token: string;
+  status: InvitationStatus;
+  expiresAt: Date;
+  createdAt: Date;
+  acceptedAt?: Date;
+}
+
+export interface SharedObjective {
+  id: string;
+  objectiveId: string; // Can be ambitionId, keyResultId, etc.
+  objectiveType: 'ambition' | 'keyResult' | 'quarterlyObjective' | 'okr';
+  sharedWithUserId: string;
+  sharedWithUser?: User; // Populated user data
+  sharedByUserId: string;
+  sharedByUser?: User; // Populated user data
+  permission: SharePermission;
+  sharedAt: Date;
+}
+
+export interface Comment {
+  id: string;
+  objectiveId: string; // Can be ambitionId, keyResultId, etc.
+  objectiveType: 'ambition' | 'keyResult' | 'quarterlyObjective' | 'okr';
+  userId: string;
+  user?: User; // Populated user data
+  content: string;
+  mentions: string[]; // Array of user IDs mentioned
+  createdAt: Date;
+  updatedAt: Date;
+  editedAt?: Date;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string;
+  read: boolean;
+  createdAt: Date;
+  readAt?: Date;
+}
+
+export enum NotificationType {
+  TEAM_INVITATION = 'team_invitation',
+  OBJECTIVE_SHARED = 'objective_shared',
+  COMMENT_MENTION = 'comment_mention',
+  COMMENT_REPLY = 'comment_reply',
+  DEADLINE_APPROACHING = 'deadline_approaching',
+  OBJECTIVE_COMPLETED = 'objective_completed',
+  TEAM_MEMBER_JOINED = 'team_member_joined',
+}
