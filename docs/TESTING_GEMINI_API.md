@@ -60,7 +60,7 @@ Ce test vérifie rapidement que :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📋 Étape 1: Vérification de la clé API
-✅ Clé API trouvée: AIzaSyBAxj...
+✅ Clé API trouvée: AIzaSy****...
 
 📋 Étape 2: Initialisation du client Gemini
 ✅ Client Gemini initialisé avec le modèle gemini-2.5-flash
