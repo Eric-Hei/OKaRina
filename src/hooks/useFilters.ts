@@ -119,33 +119,70 @@ export const useFilters = ({
     });
   }, [actions, quarterlyObjectives, filters]);
 
-  // Filtrer les ambitions (celles qui ont des actions correspondantes)
+  // Filtrer les ambitions
   const filteredAmbitions = useMemo(() => {
-    if (filteredActions.length === 0) return [];
+    return ambitions.filter(ambition => {
+      // Si des filtres d'ambition sont actifs, les appliquer
+      if (filters.ambitionIds.length > 0) {
+        return filters.ambitionIds.includes(ambition.id);
+      }
 
-    const relevantObjectiveIds = new Set(
-      filteredActions.map(action => action.quarterlyObjectiveId)
-    );
-    
-    const relevantAmbitionIds = new Set(
-      quarterlyObjectives
-        .filter(obj => relevantObjectiveIds.has(obj.id))
-        .map(obj => obj.ambitionId)
-    );
+      // Sinon, afficher toutes les ambitions qui ont des objectifs correspondants
+      const hasRelevantObjectives = quarterlyObjectives.some(obj => {
+        if (obj.ambitionId !== ambition.id) return false;
 
-    return ambitions.filter(ambition => relevantAmbitionIds.has(ambition.id));
-  }, [ambitions, quarterlyObjectives, filteredActions]);
+        // Vérifier les filtres de trimestre et année
+        if (filters.quarters.length > 0 && !filters.quarters.includes(obj.quarter)) {
+          return false;
+        }
+        if (filters.years.length > 0 && !filters.years.includes(obj.year)) {
+          return false;
+        }
+        if (filters.objectiveIds.length > 0 && !filters.objectiveIds.includes(obj.id)) {
+          return false;
+        }
 
-  // Filtrer les objectifs trimestriels (ceux qui ont des actions correspondantes)
+        return true;
+      });
+
+      return hasRelevantObjectives;
+    });
+  }, [ambitions, quarterlyObjectives, filters]);
+
+  // Filtrer les objectifs trimestriels
   const filteredQuarterlyObjectives = useMemo(() => {
-    if (filteredActions.length === 0) return [];
+    return quarterlyObjectives.filter(obj => {
+      // Filtre par ambition
+      if (filters.ambitionIds.length > 0) {
+        if (!filters.ambitionIds.includes(obj.ambitionId)) {
+          return false;
+        }
+      }
 
-    const relevantObjectiveIds = new Set(
-      filteredActions.map(action => action.quarterlyObjectiveId)
-    );
+      // Filtre par trimestre
+      if (filters.quarters.length > 0) {
+        if (!filters.quarters.includes(obj.quarter)) {
+          return false;
+        }
+      }
 
-    return quarterlyObjectives.filter(obj => relevantObjectiveIds.has(obj.id));
-  }, [quarterlyObjectives, filteredActions]);
+      // Filtre par année
+      if (filters.years.length > 0) {
+        if (!filters.years.includes(obj.year)) {
+          return false;
+        }
+      }
+
+      // Filtre par objectif spécifique
+      if (filters.objectiveIds.length > 0) {
+        if (!filters.objectiveIds.includes(obj.id)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [quarterlyObjectives, filters]);
 
   // Statistiques de filtrage
   const filterStats = useMemo(() => {
