@@ -1,6 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import { Shield, FileText, Cookie, Mail, Github, Twitter, Linkedin } from 'lucide-react';
+import { Shield, FileText, Cookie, Mail, Github, Twitter, Linkedin, Settings } from 'lucide-react';
+
+// Importer la version depuis package.json
+const packageJson = require('../../../package.json');
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -155,9 +158,9 @@ export const Footer: React.FC = () => {
         {/* Séparateur */}
         <div className="mt-8 pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            {/* Copyright */}
+            {/* Copyright et version */}
             <p className="text-sm text-gray-500">
-              © {currentYear} OKaRina. Tous droits réservés.
+              © {currentYear} OKaRina v{packageJson.version}. Tous droits réservés.
             </p>
 
             {/* Bouton paramètres cookies */}
@@ -195,7 +198,3 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
-
-// Import manquant
-import { Settings } from 'lucide-react';
-

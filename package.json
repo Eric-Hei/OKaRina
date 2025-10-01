@@ -1,6 +1,6 @@
 {
   "name": "okarina",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Outil de gestion d'objectifs pour entrepreneurs avec IA coach intégrée",
   "private": true,
   "scripts": {
