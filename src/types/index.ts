@@ -353,26 +353,36 @@ export interface QuarterlyKeyResultFormData {
 }
 
 // ============================================
-// TYPES POUR LA COLLABORATION D'ÉQUIPE
+// COLLABORATION TYPES (Future feature)
 // ============================================
 
 export enum TeamRole {
   OWNER = 'owner',
   ADMIN = 'admin',
   MEMBER = 'member',
-  VIEWER = 'viewer',
+  VIEWER = 'viewer'
 }
 
 export enum InvitationStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   DECLINED = 'declined',
-  EXPIRED = 'expired',
+  EXPIRED = 'expired'
 }
 
 export enum SharePermission {
   VIEW = 'view',
-  EDIT = 'edit',
+  EDIT = 'edit'
+}
+
+export enum NotificationType {
+  TEAM_INVITATION = 'team_invitation',
+  OBJECTIVE_SHARED = 'objective_shared',
+  COMMENT_MENTION = 'comment_mention',
+  OBJECTIVE_UPDATED = 'objective_updated',
+  DEADLINE_APPROACHING = 'deadline_approaching',
+  MILESTONE_ACHIEVED = 'milestone_achieved',
+  TEAM_MEMBER_JOINED = 'team_member_joined'
 }
 
 export interface Team {
@@ -388,7 +398,6 @@ export interface TeamMember {
   id: string;
   teamId: string;
   userId: string;
-  user?: User; // Populated user data
   role: TeamRole;
   joinedAt: Date;
 }
@@ -396,41 +405,35 @@ export interface TeamMember {
 export interface Invitation {
   id: string;
   teamId: string;
-  team?: Team; // Populated team data
   email: string;
   role: TeamRole;
   invitedBy: string;
-  invitedByUser?: User; // Populated user data
   token: string;
   status: InvitationStatus;
   expiresAt: Date;
-  createdAt: Date;
   acceptedAt?: Date;
+  createdAt: Date;
 }
 
 export interface SharedObjective {
   id: string;
-  objectiveId: string; // Can be ambitionId, keyResultId, etc.
-  objectiveType: 'ambition' | 'keyResult' | 'quarterlyObjective' | 'okr';
+  objectiveId: string;
+  objectiveType: 'ambition' | 'quarterly_objective';
   sharedWithUserId: string;
-  sharedWithUser?: User; // Populated user data
   sharedByUserId: string;
-  sharedByUser?: User; // Populated user data
   permission: SharePermission;
   sharedAt: Date;
 }
 
 export interface Comment {
   id: string;
-  objectiveId: string; // Can be ambitionId, keyResultId, etc.
-  objectiveType: 'ambition' | 'keyResult' | 'quarterlyObjective' | 'okr';
+  objectiveId: string;
+  objectiveType: 'ambition' | 'quarterly_objective';
   userId: string;
-  user?: User; // Populated user data
   content: string;
-  mentions: string[]; // Array of user IDs mentioned
+  mentions: string[]; // User IDs mentioned with @
   createdAt: Date;
   updatedAt: Date;
-  editedAt?: Date;
 }
 
 export interface Notification {
@@ -439,18 +442,7 @@ export interface Notification {
   type: NotificationType;
   title: string;
   message: string;
-  link?: string;
-  read: boolean;
+  relatedId?: string; // ID of related entity (team, objective, etc.)
+  isRead: boolean;
   createdAt: Date;
-  readAt?: Date;
-}
-
-export enum NotificationType {
-  TEAM_INVITATION = 'team_invitation',
-  OBJECTIVE_SHARED = 'objective_shared',
-  COMMENT_MENTION = 'comment_mention',
-  COMMENT_REPLY = 'comment_reply',
-  DEADLINE_APPROACHING = 'deadline_approaching',
-  OBJECTIVE_COMPLETED = 'objective_completed',
-  TEAM_MEMBER_JOINED = 'team_member_joined',
 }

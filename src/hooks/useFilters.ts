@@ -145,7 +145,7 @@ export const useFilters = ({
         return true;
       });
 
-      return hasRelevantObjectives;
+      return hasRelevantObjectives || quarterlyObjectives.some(obj => obj.ambitionId === ambition.id);
     });
   }, [ambitions, quarterlyObjectives, filters]);
 

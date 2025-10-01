@@ -237,7 +237,6 @@ export const commentService = {
     if (index !== -1) {
       comments[index].content = content;
       comments[index].updatedAt = new Date();
-      comments[index].editedAt = new Date();
       localStorage.setItem(STORAGE_KEYS.COMMENTS, JSON.stringify(comments));
       console.log('✅ Commentaire modifié');
     }
@@ -267,7 +266,7 @@ export const notificationService = {
   },
 
   getUnreadCount: (userId: string): number => {
-    return notificationService.getByUserId(userId).filter(n => !n.read).length;
+    return notificationService.getByUserId(userId).filter(n => !n.isRead).length;
   },
 
   create: (notification: Notification): void => {
@@ -281,8 +280,7 @@ export const notificationService = {
     const notifications = notificationService.getAll();
     const index = notifications.findIndex(n => n.id === id);
     if (index !== -1) {
-      notifications[index].read = true;
-      notifications[index].readAt = new Date();
+      notifications[index].isRead = true;
       localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
     }
   },
@@ -290,8 +288,8 @@ export const notificationService = {
   markAllAsRead: (userId: string): void => {
     const notifications = notificationService.getAll();
     const updated = notifications.map(n => {
-      if (n.userId === userId && !n.read) {
-        return { ...n, read: true, readAt: new Date() };
+      if (n.userId === userId && !n.isRead) {
+        return { ...n, isRead: true };
       }
       return n;
     });

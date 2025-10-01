@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/router';
-import {
-  LayoutGrid,
-  List,
-  Filter,
+import { 
+  LayoutGrid, 
+  List, 
+  Filter, 
   Plus,
   Target,
   Building2,
-  Zap,
-  ArrowRight,
-  Lightbulb
+  Zap
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
@@ -41,7 +38,6 @@ type ViewMode = 'tree' | 'kanban';
 type FormMode = 'quarterly-objective' | 'quarterly-key-result' | 'action' | null;
 
 const ManagementPage: React.FC = () => {
-  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('tree');
   const [showFilters, setShowFilters] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>(null);
@@ -92,9 +88,6 @@ const ManagementPage: React.FC = () => {
 
   const hasActiveFilters = useHasActiveFilters(filters);
   const filtersDescription = useActiveFiltersDescription(filters, ambitions, quarterlyObjectives);
-
-  // Vérifier s'il y a des données
-  const hasData = ambitions.length > 0 || quarterlyObjectives.length > 0 || actions.length > 0;
 
   // Handlers pour les formulaires
   const handleAddQuarterlyObjective = (ambitionId?: string) => {
@@ -372,70 +365,7 @@ const ManagementPage: React.FC = () => {
 
         {/* Contenu principal */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {!hasData ? (
-            /* État vide - Première utilisation */
-            <div className="text-center py-16">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="max-w-md mx-auto"
-              >
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-                  <Lightbulb className="h-12 w-12 text-blue-600" />
-                </div>
-
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Commencez votre parcours OKR
-                </h2>
-
-                <p className="text-gray-600 mb-8 leading-relaxed">
-                  Vous n'avez pas encore créé d'objectifs. Utilisez notre Canvas guidé
-                  pour transformer vos ambitions en plan d'action concret avec l'aide de l'IA.
-                </p>
-
-                <div className="space-y-4">
-                  <Button
-                    onClick={() => router.push('/canvas')}
-                    size="lg"
-                    className="w-full sm:w-auto"
-                  >
-                    <Target className="h-5 w-5 mr-2" />
-                    Créer mes premiers objectifs
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-
-                  <div className="text-sm text-gray-500">
-                    ⏱️ 10-15 minutes • 🤖 Guidé par l'IA
-                  </div>
-                </div>
-
-                <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
-                  <div className="text-center">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border">
-                      <Building2 className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                      <div className="font-medium text-gray-900">Ambitions</div>
-                      <div className="text-gray-500">Vos objectifs annuels</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border">
-                      <Target className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                      <div className="font-medium text-gray-900">Objectifs</div>
-                      <div className="text-gray-500">Déclinaison trimestrielle</div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border">
-                      <Zap className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                      <div className="font-medium text-gray-900">Actions</div>
-                      <div className="text-gray-500">Plan d'actions concret</div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          ) : viewMode === 'tree' ? (
+          {viewMode === 'tree' ? (
             <div className="space-y-6">
               {/* Vue hiérarchique : Ambitions → Objectifs Trimestriels → KR Trimestriels */}
               <HierarchicalTreeView

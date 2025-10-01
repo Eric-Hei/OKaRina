@@ -22,28 +22,6 @@ OKaRina transforme vos ambitions en résultats concrets grâce à une approche g
 - **Analyse SMART** automatique des objectifs
 - **Conseils d'optimisation** contextuels et pertinents
 - **Fallback gracieux** si l'API n'est pas disponible
-- **Tests automatisés** pour garantir la fiabilité ([Documentation](docs/TESTING_GEMINI_API.md))
-
-### 🔒 RGPD et Conformité Légale (NOUVEAU ✨)
-- **4 pages légales complètes** : Confidentialité, CGU, Cookies, Droits RGPD
-- **Bannière de cookies** avec personnalisation des préférences
-- **Export de données** : Téléchargement JSON de toutes vos données
-- **Suppression de données** : Effacement complet avec confirmation
-- **Footer légal** : Liens vers toutes les pages légales
-- **100% conforme RGPD** pour opérer en Europe
-
-### 📱 PWA (Progressive Web App) (NOUVEAU ✨)
-- **Installation** : Ajoutez l'app à votre écran d'accueil (iOS + Android)
-- **Mode standalone** : Expérience app native sans barre d'adresse
-- **Mode offline** : Utilisez l'app sans connexion internet
-- **Raccourcis** : Accès rapide Dashboard, Canvas, Gestion
-- **Icônes optimisées** : 8 tailles pour tous les appareils
-- **Share target** : Partagez du contenu vers l'app (Android)
-
-### 👥 Collaboration d'Équipe (FONDATIONS) (NOUVEAU ✨)
-- **Types et services créés** : Teams, Invitations, Partages, Commentaires, Notifications
-- **Backend localStorage** : Prêt pour migration Supabase
-- **UI à venir** : Page équipe, commentaires, partages, notifications
 
 ### 🏗️ Architecture OKR Moderne
 ```
@@ -79,8 +57,6 @@ Ambitions (multiples)
 - **Charts** : Recharts
 - **Export** : jsPDF, SheetJS
 - **IA** : Google Generative AI (Gemini)
-- **PWA** : next-pwa avec service worker
-- **Cookies** : react-cookie-consent
 - **Déploiement** : Netlify avec export statique
 - **Testing** : Jest, React Testing Library
 
@@ -154,19 +130,13 @@ src/
 │   ├── canvas.tsx      # Canvas guidé multi-étapes
 │   ├── management.tsx  # Gestion OKR + Kanban
 │   ├── dashboard.tsx   # Tableau de bord
-│   ├── company-profile.tsx # Profil d'entreprise pour l'IA
-│   └── legal/          # Pages légales (NOUVEAU)
-│       ├── privacy-policy.tsx    # Politique de confidentialité
-│       ├── terms-of-service.tsx  # CGU
-│       ├── cookies-policy.tsx    # Politique de cookies
-│       └── gdpr.tsx              # Droits RGPD
+│   └── company-profile.tsx # Profil d'entreprise pour l'IA
 ├── services/           # Services métier
 │   ├── storage.ts      # Gestion du localStorage
 │   ├── ai-coach.ts     # Service IA coach contextuel
 │   ├── gemini.ts       # Intégration Google Gemini AI
 │   ├── analytics.ts    # Calculs et métriques avancées
-│   ├── export.ts       # Export PDF/Excel/JSON
-│   └── collaboration.ts # Services collaboration (NOUVEAU)
+│   └── export.ts       # Export PDF/Excel/JSON
 ├── store/              # Stores Zustand avec persistance
 │   ├── useAppStore.ts  # Store principal de l'application
 │   └── useCanvasStore.ts # Store du canvas guidé
@@ -203,60 +173,33 @@ src/
 - **Alertes automatiques** : Échéances et recommandations
 - **Progression en temps réel** : Calculs automatiques des pourcentages
 
-### 5. RGPD et Données Personnelles (NOUVEAU)
-- **Pages légales** : Accédez à `/legal/privacy-policy`, `/legal/terms-of-service`, `/legal/cookies-policy`, `/legal/gdpr`
-- **Bannière de cookies** : Personnalisez vos préférences de cookies
-- **Export de données** : Téléchargez toutes vos données en JSON depuis `/legal/gdpr`
-- **Suppression de données** : Effacez toutes vos données depuis `/legal/gdpr`
-- **Footer** : Liens vers toutes les pages légales en bas de chaque page
-
-### 6. Installation PWA (NOUVEAU)
-- **Sur Chrome/Edge** : Cliquez sur l'icône "+" dans la barre d'adresse
-- **Sur Safari (iOS)** : Partager → Ajouter à l'écran d'accueil
-- **Sur Android** : Suivez les instructions de la bannière d'installation
-- **Mode offline** : L'app fonctionne sans connexion internet
-- **Raccourcis** : Accès rapide aux pages principales depuis l'icône
-
-### 7. Rapports et Export
+### 5. Rapports et Export
 - **Export PDF** : Rapports complets avec graphiques
 - **Export Excel** : Données pour analyse approfondie
 - **Backup JSON** : Sauvegarde complète de vos données
 
 ## 🧪 Tests
 
-### Tests unitaires
+### Lancer les tests
 ```bash
-# Tous les tests
 npm run test
+# ou
+yarn test
+```
 
-# Tests avec couverture
+### Tests avec couverture
+```bash
 npm run test:coverage
+# ou
+yarn test:coverage
+```
 
-# Tests en mode watch
+### Tests en mode watch
+```bash
 npm run test:watch
+# ou
+yarn test:watch
 ```
-
-### Test de l'API Gemini
-```bash
-# Test rapide de l'API Gemini (recommandé)
-npm run test:gemini
-
-# Test du contexte entreprise (NOUVEAU)
-npm run test:gemini:context
-
-# Tests unitaires Gemini
-npm test -- src/__tests__/services/gemini.test.ts
-```
-
-📖 **Documentation complète** : [Guide de test de l'API Gemini](docs/TESTING_GEMINI_API.md)
-
-### Génération des Icônes PWA (NOUVEAU)
-```bash
-# Générer les icônes PWA temporaires (SVG)
-node scripts/generate-pwa-icons.js
-```
-
-📖 **Documentation complète** : [Guide PWA](docs/PWA_SETUP.md)
 
 ## 🏗️ Build et Déploiement
 
@@ -357,84 +300,6 @@ Modifiez `src/constants/index.ts` pour :
 - [ ] Recommandations automatiques basées sur l'historique
 - [ ] Coaching personnalisé avec sessions guidées
 - [ ] Analytics avancées avec machine learning
-
-## 🧪 Tests
-
-### Tests Gemini AI
-
-Pour tester l'intégration avec l'API Gemini :
-
-```bash
-# Test rapide de l'API
-npm run test:gemini
-
-# Test de prise en compte du contexte entreprise
-npm run test:gemini:context
-
-# Tests unitaires
-npm test -- src/__tests__/services/gemini.test.ts
-```
-
-Voir [GEMINI_API_SETUP.md](./GEMINI_API_SETUP.md) pour plus de détails.
-
-## 🐛 Débogage
-
-### Composant de débogage de synchronisation
-
-En mode développement, un bouton flottant apparaît en bas à droite de l'écran. Il permet de :
-- 🔍 Vérifier la synchronisation entre le store et le localStorage
-- ⚠️ Détecter les incohérences
-- 🔄 Recharger les données
-- 🗑️ Vider le localStorage
-
-### Logs de débogage
-
-L'application affiche des logs dans la console pour faciliter le débogage :
-- `📊 Données chargées depuis localStorage:` - Au démarrage
-- `✅ Ambition ajoutée:` - Lors de l'ajout d'une ambition
-- `✅ Résultat clé ajouté:` - Lors de l'ajout d'un résultat clé
-- `✅ Objectif trimestriel ajouté:` - Lors de l'ajout d'un objectif trimestriel
-- `✅ Résultat clé trimestriel ajouté:` - Lors de l'ajout d'un résultat clé trimestriel
-- `❌ Erreur lors du chargement des données:` - En cas d'erreur
-
-### Fonctions de débogage console
-
-```javascript
-// Afficher l'état complet de synchronisation
-debugDataSync()
-
-// Exporter toutes les données en JSON
-exportData()
-
-// Vider toutes les données (ATTENTION !)
-clearAllData()
-```
-
-### Documentation de dépannage
-
-- [TROUBLESHOOTING_DATA_SYNC.md](./docs/TROUBLESHOOTING_DATA_SYNC.md) - Guide de dépannage pour les problèmes de synchronisation
-- [IMPROVEMENTS_DATA_SYNC.md](./docs/IMPROVEMENTS_DATA_SYNC.md) - Récapitulatif des améliorations apportées
-- [IMPROVEMENTS_V2.md](./docs/IMPROVEMENTS_V2.md) - Nouvelles améliorations V2 (synchronisation complète + Coach IA)
-- [GUIDE_UTILISATEUR_V2.md](./docs/GUIDE_UTILISATEUR_V2.md) - Guide utilisateur des nouvelles fonctionnalités
-
-## 📚 Documentation Complète
-
-### Documentation Technique
-- **[PRD.md](./PRD.md)** - Product Requirements Document complet
-- **[TESTING_GEMINI_API.md](./docs/TESTING_GEMINI_API.md)** - Guide de test de l'API Gemini
-- **[PWA_SETUP.md](./docs/PWA_SETUP.md)** - Guide complet PWA (installation, icônes, tests)
-- **[IMPLEMENTATION_RGPD_PWA_COLLAB.md](./docs/IMPLEMENTATION_RGPD_PWA_COLLAB.md)** - Détails techniques des implémentations
-
-### Documentation Utilisateur
-- **[RESUME_FINAL.md](./docs/RESUME_FINAL.md)** - Résumé des dernières fonctionnalités
-- **[ROADMAP_PRIORITAIRE.md](./docs/ROADMAP_PRIORITAIRE.md)** - Roadmap priorisée avec estimations
-- **[ANALYSE_GLOBALE.md](./docs/ANALYSE_GLOBALE.md)** - Analyse complète de l'application
-
-### Guides de Dépannage
-- **[TROUBLESHOOTING_DATA_SYNC.md](./docs/TROUBLESHOOTING_DATA_SYNC.md)** - Problèmes de synchronisation
-- **[IMPROVEMENTS_DATA_SYNC.md](./docs/IMPROVEMENTS_DATA_SYNC.md)** - Améliorations de synchronisation
-- **[IMPROVEMENTS_V2.md](./docs/IMPROVEMENTS_V2.md)** - Améliorations V2
-- **[GUIDE_UTILISATEUR_V2.md](./docs/GUIDE_UTILISATEUR_V2.md)** - Guide utilisateur V2
 
 ## 🐛 Signaler un Bug
 

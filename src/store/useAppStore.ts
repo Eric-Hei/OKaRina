@@ -144,7 +144,7 @@ export const useAppStore = create<AppState>()(
         // Actions données
         loadData: () => {
           set({ isLoading: true, error: null });
-
+          
           try {
             const user = storageService.getUser();
             const ambitions = storageService.getAmbitions();
@@ -152,18 +152,9 @@ export const useAppStore = create<AppState>()(
             const okrs = storageService.getOKRs();
             const actions = storageService.getActions();
             const quarterlyObjectives = storageService.getQuarterlyObjectives();
-            const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
             const progress = storageService.getProgress();
             const metrics = analyticsService.getDashboardMetrics();
-
-            console.log('📊 Données chargées depuis localStorage:', {
-              ambitions: ambitions.length,
-              keyResults: keyResults.length,
-              okrs: okrs.length,
-              actions: actions.length,
-              quarterlyObjectives: quarterlyObjectives.length,
-              quarterlyKeyResults: quarterlyKeyResults.length,
-            });
 
             set({
               user,
@@ -179,10 +170,9 @@ export const useAppStore = create<AppState>()(
               isLoading: false,
             });
           } catch (error) {
-            console.error('❌ Erreur lors du chargement des données:', error);
-            set({
-              error: 'Erreur lors du chargement des données',
-              isLoading: false
+            set({ 
+              error: 'Erreur lors du chargement des données', 
+              isLoading: false 
             });
           }
         },
@@ -197,7 +187,6 @@ export const useAppStore = create<AppState>()(
           const ambitions = [...get().ambitions, ambition];
           set({ ambitions });
           storageService.addAmbition(ambition);
-          console.log('✅ Ambition ajoutée:', ambition.title, '- Total:', ambitions.length);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -241,7 +230,6 @@ export const useAppStore = create<AppState>()(
           const keyResults = [...get().keyResults, keyResult];
           set({ keyResults });
           storageService.addKeyResult(keyResult);
-          console.log('✅ Résultat clé ajouté:', keyResult.title, '- Total:', keyResults.length);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -362,7 +350,6 @@ export const useAppStore = create<AppState>()(
           const quarterlyObjectives = [...get().quarterlyObjectives, objective];
           set({ quarterlyObjectives });
           storageService.addQuarterlyObjective(objective);
-          console.log('✅ Objectif trimestriel ajouté:', objective.title, '- Total:', quarterlyObjectives.length);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -401,7 +388,6 @@ export const useAppStore = create<AppState>()(
           const quarterlyKeyResults = [...get().quarterlyKeyResults, keyResult];
           set({ quarterlyKeyResults });
           storageService.addQuarterlyKeyResult(keyResult);
-          console.log('✅ Résultat clé trimestriel ajouté:', keyResult.title, '- Total:', quarterlyKeyResults.length);
           get().refreshMetrics();
         },
 

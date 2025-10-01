@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { AICoachPanelV2 } from '@/components/ui/AICoachPanelV2';
+import { AICoachPanel } from '@/components/ui/AICoachPanel';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import { FORM_OPTIONS, EXAMPLES } from '@/constants';
@@ -362,10 +362,10 @@ const AmbitionStep: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <AICoachPanelV2
+        <AICoachPanel
           type="ambition"
           data={watch()}
-          className="max-w-2xl"
+          className="max-w-md"
         />
       </motion.div>
 

@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import dynamic from 'next/dynamic';
 import { Header } from './Header';
-import { Footer } from './Footer';
-import { CookieBanner } from '@/components/ui/CookieBanner';
 import { NotificationContainer } from '@/components/ui/Notification';
 import { useAppStore } from '@/store/useAppStore';
 import { APP_CONFIG } from '@/constants';
-
-// Charger le débogueur uniquement côté client pour éviter les erreurs d'hydration
-const DataSyncDebugger = dynamic(
-  () => import('@/components/debug/DataSyncDebugger').then(mod => mod.DataSyncDebugger),
-  { ssr: false }
-);
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,10 +23,12 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
-  const { isAuthenticated, user, setUser } = useAppStore();
+  const { isAuthenticated, user, loadData, setUser } = useAppStore();
 
-  // Note: loadData() est déjà appelé dans _app.tsx au démarrage de l'application
-  // Pas besoin de le rappeler ici pour éviter les doubles chargements
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Créer un utilisateur par défaut si aucun n'existe
   useEffect(() => {
@@ -76,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-50">
         <Header
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMobileMenuOpen={isMobileMenuOpen}
@@ -86,16 +79,7 @@ const Layout: React.FC<LayoutProps> = ({
           {children}
         </main>
 
-        <Footer />
-
         <NotificationContainer />
-
-        {/* Bannière de consentement des cookies */}
-        <CookieBanner />
-
-        {/* Débogueur de synchronisation (seulement en développement) */}
-        {/* Temporairement désactivé pour éviter les erreurs d'hydration */}
-        {/* {process.env.NODE_ENV === 'development' && <DataSyncDebugger />} */}
       </div>
     </>
   );
