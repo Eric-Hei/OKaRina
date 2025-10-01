@@ -6,7 +6,7 @@
 
 #### Fichier `.env` créé
 ```bash
-NEXT_PUBLIC_GEMINI_API_KEY=AIzaSyBAxjvAoE_QRz-8ALkGA7jdpyKktwzyxWw
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 NEXT_PUBLIC_APP_NAME=OKaRina
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NODE_ENV=development
@@ -81,7 +81,7 @@ Nouveau script dans `package.json` :
 ### Test rapide (npm run test:gemini)
 ```
 📋 Étape 1: Vérification de la clé API
-✅ Clé API trouvée: AIzaSyBAxj...
+✅ Clé API trouvée: AIzaSy****...
 
 📋 Étape 2: Initialisation du client Gemini
 ✅ Client Gemini initialisé avec le modèle gemini-2.5-flash
@@ -133,7 +133,7 @@ npm run dev
 
 Dans les paramètres Netlify, ajouter la variable d'environnement :
 ```
-NEXT_PUBLIC_GEMINI_API_KEY=AIzaSyBAxjvAoE_QRz-8ALkGA7jdpyKktwzyxWw
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ### 3. Surveillance et optimisation
