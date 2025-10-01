@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { storageService } from '@/services/storage';
+import type { Ambition, KeyResult, OKR, Action, QuarterlyObjective, QuarterlyKeyResult } from '@/types';
 
 /**
  * Composant de débogage pour vérifier la synchronisation des données
@@ -25,7 +26,14 @@ export const DataSyncDebugger: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showRawData, setShowRawData] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [localStorageData, setLocalStorageData] = useState({
+  const [localStorageData, setLocalStorageData] = useState<{
+    ambitions: Ambition[];
+    keyResults: KeyResult[];
+    okrs: OKR[];
+    actions: Action[];
+    quarterlyObjectives: QuarterlyObjective[];
+    quarterlyKeyResults: QuarterlyKeyResult[];
+  }>({
     ambitions: [],
     keyResults: [],
     okrs: [],

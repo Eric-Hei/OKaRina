@@ -73,9 +73,12 @@ const QuarterlyObjectivesStep: React.FC = () => {
       // Ajouter aussi au store principal
       const selectedObjective = quarterlyObjectivesData[selectedObjectiveIndex];
       if (selectedObjective) {
+        // Générer un ID stable basé sur l'index et le titre
+        const objectiveId = `qo-${selectedObjectiveIndex}-${selectedObjective.title.toLowerCase().replace(/\s+/g, '-').substring(0, 20)}`;
+
         const newKeyResult = {
           id: generateId(),
-          quarterlyObjectiveId: selectedObjective.id || generateId(),
+          quarterlyObjectiveId: objectiveId,
           title: data.title,
           description: data.description,
           target: data.target,
