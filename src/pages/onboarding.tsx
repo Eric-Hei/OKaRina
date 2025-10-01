@@ -11,7 +11,7 @@ import type { CompanyProfile } from '@/types';
 
 const OnboardingPage: React.FC = () => {
   const router = useRouter();
-  const { user, updateCompanyProfile, setUser } = useAppStore();
+  const { user, updateCompanyProfile, setUser, hasHydrated } = useAppStore();
 
   // Rediriger si l'utilisateur a déjà un profil d'entreprise
   useEffect(() => {
@@ -20,19 +20,29 @@ const OnboardingPage: React.FC = () => {
     }
   }, [user, router]);
 
-  // Créer un utilisateur par défaut si aucun n'existe
+  // Créer un utilisateur démo uniquement si aucun utilisateur n'est déjà persistant
   useEffect(() => {
-    if (!user) {
-      const defaultUser = {
-        id: 'demo-user',
-        name: 'Utilisateur Demo',
-        email: 'demo@okarina.com',
-        createdAt: new Date(),
-        lastLoginAt: new Date(),
-      };
-      setUser(defaultUser);
-    }
-  }, [user, setUser]);
+    // Attendre que Zustand ait fini de réhydrater
+    if (!hasHydrated) return;
+
+    try {
+      const persisted = typeof window !== 'undefined' ? localStorage.getItem('okarina-app-store') : null;
+      const hasPersistedUser = !!persisted && (() => {
+        try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; }
+      })();
+      if (!user && !hasPersistedUser) {
+        console.log('📝 Onboarding - Création utilisateur démo (aucun utilisateur persistant)');
+        const defaultUser = {
+          id: 'demo-user',
+          name: 'Utilisateur Demo',
+          email: 'demo@okarina.com',
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+        };
+        setUser(defaultUser);
+      }
+    } catch {}
+  }, [user, setUser, hasHydrated]);
 
   const handleCompanyProfileSubmit = (companyProfile: CompanyProfile) => {
     updateCompanyProfile(companyProfile);

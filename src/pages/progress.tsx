@@ -21,35 +21,44 @@ import { analyticsService } from '@/services/analytics';
 import { formatDate, formatRelativeDate, getDaysUntilDeadline } from '@/utils';
 
 const ProgressPage: React.FC = () => {
-  const { 
-    user, 
-    ambitions, 
-    keyResults, 
+  const {
+    user,
+    ambitions,
+    keyResults,
     okrs,
     actions,
     quarterlyObjectives,
     quarterlyKeyResults,
     setUser,
-    refreshMetrics 
+    refreshMetrics,
+    hasHydrated
   } = useAppStore();
 
   const [progressData, setProgressData] = useState<any[]>([]);
   const [trendAnalysis, setTrendAnalysis] = useState<any>(null);
 
-  // Simulation d'un utilisateur connecté pour la démo
+  // Ne pas écraser un utilisateur persistant. Créer un compte démo uniquement si aucun utilisateur n'est sauvegardé.
   useEffect(() => {
-    if (!user) {
-      setUser({
-        id: 'demo-user',
-        name: 'Entrepreneur Démo',
-        email: 'demo@okarina.com',
-        company: 'Ma Startup',
-        role: 'CEO',
-        createdAt: new Date(),
-        lastLoginAt: new Date(),
-      });
-    }
-  }, [user, setUser]);
+    // Attendre que Zustand ait fini de réhydrater
+    if (!hasHydrated) return;
+
+    try {
+      const persisted = typeof window !== 'undefined' ? localStorage.getItem('okarina-app-store') : null;
+      const hasPersistedUser = !!persisted && (() => { try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; } })();
+      if (!user && !hasPersistedUser) {
+        console.log('📝 Progress - Création utilisateur démo (aucun utilisateur persistant)');
+        setUser({
+          id: 'demo-user',
+          name: 'Entrepreneur Démo',
+          email: 'demo@okarina.com',
+          company: 'Ma Startup',
+          role: 'CEO',
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+        });
+      }
+    } catch {}
+  }, [user, setUser, hasHydrated]);
 
   useEffect(() => {
     refreshMetrics();

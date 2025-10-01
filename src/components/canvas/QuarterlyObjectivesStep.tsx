@@ -29,7 +29,7 @@ const QuarterlyObjectivesStep: React.FC = () => {
     completeStep 
   } = useCanvasStore();
   
-  const { ambitions, addQuarterlyObjective: addQuarterlyObjectiveToStore } = useAppStore();
+  const { ambitions, addQuarterlyObjective: addQuarterlyObjectiveToStore, addQuarterlyKeyResult: addQuarterlyKeyResultToStore } = useAppStore();
 
   const quarterLabels = {
     Q1: 'T1 (Jan-Mar)',
@@ -39,9 +39,10 @@ const QuarterlyObjectivesStep: React.FC = () => {
   };
 
   const onSubmitObjective = (data: QuarterlyObjectiveFormData) => {
+    const objectiveId = generateId();
     const objectiveData = {
       ...data,
-      id: generateId(),
+      id: objectiveId,
       status: Status.DRAFT,
       keyResults: [],
       actions: [],
@@ -53,17 +54,52 @@ const QuarterlyObjectivesStep: React.FC = () => {
       updateQuarterlyObjective(editingIndex, data);
       setEditingIndex(null);
     } else {
-      addQuarterlyObjective(data);
+      // Ajouter au Canvas store avec l'ID
+      addQuarterlyObjective({ ...data, id: objectiveId });
       // Ajouter aussi au store principal
       addQuarterlyObjectiveToStore(objectiveData);
     }
-    
+
     setIsEditing(false);
   };
 
   const onSubmitKeyResult = (data: any) => {
     if (selectedObjectiveIndex !== null) {
+      // Récupérer l'objectif trimestriel correspondant
+      const selectedObjective = quarterlyObjectivesData[selectedObjectiveIndex];
+
+      // Vérifier que l'objectif a un ID
+      if (!selectedObjective.id) {
+        console.error('L\'objectif trimestriel n\'a pas d\'ID');
+        return;
+      }
+
+      // Créer le KR trimestriel complet avec ID et dates
+      const quarterlyKeyResultData = {
+        ...data,
+        id: generateId(),
+        quarterlyObjectiveId: selectedObjective.id, // Utiliser l'ID de l'objectif trimestriel
+        status: Status.DRAFT,
+        deadline: new Date(data.deadline),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      console.log('✅ Création KR trimestriel:', {
+        krId: quarterlyKeyResultData.id,
+        krTitle: quarterlyKeyResultData.title,
+        quarterlyObjectiveId: quarterlyKeyResultData.quarterlyObjectiveId,
+        selectedObjective: {
+          id: selectedObjective.id,
+          title: selectedObjective.title,
+        },
+      });
+
+      // Ajouter au store Canvas
       addQuarterlyKeyResult(selectedObjectiveIndex, data);
+
+      // Ajouter au store principal pour la persistance et l'affichage dans la pyramide
+      addQuarterlyKeyResultToStore(quarterlyKeyResultData);
     }
     setShowKRForm(false);
     setSelectedObjectiveIndex(null);

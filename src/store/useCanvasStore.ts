@@ -28,7 +28,7 @@ interface CanvasState {
   keyResultsData: KeyResultFormData[];
   okrData: Partial<OKRFormData>;
   actionsData: ActionFormData[];
-  quarterlyObjectivesData: QuarterlyObjectiveFormData[];
+  quarterlyObjectivesData: (QuarterlyObjectiveFormData & { id?: string })[];
   quarterlyKeyResultsData: { [objectiveIndex: number]: QuarterlyKeyResultFormData[] };
   
   // État IA
@@ -54,8 +54,8 @@ interface CanvasState {
   removeAction: (index: number) => void;
 
   // Actions données - Objectifs trimestriels
-  addQuarterlyObjective: (objective: QuarterlyObjectiveFormData) => void;
-  updateQuarterlyObjective: (index: number, objective: QuarterlyObjectiveFormData) => void;
+  addQuarterlyObjective: (objective: QuarterlyObjectiveFormData & { id?: string }) => void;
+  updateQuarterlyObjective: (index: number, objective: QuarterlyObjectiveFormData & { id?: string }) => void;
   removeQuarterlyObjective: (index: number) => void;
   addQuarterlyKeyResult: (objectiveIndex: number, keyResult: QuarterlyKeyResultFormData) => void;
   updateQuarterlyKeyResult: (objectiveIndex: number, keyResultIndex: number, keyResult: QuarterlyKeyResultFormData) => void;
@@ -72,32 +72,24 @@ interface CanvasState {
 const initialSteps: CanvasStep[] = [
   {
     id: 1,
-    title: 'Définir vos ambitions',
-    description: 'Identifiez vos grandes ambitions pour cette année',
-    component: 'AmbitionStep',
+    title: 'Ambitions & Résultats Clés',
+    description: 'Définissez vos ambitions annuelles et leurs résultats clés mesurables',
+    component: 'AmbitionsAndKeyResultsStep',
     isCompleted: false,
     isActive: true,
   },
   {
     id: 2,
-    title: 'Créer vos résultats clés d\'ambition',
-    description: 'Transformez vos ambitions en résultats mesurables annuels',
-    component: 'KeyResultsStep',
-    isCompleted: false,
-    isActive: false,
-  },
-  {
-    id: 3,
-    title: 'Définir vos objectifs trimestriels',
+    title: 'Objectifs Trimestriels',
     description: 'Créez des objectifs trimestriels rattachés à vos ambitions',
     component: 'QuarterlyObjectivesStep',
     isCompleted: false,
     isActive: false,
   },
   {
-    id: 4,
-    title: 'Planifier vos actions',
-    description: 'Organisez vos actions dans un kanban interactif',
+    id: 3,
+    title: 'Actions',
+    description: 'Planifiez vos actions concrètes pour atteindre vos objectifs',
     component: 'ActionsStep',
     isCompleted: false,
     isActive: false,
@@ -150,16 +142,25 @@ export const useCanvasStore = create<CanvasState>()(
       },
 
       completeStep: (step) => {
-        const steps = get().steps.map(s => ({
+        const currentSteps = get().steps;
+        const stepToComplete = currentSteps.find(s => s.id === step);
+
+        // Ne rien faire si l'étape est déjà complétée
+        if (stepToComplete?.isCompleted) {
+          return;
+        }
+
+        const steps = currentSteps.map(s => ({
           ...s,
           isCompleted: s.id === step ? true : s.isCompleted,
         }));
-        
+
         const isCompleted = steps.every(s => s.isCompleted);
         set({ steps, isCompleted });
-        
-        // Passer à l'étape suivante si pas encore terminé
-        if (!isCompleted && step === get().currentStep) {
+
+        // Passer à l'étape suivante uniquement si on vient de compléter l'étape courante
+        // et que ce n'était pas déjà fait
+        if (!isCompleted && step === get().currentStep && !stepToComplete?.isCompleted) {
           get().nextStep();
         }
       },
@@ -290,7 +291,7 @@ export const useCanvasStore = create<CanvasState>()(
       // Actions IA
       validateCurrentStep: async () => {
         const { currentStep, ambitionData, keyResultsData, okrData, actionsData } = get();
-        const { user } = useAppStore.getState();
+        const { user, ambitions, keyResults } = useAppStore.getState();
         set({ isAIProcessing: true });
 
         try {
@@ -298,63 +299,57 @@ export const useCanvasStore = create<CanvasState>()(
 
           switch (currentStep) {
             case 1:
-              // Utiliser la méthode asynchrone avec Gemini AI
-              validation = await aiCoachService.validateAmbitionAsync(ambitionData, user?.companyProfile);
+              // Étape 1 : Ambitions & Résultats Clés
+              // Valider la dernière ambition ajoutée
+              if (ambitions.length > 0) {
+                const lastAmbition = ambitions[ambitions.length - 1];
+                try {
+                  validation = await aiCoachService.validateAmbitionAsync(lastAmbition, user?.companyProfile);
+                } catch (error: any) {
+                  // Afficher l'erreur de manière claire
+                  validation = {
+                    isValid: false,
+                    confidence: 0,
+                    suggestions: [],
+                    warnings: [error?.message || 'Erreur lors de la validation IA'],
+                    category: 'ambition' as any,
+                    validatedAt: new Date(),
+                  };
+                }
+              } else {
+                validation = {
+                  isValid: false,
+                  confidence: 0,
+                  suggestions: ['Ajoutez au moins une ambition pour cette année'],
+                  warnings: [],
+                  category: 'ambition' as any,
+                  validatedAt: new Date(),
+                };
+              }
               break;
             case 2:
-              // Valider le dernier résultat clé ajouté
-              if (keyResultsData.length > 0) {
-                const lastKR = keyResultsData[keyResultsData.length - 1];
-                // Convertir les données du formulaire en format KeyResult
-                const keyResultForValidation = {
-                  ...lastKR,
-                  deadline: new Date(lastKR.deadline)
-                };
-                // Utiliser la méthode asynchrone avec Gemini AI
-                validation = await aiCoachService.validateKeyResultAsync(keyResultForValidation, user?.companyProfile);
-              } else {
-                validation = {
-                  isValid: false,
-                  confidence: 0,
-                  suggestions: ['Ajoutez au moins un résultat clé mesurable'],
-                  warnings: [],
-                  category: 'key_result' as any,
-                  validatedAt: new Date(),
-                };
-              }
+              // Étape 2 : Objectifs Trimestriels (ancienne étape 3)
+              // Pas de validation IA pour le moment
+              validation = {
+                isValid: true,
+                confidence: 100,
+                suggestions: [],
+                warnings: [],
+                category: 'quarterly_objective' as any,
+                validatedAt: new Date(),
+              };
               break;
             case 3:
-              // Convertir les données du formulaire en format OKR
-              const okrForValidation = {
-                ...okrData,
-                keyResults: okrData.keyResults?.map((kr, index) => ({
-                  ...kr,
-                  id: `temp-kr-${index}`
-                }))
+              // Étape 3 : Actions (ancienne étape 4)
+              // Pas de validation IA pour le moment
+              validation = {
+                isValid: true,
+                confidence: 100,
+                suggestions: [],
+                warnings: [],
+                category: 'action' as any,
+                validatedAt: new Date(),
               };
-              validation = aiCoachService.validateOKR(okrForValidation);
-              break;
-            case 4:
-              // Valider la dernière action ajoutée
-              if (actionsData.length > 0) {
-                const lastAction = actionsData[actionsData.length - 1];
-                // Convertir les données du formulaire en format Action
-                const actionForValidation = {
-                  ...lastAction,
-                  deadline: lastAction.deadline ? new Date(lastAction.deadline) : undefined,
-                  labels: lastAction.labels ? lastAction.labels.split(',').map(l => l.trim()) : []
-                };
-                validation = aiCoachService.validateAction(actionForValidation);
-              } else {
-                validation = {
-                  isValid: false,
-                  confidence: 0,
-                  suggestions: ['Ajoutez au moins une action concrète'],
-                  warnings: [],
-                  category: 'action' as any,
-                  validatedAt: new Date(),
-                };
-              }
               break;
             default:
               validation = {

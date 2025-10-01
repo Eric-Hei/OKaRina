@@ -124,7 +124,6 @@ export const useFilters = ({
   // Filtrer les ambitions
   const filteredAmbitions = useMemo(() => {
     if (!ambitions || ambitions.length === 0) return [];
-    if (!quarterlyObjectives) return ambitions;
 
     return ambitions.filter(ambition => {
       // Si des filtres d'ambition sont actifs, les appliquer
@@ -132,25 +131,35 @@ export const useFilters = ({
         return filters.ambitionIds.includes(ambition.id);
       }
 
-      // Sinon, afficher toutes les ambitions qui ont des objectifs correspondants
-      const hasRelevantObjectives = quarterlyObjectives.some(obj => {
-        if (obj.ambitionId !== ambition.id) return false;
+      // Si des filtres de trimestre/année/objectif sont actifs, vérifier si l'ambition a des objectifs correspondants
+      const hasQuarterFilter = filters.quarters && filters.quarters.length > 0;
+      const hasYearFilter = filters.years && filters.years.length > 0;
+      const hasObjectiveFilter = filters.objectiveIds && filters.objectiveIds.length > 0;
 
-        // Vérifier les filtres de trimestre et année
-        if (filters.quarters && filters.quarters.length > 0 && !filters.quarters.includes(obj.quarter)) {
-          return false;
-        }
-        if (filters.years && filters.years.length > 0 && !filters.years.includes(obj.year)) {
-          return false;
-        }
-        if (filters.objectiveIds && filters.objectiveIds.length > 0 && !filters.objectiveIds.includes(obj.id)) {
-          return false;
-        }
+      if (hasQuarterFilter || hasYearFilter || hasObjectiveFilter) {
+        // Vérifier si l'ambition a au moins un objectif qui correspond aux filtres
+        const hasRelevantObjectives = quarterlyObjectives.some(obj => {
+          if (obj.ambitionId !== ambition.id) return false;
 
-        return true;
-      });
+          // Vérifier les filtres de trimestre et année
+          if (hasQuarterFilter && !filters.quarters.includes(obj.quarter)) {
+            return false;
+          }
+          if (hasYearFilter && !filters.years.includes(obj.year)) {
+            return false;
+          }
+          if (hasObjectiveFilter && !filters.objectiveIds.includes(obj.id)) {
+            return false;
+          }
 
-      return hasRelevantObjectives || quarterlyObjectives.some(obj => obj.ambitionId === ambition.id);
+          return true;
+        });
+
+        return hasRelevantObjectives;
+      }
+
+      // Aucun filtre actif : afficher toutes les ambitions
+      return true;
     });
   }, [ambitions, quarterlyObjectives, filters]);
 

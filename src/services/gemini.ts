@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { CompanyProfile, Ambition, KeyResult, OKR, Action } from '@/types';
+import type { CompanyProfile, Ambition, KeyResult } from '@/types';
 
 // Service Gemini AI pour des conseils intelligents
 export class GeminiService {
@@ -10,13 +10,23 @@ export class GeminiService {
   private constructor() {
     // Récupération sécurisée de la clé API depuis les variables d'environnement
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('Clé API Gemini non trouvée dans les variables d\'environnement. Utilisation du mode simulation.');
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      console.warn('⚠️ Clé API Gemini non configurée. Utilisation du mode simulation.');
+      console.warn('💡 Pour activer l\'IA, ajoutez NEXT_PUBLIC_GEMINI_API_KEY dans votre fichier .env.local');
       return;
     }
 
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    try {
+      this.genAI = new GoogleGenerativeAI(apiKey);
+      // Utiliser Gemini 2.0 Flash (le plus récent et rapide)
+      // Autres options: 'gemini-2.0-flash-exp', 'gemini-exp-1206'
+      const modelName = process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-2.0-flash-exp';
+      this.model = this.genAI.getGenerativeModel({ model: modelName });
+      console.log(`✅ Gemini AI initialisé avec succès (modèle: ${modelName})`);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'initialisation de Gemini:', error);
+      console.warn('⚠️ Utilisation du mode simulation.');
+    }
   }
 
   public static getInstance(): GeminiService {
@@ -33,24 +43,37 @@ export class GeminiService {
 
   // Générer des conseils pour une ambition
   public async generateAmbitionAdvice(
-    ambition: Partial<Ambition>, 
+    ambition: Partial<Ambition>,
     companyProfile?: CompanyProfile
   ): Promise<string[]> {
     if (!this.isAvailable()) {
-      return this.getFallbackAmbitionAdvice(ambition, companyProfile);
+      throw new Error('L\'API Gemini n\'est pas configurée. Veuillez ajouter votre clé API dans le fichier .env.local');
     }
 
     try {
       const prompt = this.buildAmbitionPrompt(ambition, companyProfile);
+      console.log('🤖 Appel à Gemini AI pour validation de l\'ambition...');
+      console.log('📝 Prompt envoyé à Gemini:', prompt);
+      console.log('🏢 Profil entreprise:', companyProfile);
+
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      
+      console.log('✅ Réponse Gemini reçue:', text);
+
       // Parser la réponse pour extraire les conseils
       return this.parseAdviceResponse(text);
-    } catch (error) {
-      console.error('Erreur Gemini API:', error);
-      return this.getFallbackAmbitionAdvice(ambition, companyProfile);
+    } catch (error: any) {
+      console.error('❌ Erreur Gemini API:', error?.message || error);
+
+      // Message d'erreur clair selon le type d'erreur
+      if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+        throw new Error('Le modèle Gemini AI n\'est pas disponible. Veuillez vérifier votre configuration API.');
+      } else if (error?.message?.includes('API key')) {
+        throw new Error('Clé API Gemini invalide. Veuillez vérifier votre configuration.');
+      } else {
+        throw new Error(`Erreur lors de l'appel à l'API Gemini : ${error?.message || 'Erreur inconnue'}`);
+      }
     }
   }
 
@@ -60,7 +83,7 @@ export class GeminiService {
     companyProfile?: CompanyProfile
   ): Promise<string[]> {
     if (!this.isAvailable()) {
-      return this.getFallbackKeyResultAdvice(keyResult);
+      throw new Error('L\'API Gemini n\'est pas configurée. Veuillez ajouter votre clé API dans le fichier .env.local');
     }
 
     try {
@@ -68,11 +91,18 @@ export class GeminiService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      
+
       return this.parseAdviceResponse(text);
-    } catch (error) {
-      console.error('Erreur Gemini API:', error);
-      return this.getFallbackKeyResultAdvice(keyResult);
+    } catch (error: any) {
+      console.error('❌ Erreur Gemini API:', error?.message || error);
+
+      if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+        throw new Error('Le modèle Gemini AI n\'est pas disponible. Veuillez vérifier votre configuration API.');
+      } else if (error?.message?.includes('API key')) {
+        throw new Error('Clé API Gemini invalide. Veuillez vérifier votre configuration.');
+      } else {
+        throw new Error(`Erreur lors de l'appel à l'API Gemini : ${error?.message || 'Erreur inconnue'}`);
+      }
     }
   }
 
@@ -81,7 +111,7 @@ export class GeminiService {
     existingProfile?: Partial<CompanyProfile>
   ): Promise<string[]> {
     if (!this.isAvailable()) {
-      return this.getFallbackCompanyQuestions(existingProfile);
+      throw new Error('L\'API Gemini n\'est pas configurée. Veuillez ajouter votre clé API dans le fichier .env.local');
     }
 
     try {
@@ -89,17 +119,24 @@ export class GeminiService {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      
+
       return this.parseQuestionsResponse(text);
-    } catch (error) {
-      console.error('Erreur Gemini API:', error);
-      return this.getFallbackCompanyQuestions(existingProfile);
+    } catch (error: any) {
+      console.error('❌ Erreur Gemini API:', error?.message || error);
+
+      if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+        throw new Error('Le modèle Gemini AI n\'est pas disponible. Veuillez vérifier votre configuration API.');
+      } else if (error?.message?.includes('API key')) {
+        throw new Error('Clé API Gemini invalide. Veuillez vérifier votre configuration.');
+      } else {
+        throw new Error(`Erreur lors de l'appel à l'API Gemini : ${error?.message || 'Erreur inconnue'}`);
+      }
     }
   }
 
   // Construire le prompt pour les ambitions
   private buildAmbitionPrompt(ambition: Partial<Ambition>, companyProfile?: CompanyProfile): string {
-    let prompt = `En tant qu'expert en stratégie d'entreprise et coach en OKR, analysez cette ambition et donnez 3-5 conseils concrets pour l'améliorer :
+    let prompt = `En tant qu'expert en stratégie d'entreprise et coach en OKR, analysez cette ambition et donnez EXACTEMENT 5 conseils concrets pour l'améliorer.
 
 Ambition : "${ambition.title || 'Non définie'}"
 Description : "${ambition.description || 'Non définie'}"
@@ -119,12 +156,22 @@ Contexte entreprise :
 
     prompt += `
 
-Donnez vos conseils sous forme de liste numérotée, en étant spécifique et actionnable. Concentrez-vous sur :
-1. La clarté et la mesurabilité de l'ambition
-2. L'alignement avec le contexte business
-3. La faisabilité et les risques
-4. Les métriques de succès
-5. Les étapes clés pour l'atteindre`;
+FORMAT DE RÉPONSE OBLIGATOIRE :
+Répondez UNIQUEMENT avec une liste numérotée de 5 conseils, sans introduction ni conclusion.
+Chaque conseil doit suivre ce format exact :
+
+1. **[Titre du conseil]** : [Action concrète en 1-2 phrases maximum]
+2. **[Titre du conseil]** : [Action concrète en 1-2 phrases maximum]
+...
+
+Concentrez-vous sur :
+- La clarté et la mesurabilité de l'ambition
+- L'alignement avec le contexte business
+- La faisabilité et les risques
+- Les métriques de succès
+- Les étapes clés pour l'atteindre
+
+NE PAS inclure d'analyse préliminaire, de justification détaillée ou de conclusion. UNIQUEMENT les 5 conseils au format demandé.`;
 
     return prompt;
   }
@@ -195,16 +242,66 @@ Répondez uniquement avec une liste numérotée de 5 questions, sans introductio
 
   // Parser la réponse pour extraire les conseils
   private parseAdviceResponse(text: string): string[] {
-    const lines = text.split('\n').filter(line => line.trim());
     const advice: string[] = [];
-    
-    for (const line of lines) {
-      // Chercher les lignes qui commencent par un numéro ou un tiret
-      if (/^\d+\./.test(line.trim()) || /^[-•]/.test(line.trim())) {
-        advice.push(line.trim().replace(/^\d+\.\s*/, '').replace(/^[-•]\s*/, ''));
+
+    // Diviser le texte en lignes et chercher les conseils numérotés
+    const lines = text.split('\n');
+    let currentAdvice = '';
+    let currentTitle = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Détecter le début d'un nouveau conseil : "1. **Titre** : Description"
+      const adviceMatch = line.match(/^(\d+)\.\s+\*\*(.+?)\*\*\s*:\s*(.*)$/);
+
+      if (adviceMatch) {
+        // Sauvegarder le conseil précédent s'il existe
+        if (currentTitle && currentAdvice) {
+          advice.push(`${currentTitle} : ${currentAdvice}`);
+        }
+
+        // Commencer un nouveau conseil
+        currentTitle = adviceMatch[2].trim();
+        currentAdvice = adviceMatch[3].trim();
+      } else if (currentTitle && line && !line.match(/^\d+\./)) {
+        // Continuer le conseil actuel (ligne de suite)
+        currentAdvice += ' ' + line;
       }
     }
-    
+
+    // Ajouter le dernier conseil
+    if (currentTitle && currentAdvice) {
+      // Nettoyer et limiter la longueur
+      let cleanAdvice = currentAdvice
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (cleanAdvice.length > 250) {
+        cleanAdvice = cleanAdvice.substring(0, 250) + '...';
+      }
+
+      advice.push(`${currentTitle} : ${cleanAdvice}`);
+    }
+
+    // Si aucun conseil structuré n'est trouvé, chercher les lignes numérotées simples
+    if (advice.length === 0) {
+      for (const line of lines) {
+        if (/^\d+\./.test(line.trim())) {
+          const cleaned = line.trim()
+            .replace(/^\d+\.\s*/, '')
+            .replace(/\*\*/g, '');
+
+          // Limiter la longueur
+          if (cleaned.length > 250) {
+            advice.push(cleaned.substring(0, 250) + '...');
+          } else {
+            advice.push(cleaned);
+          }
+        }
+      }
+    }
+
     return advice.length > 0 ? advice : [text.trim()];
   }
 
@@ -222,50 +319,8 @@ Répondez uniquement avec une liste numérotée de 5 questions, sans introductio
     return questions.length > 0 ? questions : [text.trim()];
   }
 
-  // Conseils de fallback pour les ambitions
-  private getFallbackAmbitionAdvice(ambition: Partial<Ambition>, companyProfile?: CompanyProfile): string[] {
-    const advice = [
-      "Assurez-vous que votre ambition est spécifique et mesurable",
-      "Définissez une échéance claire pour votre ambition",
-      "Identifiez les ressources nécessaires pour l'atteindre"
-    ];
-
-    if (companyProfile?.stage === 'early_stage') {
-      advice.push("En phase de démarrage, concentrez-vous sur la validation du marché");
-    }
-
-    return advice;
-  }
-
-  // Conseils de fallback pour les résultats clés
-  private getFallbackKeyResultAdvice(keyResult: Partial<KeyResult>): string[] {
-    return [
-      "Vérifiez que votre résultat clé respecte les critères SMART",
-      "Assurez-vous que la métrique est facilement mesurable",
-      "Définissez des jalons intermédiaires pour suivre les progrès"
-    ];
-  }
-
-  // Questions de fallback pour l'entreprise
-  private getFallbackCompanyQuestions(existingProfile?: Partial<CompanyProfile>): string[] {
-    if (!existingProfile) {
-      return [
-        "Dans quel secteur d'activité évoluez-vous ?",
-        "Quelle est la taille actuelle de votre équipe ?",
-        "Quels sont vos principaux défis business actuels ?",
-        "Quel est votre marché cible principal ?",
-        "Comment générez-vous vos revenus actuellement ?"
-      ];
-    }
-
-    return [
-      "Quels sont vos objectifs de croissance pour les 12 prochains mois ?",
-      "Quels obstacles rencontrez-vous le plus fréquemment ?",
-      "Comment mesurez-vous actuellement votre succès ?",
-      "Quelles sont vos priorités stratégiques cette année ?",
-      "Quels investissements prévoyez-vous dans les prochains trimestres ?"
-    ];
-  }
+  // Note: Les méthodes fallback ont été supprimées
+  // L'application affiche maintenant des messages d'erreur clairs si l'API n'est pas disponible
 }
 
 // Instance singleton

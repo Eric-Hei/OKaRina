@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/Badge';
 import { HierarchicalTreeView } from '@/components/ui/HierarchicalTreeView';
 import { KanbanBoard } from '@/components/ui/KanbanBoard';
 import { FilterPanel, FilterState } from '@/components/ui/FilterPanel';
+import { AmbitionForm, AmbitionFormData } from '@/components/forms/AmbitionForm';
 import { QuarterlyObjectiveForm } from '@/components/forms/QuarterlyObjectiveForm';
 import { QuarterlyKeyResultForm } from '@/components/forms/QuarterlyKeyResultForm';
 import { ActionForm } from '@/components/forms/ActionForm';
@@ -35,7 +36,7 @@ import {
 import { generateId } from '@/utils';
 
 type ViewMode = 'tree' | 'kanban';
-type FormMode = 'quarterly-objective' | 'quarterly-key-result' | 'action' | null;
+type FormMode = 'ambition' | 'quarterly-objective' | 'quarterly-key-result' | 'action' | null;
 
 const ManagementPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('tree');
@@ -49,6 +50,9 @@ const ManagementPage: React.FC = () => {
     quarterlyObjectives,
     quarterlyKeyResults,
     actions,
+    addAmbition,
+    updateAmbition,
+    deleteAmbition,
     addQuarterlyObjective,
     updateQuarterlyObjective,
     deleteQuarterlyObjective,
@@ -89,7 +93,28 @@ const ManagementPage: React.FC = () => {
   const hasActiveFilters = useHasActiveFilters(filters);
   const filtersDescription = useActiveFiltersDescription(filters, ambitions, quarterlyObjectives);
 
+  // Debug logs
+  console.log('🔍 Management Page - Données:', {
+    ambitions: ambitions.length,
+    quarterlyObjectives: quarterlyObjectives.length,
+    quarterlyKeyResults: quarterlyKeyResults.length,
+    actions: actions.length,
+    filteredAmbitions: filteredAmbitions.length,
+    filteredQuarterlyObjectives: filteredQuarterlyObjectives.length,
+    filteredActions: filteredActions.length,
+  });
+
   // Handlers pour les formulaires
+  const handleAddAmbition = () => {
+    setEditingItem(null);
+    setFormMode('ambition');
+  };
+
+  const handleEditAmbition = (ambition: Ambition) => {
+    setEditingItem(ambition);
+    setFormMode('ambition');
+  };
+
   const handleAddQuarterlyObjective = (ambitionId?: string) => {
     setSelectedObjectiveId(ambitionId || null);
     setEditingItem(null);
@@ -124,6 +149,27 @@ const ManagementPage: React.FC = () => {
   };
 
   // Handlers pour les soumissions de formulaires
+  const handleAmbitionSubmit = (data: AmbitionFormData) => {
+    if (editingItem) {
+      updateAmbition(editingItem.id, {
+        ...data,
+        updatedAt: new Date(),
+      });
+    } else {
+      const newAmbition: Ambition = {
+        ...data,
+        id: generateId(),
+        userId: 'demo-user', // TODO: Use actual user ID
+        status: Status.ACTIVE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      addAmbition(newAmbition);
+    }
+    setFormMode(null);
+    setEditingItem(null);
+  };
+
   const handleQuarterlyObjectiveSubmit = (data: QuarterlyObjectiveFormData) => {
     if (editingItem) {
       updateQuarterlyObjective(editingItem.id, {
@@ -241,6 +287,13 @@ const ManagementPage: React.FC = () => {
     return (
       <Layout title="Gestion des Objectifs" requireAuth>
         <div className="min-h-screen bg-gray-50 py-8">
+          {formMode === 'ambition' && (
+            <AmbitionForm
+              initialData={editingItem}
+              onSubmit={handleAmbitionSubmit}
+              onCancel={handleCancelForm}
+            />
+          )}
           {formMode === 'quarterly-objective' && (
             <QuarterlyObjectiveForm
               initialData={editingItem}
@@ -373,9 +426,13 @@ const ManagementPage: React.FC = () => {
                 quarterlyObjectives={filteredQuarterlyObjectives}
                 quarterlyKeyResults={quarterlyKeyResults}
                 actions={[]} // Pas d'actions dans la vue hiérarchique
-                onAddAmbition={() => {}} // TODO: Implémenter
-                onEditAmbition={() => {}} // TODO: Implémenter
-                onDeleteAmbition={() => {}} // TODO: Implémenter
+                onAddAmbition={handleAddAmbition}
+                onEditAmbition={handleEditAmbition}
+                onDeleteAmbition={(id) => {
+                  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette ambition ? Tous les objectifs associés seront également supprimés.')) {
+                    deleteAmbition(id);
+                  }
+                }}
                 onAddQuarterlyObjective={handleAddQuarterlyObjective}
                 onEditQuarterlyObjective={handleEditQuarterlyObjective}
                 onDeleteQuarterlyObjective={(id) => deleteQuarterlyObjective(id)}

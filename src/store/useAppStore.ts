@@ -22,7 +22,7 @@ interface AppState {
   // État utilisateur
   user: User | null;
   isAuthenticated: boolean;
-  
+
   // Données
   ambitions: Ambition[];
   keyResults: KeyResult[];
@@ -31,14 +31,15 @@ interface AppState {
   quarterlyObjectives: QuarterlyObjective[];
   quarterlyKeyResults: QuarterlyKeyResult[];
   progress: Progress[];
-  
+
   // Métriques
   metrics: DashboardMetrics | null;
-  
+
   // État UI
   isLoading: boolean;
   error: string | null;
   notifications: Notification[];
+  hasHydrated: boolean;
   
   // Actions utilisateur
   setUser: (user: User) => void;
@@ -120,6 +121,7 @@ export const useAppStore = create<AppState>()(
         isLoading: false,
         error: null,
         notifications: [],
+        hasHydrated: false,
 
         // Actions utilisateur
         setUser: (user) => {
@@ -478,7 +480,25 @@ export const useAppStore = create<AppState>()(
         partialize: (state) => ({
           user: state.user,
           isAuthenticated: state.isAuthenticated,
+          ambitions: state.ambitions,
+          keyResults: state.keyResults,
+          okrs: state.okrs,
+          actions: state.actions,
+          quarterlyObjectives: state.quarterlyObjectives,
+          quarterlyKeyResults: state.quarterlyKeyResults,
+          progress: state.progress,
         }),
+        onRehydrateStorage: () => (state) => {
+          console.log('🔄 Zustand persist - Réhydratation terminée');
+          console.log('📊 Données restaurées:', {
+            user: state?.user ? `${state.user.name} (${state.user.id})` : 'null',
+            ambitionsCount: state?.ambitions?.length || 0,
+            hasCompanyProfile: !!state?.user?.companyProfile,
+          });
+          if (state) {
+            state.hasHydrated = true;
+          }
+        },
       }
     ),
     { name: 'OKaRina App Store' }

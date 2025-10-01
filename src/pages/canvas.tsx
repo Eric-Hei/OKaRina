@@ -15,15 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
-import { AmbitionStep } from '@/components/canvas/AmbitionStep';
-import { KeyResultsStep } from '@/components/canvas/KeyResultsStep';
+import AmbitionsAndKeyResultsStep from '@/components/canvas/AmbitionsAndKeyResultsStep';
 import { OKRStep } from '@/components/canvas/OKRStep';
 import { ActionsStep } from '@/components/canvas/ActionsStep';
 import QuarterlyObjectivesStep from '@/components/canvas/QuarterlyObjectivesStep';
+import AISuggestionsPanel from '@/components/canvas/AISuggestionsPanel';
 
 
 const CanvasPage: React.FC = () => {
-  const { user, setUser } = useAppStore();
+  const { user, setUser, hasHydrated } = useAppStore();
   const {
     currentStep,
     steps,
@@ -37,20 +37,28 @@ const CanvasPage: React.FC = () => {
     validateCurrentStep,
   } = useCanvasStore();
 
-  // Simulation d'un utilisateur connecté pour la démo
+  // Ne pas écraser un utilisateur persistant. Créer un compte démo uniquement si aucun utilisateur n'est sauvegardé.
   useEffect(() => {
-    if (!user) {
-      setUser({
-        id: 'demo-user',
-        name: 'Entrepreneur Démo',
-        email: 'demo@okarina.com',
-        company: 'Ma Startup',
-        role: 'CEO',
-        createdAt: new Date(),
-        lastLoginAt: new Date(),
-      });
-    }
-  }, [user, setUser]);
+    // Attendre que Zustand ait fini de réhydrater
+    if (!hasHydrated) return;
+
+    try {
+      const persisted = typeof window !== 'undefined' ? localStorage.getItem('okarina-app-store') : null;
+      const hasPersistedUser = !!persisted && (() => { try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; } })();
+      if (!user && !hasPersistedUser) {
+        console.log('📝 Canvas - Création utilisateur démo (aucun utilisateur persistant)');
+        setUser({
+          id: 'demo-user',
+          name: 'Entrepreneur Démo',
+          email: 'demo@okarina.com',
+          company: 'Ma Startup',
+          role: 'CEO',
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+        });
+      }
+    } catch {}
+  }, [user, setUser, hasHydrated]);
 
   const currentStepData = steps.find(step => step.id === currentStep);
   const currentValidation = aiValidations[currentStep];
@@ -58,15 +66,13 @@ const CanvasPage: React.FC = () => {
   const renderStepComponent = () => {
     switch (currentStep) {
       case 1:
-        return <AmbitionStep />;
+        return <AmbitionsAndKeyResultsStep />;
       case 2:
-        return <KeyResultsStep />;
-      case 3:
         return <QuarterlyObjectivesStep />;
-      case 4:
+      case 3:
         return <ActionsStep />;
       default:
-        return <AmbitionStep />;
+        return <AmbitionsAndKeyResultsStep />;
     }
   };
 
@@ -228,56 +234,63 @@ const CanvasPage: React.FC = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <Card className={`border-l-4 ${
-                    currentValidation.isValid 
-                      ? 'border-l-green-500 bg-green-50' 
+                    currentValidation.isValid
+                      ? 'border-l-green-500 bg-green-50'
                       : 'border-l-orange-500 bg-orange-50'
                   }`}>
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center text-sm">
-                        <Brain className={`h-4 w-4 mr-2 ${
-                          currentValidation.isValid ? 'text-green-600' : 'text-orange-600'
-                        }`} />
-                        Analyse IA
-                        <Badge 
+                      <CardTitle className="flex items-center justify-between text-sm">
+                        <div className="flex items-center">
+                          <Brain className={`h-4 w-4 mr-2 ${
+                            currentValidation.isValid ? 'text-green-600' : 'text-orange-600'
+                          }`} />
+                          Statut de validation
+                        </div>
+                        <Badge
                           variant={currentValidation.isValid ? 'success' : 'warning'}
                           size="sm"
-                          className="ml-2"
                         >
                           {currentValidation.confidence}%
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      {currentValidation.suggestions.length > 0 && (
-                        <div className="mb-3">
-                          <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center">
-                            <Lightbulb className="h-3 w-3 mr-1" />
-                            Suggestions
-                          </h4>
-                          <ul className="space-y-1">
-                            {currentValidation.suggestions.map((suggestion, index) => (
-                              <li key={index} className="text-xs text-gray-600 flex items-start">
-                                <Circle className="h-2 w-2 mt-1 mr-2 flex-shrink-0" />
-                                {suggestion}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      {/* Message de statut */}
+                      <p className={`text-sm mb-3 ${
+                        currentValidation.isValid ? 'text-green-700' : 'text-orange-700'
+                      }`}>
+                        {currentValidation.isValid
+                          ? '✓ Votre ambition est bien structurée !'
+                          : '⚠ Quelques améliorations sont possibles'}
+                      </p>
 
                       {currentValidation.warnings.length > 0 && (
                         <div>
                           <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center">
                             <AlertTriangle className="h-3 w-3 mr-1" />
-                            Avertissements
+                            {currentValidation.warnings.some(w => w.includes('API') || w.includes('Gemini'))
+                              ? 'Erreur de configuration'
+                              : 'Avertissements'}
                           </h4>
-                          <ul className="space-y-1">
-                            {currentValidation.warnings.map((warning, index) => (
-                              <li key={index} className="text-xs text-orange-600 flex items-start">
-                                <AlertTriangle className="h-2 w-2 mt-1 mr-2 flex-shrink-0" />
-                                {warning}
-                              </li>
-                            ))}
+                          <ul className="space-y-2">
+                            {currentValidation.warnings.map((warning, index) => {
+                              const isAPIError = warning.includes('API') || warning.includes('Gemini') || warning.includes('configurée');
+                              return (
+                                <li
+                                  key={index}
+                                  className={`text-xs flex items-start p-2 rounded ${
+                                    isAPIError
+                                      ? 'bg-red-50 text-red-700 border border-red-200'
+                                      : 'text-orange-600'
+                                  }`}
+                                >
+                                  <AlertTriangle className={`h-3 w-3 mt-0.5 mr-2 flex-shrink-0 ${
+                                    isAPIError ? 'text-red-500' : 'text-orange-500'
+                                  }`} />
+                                  <span className="flex-1">{warning}</span>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}
@@ -286,31 +299,14 @@ const CanvasPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Suggestions IA */}
-              {aiSuggestions.length > 0 && (
+              {/* Panneau de suggestions IA dépliables */}
+              {currentValidation && currentValidation.suggestions.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                 >
-                  <Card className="bg-blue-50 border-blue-200">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm text-blue-800 flex items-center">
-                        <Lightbulb className="h-4 w-4 mr-2" />
-                        Conseils personnalisés
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <ul className="space-y-2">
-                        {aiSuggestions.map((suggestion, index) => (
-                          <li key={index} className="text-xs text-blue-700 flex items-start">
-                            <Circle className="h-2 w-2 mt-1 mr-2 flex-shrink-0" />
-                            {suggestion}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
+                  <AISuggestionsPanel suggestions={currentValidation.suggestions} />
                 </motion.div>
               )}
 

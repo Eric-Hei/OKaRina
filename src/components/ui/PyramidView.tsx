@@ -47,12 +47,29 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
 
   // Construction de la hiérarchie pyramidale
   const buildPyramidData = (): PyramidNode[] => {
+    console.log('🔍 PyramidView - Données reçues:', {
+      ambitions: ambitions.length,
+      quarterlyObjectives: quarterlyObjectives.length,
+      quarterlyKeyResults: quarterlyKeyResults.length,
+      actions: actions.length,
+    });
+
     return ambitions.map(ambition => {
       const ambitionQuarterlyObjectives = quarterlyObjectives.filter(qo => qo.ambitionId === ambition.id);
 
       const quarterlyObjectiveNodes: PyramidNode[] = ambitionQuarterlyObjectives.map(qo => {
         const qoKeyResults = quarterlyKeyResults.filter(qkr => qkr.quarterlyObjectiveId === qo.id);
         const qoActions = actions.filter(action => action.quarterlyObjectiveId === qo.id);
+
+        console.log(`📊 Objectif "${qo.title}" (ID: ${qo.id}):`, {
+          keyResults: qoKeyResults.length,
+          actions: qoActions.length,
+          allQuarterlyKeyResults: quarterlyKeyResults.map(kr => ({
+            id: kr.id,
+            title: kr.title,
+            quarterlyObjectiveId: kr.quarterlyObjectiveId,
+          })),
+        });
 
         const qoKeyResultNodes: PyramidNode[] = qoKeyResults.map(qkr => ({
           id: qkr.id,

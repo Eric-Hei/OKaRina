@@ -38,6 +38,13 @@ export const ActionForm: React.FC<ActionFormProps> = ({
   quarterlyObjectives = [],
   allowObjectiveSelection = false,
 }) => {
+  // Convertir labels array en string si nécessaire
+  const labelsString = initialData?.labels
+    ? (Array.isArray(initialData.labels)
+        ? initialData.labels.join(', ')
+        : initialData.labels)
+    : '';
+
   const {
     register,
     handleSubmit,
@@ -50,7 +57,7 @@ export const ActionForm: React.FC<ActionFormProps> = ({
       title: initialData?.title || '',
       description: initialData?.description || '',
       priority: initialData?.priority || Priority.MEDIUM,
-      labels: initialData?.labels || '',
+      labels: labelsString,
       deadline: initialData?.deadline || '',
       quarterlyObjectiveId: initialData?.quarterlyObjectiveId || quarterlyObjectives[0]?.id || '',
     },
@@ -77,7 +84,10 @@ export const ActionForm: React.FC<ActionFormProps> = ({
     'recherche', 'analyse', 'communication', 'stratégie', 'opérations', 'finance'
   ];
 
-  const selectedLabels = watch('labels')?.split(',').map(l => l.trim()).filter(l => l) || [];
+  const labelsValue = watch('labels');
+  const selectedLabels = (typeof labelsValue === 'string' && labelsValue)
+    ? labelsValue.split(',').map(l => l.trim()).filter(l => l)
+    : [];
 
   return (
     <motion.div
