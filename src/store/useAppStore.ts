@@ -129,10 +129,16 @@ export const useAppStore = create<AppState>()(
 
         updateCompanyProfile: (companyProfile) => {
           const currentUser = get().user;
+          console.log('🔄 updateCompanyProfile appelé avec:', companyProfile);
+          console.log('👤 Utilisateur actuel:', currentUser);
           if (currentUser) {
             const updatedUser = { ...currentUser, companyProfile };
+            console.log('💾 Sauvegarde de l\'utilisateur mis à jour:', updatedUser);
             set({ user: updatedUser });
             storageService.saveUser(updatedUser);
+            console.log('✅ Utilisateur sauvegardé dans localStorage');
+          } else {
+            console.warn('⚠️ Aucun utilisateur connecté, impossible de mettre à jour le profil');
           }
         },
 

@@ -13,7 +13,9 @@ const CompanyProfilePage: React.FC = () => {
   const { user, updateCompanyProfile } = useAppStore();
 
   const handleCompanyProfileSubmit = (companyProfile: CompanyProfile) => {
+    console.log('📝 Soumission du profil d\'entreprise:', companyProfile);
     updateCompanyProfile(companyProfile);
+    console.log('✅ Profil mis à jour dans le store');
     router.push('/dashboard');
   };
 
