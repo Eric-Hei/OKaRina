@@ -33,20 +33,22 @@ interface UseFiltersReturn {
 }
 
 export const useFilters = ({
-  actions,
-  ambitions,
-  quarterlyObjectives,
-  quarterlyKeyResults,
+  actions = [],
+  ambitions = [],
+  quarterlyObjectives = [],
+  quarterlyKeyResults = [],
   filters,
 }: UseFiltersProps): UseFiltersReturn => {
   // Calculer les labels disponibles
   const availableLabels = useMemo(() => {
-    const allLabels = actions.flatMap(action => action.labels);
+    if (!actions || actions.length === 0) return [];
+    const allLabels = actions.flatMap(action => action.labels || []);
     return Array.from(new Set(allLabels)).sort();
   }, [actions]);
 
   // Calculer les années disponibles
   const availableYears = useMemo(() => {
+    if (!quarterlyObjectives || quarterlyObjectives.length === 0) return [];
     const years = quarterlyObjectives.map(obj => obj.year);
     return Array.from(new Set(years)).sort((a, b) => b - a);
   }, [quarterlyObjectives]);
@@ -121,9 +123,12 @@ export const useFilters = ({
 
   // Filtrer les ambitions
   const filteredAmbitions = useMemo(() => {
+    if (!ambitions || ambitions.length === 0) return [];
+    if (!quarterlyObjectives) return ambitions;
+
     return ambitions.filter(ambition => {
       // Si des filtres d'ambition sont actifs, les appliquer
-      if (filters.ambitionIds.length > 0) {
+      if (filters.ambitionIds && filters.ambitionIds.length > 0) {
         return filters.ambitionIds.includes(ambition.id);
       }
 
@@ -132,13 +137,13 @@ export const useFilters = ({
         if (obj.ambitionId !== ambition.id) return false;
 
         // Vérifier les filtres de trimestre et année
-        if (filters.quarters.length > 0 && !filters.quarters.includes(obj.quarter)) {
+        if (filters.quarters && filters.quarters.length > 0 && !filters.quarters.includes(obj.quarter)) {
           return false;
         }
-        if (filters.years.length > 0 && !filters.years.includes(obj.year)) {
+        if (filters.years && filters.years.length > 0 && !filters.years.includes(obj.year)) {
           return false;
         }
-        if (filters.objectiveIds.length > 0 && !filters.objectiveIds.includes(obj.id)) {
+        if (filters.objectiveIds && filters.objectiveIds.length > 0 && !filters.objectiveIds.includes(obj.id)) {
           return false;
         }
 
@@ -151,30 +156,32 @@ export const useFilters = ({
 
   // Filtrer les objectifs trimestriels
   const filteredQuarterlyObjectives = useMemo(() => {
+    if (!quarterlyObjectives || quarterlyObjectives.length === 0) return [];
+
     return quarterlyObjectives.filter(obj => {
       // Filtre par ambition
-      if (filters.ambitionIds.length > 0) {
+      if (filters.ambitionIds && filters.ambitionIds.length > 0) {
         if (!filters.ambitionIds.includes(obj.ambitionId)) {
           return false;
         }
       }
 
       // Filtre par trimestre
-      if (filters.quarters.length > 0) {
+      if (filters.quarters && filters.quarters.length > 0) {
         if (!filters.quarters.includes(obj.quarter)) {
           return false;
         }
       }
 
       // Filtre par année
-      if (filters.years.length > 0) {
+      if (filters.years && filters.years.length > 0) {
         if (!filters.years.includes(obj.year)) {
           return false;
         }
       }
 
       // Filtre par objectif spécifique
-      if (filters.objectiveIds.length > 0) {
+      if (filters.objectiveIds && filters.objectiveIds.length > 0) {
         if (!filters.objectiveIds.includes(obj.id)) {
           return false;
         }
@@ -187,12 +194,12 @@ export const useFilters = ({
   // Statistiques de filtrage
   const filterStats = useMemo(() => {
     return {
-      totalActions: actions.length,
-      filteredActions: filteredActions.length,
-      ambitionsCount: filteredAmbitions.length,
-      objectivesCount: filteredQuarterlyObjectives.length,
+      totalActions: actions?.length || 0,
+      filteredActions: filteredActions?.length || 0,
+      ambitionsCount: filteredAmbitions?.length || 0,
+      objectivesCount: filteredQuarterlyObjectives?.length || 0,
     };
-  }, [actions.length, filteredActions.length, filteredAmbitions.length, filteredQuarterlyObjectives.length]);
+  }, [actions?.length, filteredActions?.length, filteredAmbitions?.length, filteredQuarterlyObjectives?.length]);
 
   return {
     filteredActions,
