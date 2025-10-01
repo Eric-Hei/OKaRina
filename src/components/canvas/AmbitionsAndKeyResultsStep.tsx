@@ -83,7 +83,9 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
       };
       addAmbition(newAmbition);
       // Auto-expand la nouvelle ambition
-      setExpandedAmbitions(new Set([...expandedAmbitions, newAmbition.id]));
+      const newExpanded = new Set(expandedAmbitions);
+      newExpanded.add(newAmbition.id);
+      setExpandedAmbitions(newExpanded);
     }
     setShowAmbitionForm(false);
     setEditingAmbition(null);

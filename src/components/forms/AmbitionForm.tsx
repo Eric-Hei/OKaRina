@@ -28,8 +28,8 @@ export const AmbitionForm: React.FC<AmbitionFormProps> = ({
     title: initialData?.title || '',
     description: initialData?.description || '',
     year: initialData?.year || new Date().getFullYear(),
-    category: initialData?.category || 'revenue',
-    priority: initialData?.priority || 'medium',
+    category: initialData?.category || AmbitionCategory.REVENUE,
+    priority: initialData?.priority || Priority.MEDIUM,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof AmbitionFormData, string>>>({});

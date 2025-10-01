@@ -37,7 +37,7 @@ export const KeyResultForm: React.FC<KeyResultFormProps> = ({
     current: initialData?.current || 0,
     unit: initialData?.unit || '%',
     deadline: initialData?.deadline || new Date(new Date().setMonth(new Date().getMonth() + 3)),
-    priority: initialData?.priority || 'medium',
+    priority: initialData?.priority || Priority.MEDIUM,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof KeyResultFormData, string>>>({});
