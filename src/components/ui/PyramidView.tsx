@@ -59,11 +59,9 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
 
       const quarterlyObjectiveNodes: PyramidNode[] = ambitionQuarterlyObjectives.map(qo => {
         const qoKeyResults = quarterlyKeyResults.filter(qkr => qkr.quarterlyObjectiveId === qo.id);
-        const qoActions = actions.filter(action => action.quarterlyObjectiveId === qo.id);
 
         console.log(`📊 Objectif "${qo.title}" (ID: ${qo.id}):`, {
           keyResults: qoKeyResults.length,
-          actions: qoActions.length,
           allQuarterlyKeyResults: quarterlyKeyResults.map(kr => ({
             id: kr.id,
             title: kr.title,
@@ -71,29 +69,34 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
           })),
         });
 
-        const qoKeyResultNodes: PyramidNode[] = qoKeyResults.map(qkr => ({
-          id: qkr.id,
-          type: 'quarterlyKeyResult',
-          title: qkr.title,
-          description: qkr.description,
-          status: qkr.status,
-          progress: (qkr.current / qkr.target) * 100,
-          deadline: qkr.deadline,
-          children: [],
-          data: qkr,
-        }));
+        const qoKeyResultNodes: PyramidNode[] = qoKeyResults.map(qkr => {
+          // Récupérer les actions liées à ce KR
+          const krActions = actions.filter(action => action.quarterlyKeyResultId === qkr.id);
 
-        const actionNodes: PyramidNode[] = qoActions.map(action => ({
-          id: action.id,
-          type: 'action',
-          title: action.title,
-          description: action.description,
-          status: action.status,
-          deadline: action.deadline,
-          priority: action.priority,
-          children: [],
-          data: action,
-        }));
+          const actionNodes: PyramidNode[] = krActions.map(action => ({
+            id: action.id,
+            type: 'action',
+            title: action.title,
+            description: action.description,
+            status: action.status,
+            deadline: action.deadline,
+            priority: action.priority,
+            children: [],
+            data: action,
+          }));
+
+          return {
+            id: qkr.id,
+            type: 'quarterlyKeyResult',
+            title: qkr.title,
+            description: qkr.description,
+            status: qkr.status,
+            progress: (qkr.current / qkr.target) * 100,
+            deadline: qkr.deadline,
+            children: actionNodes,
+            data: qkr,
+          };
+        });
 
         return {
           id: qo.id,
@@ -101,7 +104,7 @@ export const PyramidView: React.FC<PyramidViewProps> = ({
           title: qo.title,
           description: qo.description,
           status: qo.status,
-          children: [...qoKeyResultNodes, ...actionNodes],
+          children: qoKeyResultNodes,
           data: qo,
         };
       });

@@ -330,7 +330,90 @@ export class StorageService {
       return false;
     }
   }
+
+  // Migration: Convertir les actions de quarterlyObjectiveId vers quarterlyKeyResultId
+  public migrateActionsToKeyResults(): void {
+    try {
+      const actions = this.getActions();
+      const quarterlyKeyResults = this.getQuarterlyKeyResults();
+
+      console.log('🔄 Migration des actions:', {
+        totalActions: actions.length,
+        totalKRs: quarterlyKeyResults.length,
+        actionsAvecOldFormat: actions.filter((a: any) => a.quarterlyObjectiveId && !a.quarterlyKeyResultId).length,
+      });
+
+      if (!actions || actions.length === 0) {
+        console.log('⚠️ Aucune action à migrer');
+        return;
+      }
+
+      let migrated = 0;
+      let skipped = 0;
+      const migratedActions = actions.map((action: any) => {
+        // Si l'action a un quarterlyObjectiveId mais pas de quarterlyKeyResultId
+        if (action.quarterlyObjectiveId && !action.quarterlyKeyResultId) {
+          // Trouver le premier KR de cet objectif
+          const firstKR = quarterlyKeyResults.find(
+            kr => kr.quarterlyObjectiveId === action.quarterlyObjectiveId
+          );
+
+          if (firstKR) {
+            migrated++;
+            const { quarterlyObjectiveId, ...rest } = action;
+            console.log(`  ✓ Action "${action.title}" migrée vers KR "${firstKR.title}"`);
+            return {
+              ...rest,
+              quarterlyKeyResultId: firstKR.id,
+            };
+          } else {
+            skipped++;
+            console.warn(`  ⚠️ Action "${action.title}" ignorée: aucun KR trouvé pour l'objectif ${action.quarterlyObjectiveId}`);
+          }
+        }
+        return action;
+      });
+
+      if (migrated > 0) {
+        this.saveActions(migratedActions);
+        console.log(`✅ Migration terminée: ${migrated} actions migrées, ${skipped} ignorées`);
+      } else {
+        console.log('ℹ️ Aucune action à migrer');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la migration des actions:', error);
+    }
+  }
 }
 
 // Instance singleton
 export const storageService = StorageService.getInstance();
+
+// Fonction de débogage globale pour forcer la migration
+if (typeof window !== 'undefined') {
+  (window as any).forceMigrateActions = () => {
+    console.log('🔧 Forçage de la migration des actions...');
+    storageService.migrateActionsToKeyResults();
+    console.log('✅ Migration forcée terminée. Rechargez la page pour voir les changements.');
+  };
+
+  (window as any).debugActions = () => {
+    const actions = storageService.getActions();
+    const krs = storageService.getQuarterlyKeyResults();
+    console.log('📊 État des actions:', {
+      totalActions: actions.length,
+      actions: actions.map((a: any) => ({
+        id: a.id,
+        title: a.title,
+        quarterlyObjectiveId: a.quarterlyObjectiveId,
+        quarterlyKeyResultId: a.quarterlyKeyResultId,
+      })),
+      totalKRs: krs.length,
+      krs: krs.map(kr => ({
+        id: kr.id,
+        title: kr.title,
+        quarterlyObjectiveId: kr.quarterlyObjectiveId,
+      })),
+    });
+  };
+}

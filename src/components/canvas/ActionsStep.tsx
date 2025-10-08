@@ -48,12 +48,14 @@ const ActionsStep: React.FC = () => {
       setEditingIndex(null);
     } else {
       addAction(data);
-      
+
       // Ajouter aussi au store principal
-      if (okrs.length > 0) {
+      // Note: Les actions du canvas ne sont pas directement liées aux KR
+      // Elles seront converties lors de la création des objectifs trimestriels
+      if (data.quarterlyKeyResultId) {
         const newAction = {
           id: generateId(),
-          quarterlyObjectiveId: '', // TODO: À connecter avec les objectifs trimestriels
+          quarterlyKeyResultId: data.quarterlyKeyResultId,
           title: data.title,
           description: data.description,
           deadline: data.deadline ? new Date(data.deadline) : undefined,
@@ -66,7 +68,7 @@ const ActionsStep: React.FC = () => {
         addActionToStore(newAction);
       }
     }
-    
+
     reset();
     setIsEditing(false);
     

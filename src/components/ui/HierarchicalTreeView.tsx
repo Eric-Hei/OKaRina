@@ -40,7 +40,7 @@ interface HierarchicalTreeViewProps {
   onAddQuarterlyKeyResult: (objectiveId: string) => void;
   onEditQuarterlyKeyResult: (keyResult: QuarterlyKeyResult) => void;
   onDeleteQuarterlyKeyResult: (keyResultId: string) => void;
-  onAddAction: (objectiveId: string) => void;
+  onAddAction: (keyResultId: string) => void;
   onEditAction: (action: Action) => void;
   onDeleteAction: (actionId: string) => void;
   onViewKanban: (objectiveId?: string) => void;
@@ -67,6 +67,7 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
 }) => {
   const [expandedAmbitions, setExpandedAmbitions] = useState<Set<string>>(new Set());
   const [expandedObjectives, setExpandedObjectives] = useState<Set<string>>(new Set());
+  const [expandedKeyResults, setExpandedKeyResults] = useState<Set<string>>(new Set());
 
   const toggleAmbition = (ambitionId: string) => {
     const newExpanded = new Set(expandedAmbitions);
@@ -86,6 +87,16 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
       newExpanded.add(objectiveId);
     }
     setExpandedObjectives(newExpanded);
+  };
+
+  const toggleKeyResult = (keyResultId: string) => {
+    const newExpanded = new Set(expandedKeyResults);
+    if (newExpanded.has(keyResultId)) {
+      newExpanded.delete(keyResultId);
+    } else {
+      newExpanded.add(keyResultId);
+    }
+    setExpandedKeyResults(newExpanded);
   };
 
   const quarterLabels = {
@@ -114,16 +125,17 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
   const getKeyResultsForObjective = (objectiveId: string) =>
     quarterlyKeyResults.filter(kr => kr.quarterlyObjectiveId === objectiveId);
 
-  const getActionsForObjective = (objectiveId: string) =>
-    actions.filter(action => action.quarterlyObjectiveId === objectiveId);
+  const getActionsForKeyResult = (keyResultId: string) =>
+    actions.filter(action => action.quarterlyKeyResultId === keyResultId);
 
-  const getActionStats = (objectiveId: string) => {
-    const objectiveActions = getActionsForObjective(objectiveId);
+  const getActionStatsForObjective = (objectiveId: string) => {
+    const keyResults = getKeyResultsForObjective(objectiveId);
+    const allActions = keyResults.flatMap(kr => getActionsForKeyResult(kr.id));
     return {
-      total: objectiveActions.length,
-      todo: objectiveActions.filter(a => a.status === ActionStatus.TODO).length,
-      inProgress: objectiveActions.filter(a => a.status === ActionStatus.IN_PROGRESS).length,
-      done: objectiveActions.filter(a => a.status === ActionStatus.DONE).length,
+      total: allActions.length,
+      todo: allActions.filter(a => a.status === ActionStatus.TODO).length,
+      inProgress: allActions.filter(a => a.status === ActionStatus.IN_PROGRESS).length,
+      done: allActions.filter(a => a.status === ActionStatus.DONE).length,
     };
   };
 
@@ -169,7 +181,10 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                       </button>
                       <Building2 className="h-5 w-5 text-purple-600" />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-purple-900">{ambition.title}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-purple-900">{ambition.title}</h3>
+                          <span className="text-xs text-purple-400 font-normal">Ambition</span>
+                        </div>
                         <p className="text-sm text-purple-700">{ambition.description}</p>
                       </div>
                       <Badge variant="info" size="sm">
@@ -185,7 +200,8 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                         variant="ghost"
                         onClick={() => onAddQuarterlyObjective(ambition.id)}
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ajouter un objectif trimestriel
                       </Button>
                       <Button
                         size="sm"
@@ -220,7 +236,7 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                         {objectives.map((objective) => {
                           const isObjectiveExpanded = expandedObjectives.has(objective.id);
                           const keyResults = getKeyResultsForObjective(objective.id);
-                          const actionStats = getActionStats(objective.id);
+                          const actionStats = getActionStatsForObjective(objective.id);
 
                           return (
                             <div key={objective.id} className="bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
@@ -240,7 +256,10 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                     </button>
                                     <Target className="h-4 w-4 text-blue-600" />
                                     <div className="flex-1">
-                                      <h4 className="font-medium text-blue-900">{objective.title}</h4>
+                                      <div className="flex items-center gap-2">
+                                        <h4 className="font-medium text-blue-900">{objective.title}</h4>
+                                        <span className="text-xs text-blue-400 font-normal">Objectif Trimestriel</span>
+                                      </div>
                                       <p className="text-xs text-blue-700">{objective.description}</p>
                                     </div>
                                     <Badge variant="secondary" size="sm">
@@ -266,7 +285,8 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                       variant="ghost"
                                       onClick={() => onAddQuarterlyKeyResult(objective.id)}
                                     >
-                                      <Plus className="h-3 w-3" />
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      Ajouter un KR
                                     </Button>
                                     <Button
                                       size="sm"
@@ -315,49 +335,123 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                   >
                                     <div className="pl-6 pb-3 space-y-2">
                                       {/* Key Results */}
-                                      {keyResults.map((kr) => (
-                                        <div key={kr.id} className="bg-green-50 border-l-2 border-green-400 p-2 rounded-r">
-                                          <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-2 flex-1">
-                                              <TrendingUp className="h-3 w-3 text-green-600" />
-                                              <span className="text-sm font-medium text-green-900">{kr.title}</span>
-                                              <span className="text-xs text-green-700">
-                                                {kr.current}/{kr.target} {kr.unit}
-                                              </span>
-                                            </div>
-                                            <div className="flex items-center space-x-1">
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => onEditQuarterlyKeyResult(kr)}
-                                              >
-                                                <Edit2 className="h-3 w-3" />
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => onDeleteQuarterlyKeyResult(kr.id)}
-                                                className="text-red-600 hover:text-red-700"
-                                              >
-                                                <Trash2 className="h-3 w-3" />
-                                              </Button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))}
+                                      {keyResults.map((kr) => {
+                                        const isKRExpanded = expandedKeyResults.has(kr.id);
+                                        const krActions = getActionsForKeyResult(kr.id);
 
-                                      {/* Bouton d'ajout d'action */}
-                                      <div className="pt-2">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => onAddAction(objective.id)}
-                                          className="w-full"
-                                        >
-                                          <Plus className="h-3 w-3 mr-2" />
-                                          Ajouter une action
-                                        </Button>
-                                      </div>
+                                        return (
+                                          <div key={kr.id} className="bg-green-50 border-l-2 border-green-400 rounded-r">
+                                            <div className="p-2">
+                                              <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2 flex-1">
+                                                  <button
+                                                    onClick={() => toggleKeyResult(kr.id)}
+                                                    className="p-1 hover:bg-green-100 rounded transition-colors"
+                                                  >
+                                                    {isKRExpanded ? (
+                                                      <ChevronDown className="h-3 w-3 text-green-600" />
+                                                    ) : (
+                                                      <ChevronRight className="h-3 w-3 text-green-600" />
+                                                    )}
+                                                  </button>
+                                                  <TrendingUp className="h-3 w-3 text-green-600" />
+                                                  <span className="text-sm font-medium text-green-900">{kr.title}</span>
+                                                  <span className="text-xs text-green-400 font-normal">KR</span>
+                                                  <span className="text-xs text-green-700">
+                                                    {kr.current}/{kr.target} {kr.unit}
+                                                  </span>
+                                                  <Badge variant="success" size="sm">
+                                                    {krActions.length} actions
+                                                  </Badge>
+                                                </div>
+                                                <div className="flex items-center space-x-1">
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onAddAction(kr.id)}
+                                                  >
+                                                    <Plus className="h-3 w-3 mr-1" />
+                                                    Ajouter une action
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onEditQuarterlyKeyResult(kr)}
+                                                  >
+                                                    <Edit2 className="h-3 w-3" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onDeleteQuarterlyKeyResult(kr.id)}
+                                                    className="text-red-600 hover:text-red-700"
+                                                  >
+                                                    <Trash2 className="h-3 w-3" />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            </div>
+
+                                            {/* Actions du KR */}
+                                            <AnimatePresence>
+                                              {isKRExpanded && (
+                                                <motion.div
+                                                  initial={{ height: 0, opacity: 0 }}
+                                                  animate={{ height: 'auto', opacity: 1 }}
+                                                  exit={{ height: 0, opacity: 0 }}
+                                                  transition={{ duration: 0.2 }}
+                                                  className="overflow-hidden"
+                                                >
+                                                  <div className="pl-6 pr-2 pb-2 space-y-1">
+                                                    {krActions.map((action) => (
+                                                      <div key={action.id} className="bg-orange-50 border-l-2 border-orange-400 p-2 rounded-r">
+                                                        <div className="flex items-center justify-between">
+                                                          <div className="flex items-center space-x-2 flex-1">
+                                                            <Calendar className="h-3 w-3 text-orange-600" />
+                                                            <span className="text-sm font-medium text-orange-900">{action.title}</span>
+                                                            <span className="text-xs text-orange-400 font-normal">Action</span>
+                                                            <Badge
+                                                              variant={action.status === ActionStatus.DONE ? 'success' : action.status === ActionStatus.IN_PROGRESS ? 'info' : 'secondary'}
+                                                              size="sm"
+                                                            >
+                                                              {action.status === ActionStatus.TODO ? 'À faire' : action.status === ActionStatus.IN_PROGRESS ? 'En cours' : 'Terminé'}
+                                                            </Badge>
+                                                            <Badge variant="secondary" size="sm">
+                                                              {action.priority}
+                                                            </Badge>
+                                                          </div>
+                                                          <div className="flex items-center space-x-1">
+                                                            <Button
+                                                              size="sm"
+                                                              variant="ghost"
+                                                              onClick={() => onEditAction(action)}
+                                                            >
+                                                              <Edit2 className="h-3 w-3" />
+                                                            </Button>
+                                                            <Button
+                                                              size="sm"
+                                                              variant="ghost"
+                                                              onClick={() => onDeleteAction(action.id)}
+                                                              className="text-red-600 hover:text-red-700"
+                                                            >
+                                                              <Trash2 className="h-3 w-3" />
+                                                            </Button>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    ))}
+                                                    {krActions.length === 0 && (
+                                                      <div className="text-center py-2 text-gray-500">
+                                                        <p className="text-xs">Aucune action</p>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </motion.div>
+                                              )}
+                                            </AnimatePresence>
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                   </motion.div>
                                 )}

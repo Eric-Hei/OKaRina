@@ -81,7 +81,7 @@ export interface Action {
   id: string;
   title: string;
   description?: string;
-  quarterlyObjectiveId: string;
+  quarterlyKeyResultId: string; // Lié au KR trimestriel
   status: ActionStatus;
   priority: Priority;
   labels: string[];
@@ -330,7 +330,7 @@ export interface ActionFormData {
   priority: Priority;
   labels: string; // Chaîne séparée par des virgules
   deadline?: string;
-  quarterlyObjectiveId?: string;
+  quarterlyKeyResultId?: string; // Lié au KR trimestriel
 }
 
 // Types pour les formulaires des objectifs trimestriels

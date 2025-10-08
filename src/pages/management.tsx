@@ -137,8 +137,8 @@ const ManagementPage: React.FC = () => {
     setFormMode('quarterly-key-result');
   };
 
-  const handleAddAction = (objectiveId?: string) => {
-    setSelectedObjectiveId(objectiveId || null);
+  const handleAddAction = (keyResultId?: string) => {
+    setSelectedObjectiveId(keyResultId || null); // Réutilise la variable pour stocker le KR ID
     setEditingItem(null);
     setFormMode('action');
   };
@@ -228,13 +228,13 @@ const ManagementPage: React.FC = () => {
         updatedAt: new Date(),
       });
     } else {
-      // Utiliser l'objectif du formulaire, ou celui présélectionné, ou le premier disponible
-      const objectiveId = data.quarterlyObjectiveId || selectedObjectiveId || quarterlyObjectives[0]?.id || '';
+      // Utiliser le KR du formulaire, ou celui présélectionné, ou le premier disponible
+      const keyResultId = data.quarterlyKeyResultId || selectedObjectiveId || quarterlyKeyResults[0]?.id || '';
 
       const newAction: Action = {
         ...data,
         id: generateId(),
-        quarterlyObjectiveId: objectiveId,
+        quarterlyKeyResultId: keyResultId,
         status: ActionStatus.TODO,
         deadline: data.deadline ? new Date(data.deadline) : undefined,
         labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
@@ -312,9 +312,9 @@ const ManagementPage: React.FC = () => {
           {formMode === 'action' && (
             <ActionForm
               initialData={editingItem}
-              quarterlyObjectiveTitle={selectedObjective?.title}
-              quarterlyObjectives={quarterlyObjectives}
-              allowObjectiveSelection={!selectedObjectiveId}
+              quarterlyKeyResultTitle={quarterlyKeyResults.find(kr => kr.id === selectedObjectiveId)?.title}
+              quarterlyKeyResults={quarterlyKeyResults}
+              allowKeyResultSelection={!selectedObjectiveId}
               onSubmit={handleActionSubmit}
               onCancel={handleCancelForm}
             />
@@ -425,7 +425,7 @@ const ManagementPage: React.FC = () => {
                 ambitions={filteredAmbitions}
                 quarterlyObjectives={filteredQuarterlyObjectives}
                 quarterlyKeyResults={quarterlyKeyResults}
-                actions={[]} // Pas d'actions dans la vue hiérarchique
+                actions={filteredActions}
                 onAddAmbition={handleAddAmbition}
                 onEditAmbition={handleEditAmbition}
                 onDeleteAmbition={(id) => {
@@ -470,6 +470,7 @@ const ManagementPage: React.FC = () => {
                   onActionEdit={handleEditAction}
                   onActionDelete={(id) => deleteAction(id)}
                   onAddAction={() => handleAddAction()}
+                  quarterlyKeyResults={quarterlyKeyResults}
                   quarterlyObjectives={quarterlyObjectives}
                   selectedAmbition={filters.ambitionIds[0]}
                   selectedQuarter={filters.quarters[0]}

@@ -7,7 +7,7 @@ import { Zap, Calendar, Tag, AlertTriangle, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ActionFormData, Priority, QuarterlyObjective } from '@/types';
+import { ActionFormData, Priority, QuarterlyKeyResult } from '@/types';
 
 // Schéma de validation
 const actionSchema = z.object({
@@ -16,7 +16,7 @@ const actionSchema = z.object({
   priority: z.nativeEnum(Priority),
   labels: z.string().optional(),
   deadline: z.string().optional(),
-  quarterlyObjectiveId: z.string().optional(),
+  quarterlyKeyResultId: z.string().min(1, 'Vous devez sélectionner un résultat clé'),
 });
 
 interface ActionFormProps {
@@ -24,9 +24,9 @@ interface ActionFormProps {
   onSubmit: (data: ActionFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
-  quarterlyObjectiveTitle?: string;
-  quarterlyObjectives?: QuarterlyObjective[];
-  allowObjectiveSelection?: boolean;
+  quarterlyKeyResultTitle?: string;
+  quarterlyKeyResults?: QuarterlyKeyResult[];
+  allowKeyResultSelection?: boolean;
 }
 
 export const ActionForm: React.FC<ActionFormProps> = ({
@@ -34,9 +34,9 @@ export const ActionForm: React.FC<ActionFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
-  quarterlyObjectiveTitle,
-  quarterlyObjectives = [],
-  allowObjectiveSelection = false,
+  quarterlyKeyResultTitle,
+  quarterlyKeyResults = [],
+  allowKeyResultSelection = true,
 }) => {
   // Convertir labels array en string si nécessaire
   const labelsString = initialData?.labels
@@ -59,7 +59,7 @@ export const ActionForm: React.FC<ActionFormProps> = ({
       priority: initialData?.priority || Priority.MEDIUM,
       labels: labelsString,
       deadline: initialData?.deadline || '',
-      quarterlyObjectiveId: initialData?.quarterlyObjectiveId || quarterlyObjectives[0]?.id || '',
+      quarterlyKeyResultId: initialData?.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '',
     },
     mode: 'onChange',
   });
@@ -103,9 +103,9 @@ export const ActionForm: React.FC<ActionFormProps> = ({
               {initialData ? 'Modifier l\'action' : 'Nouvelle action'}
             </span>
           </CardTitle>
-          {quarterlyObjectiveTitle && (
+          {quarterlyKeyResultTitle && (
             <p className="text-sm text-gray-600 mt-1">
-              Pour l'objectif: {quarterlyObjectiveTitle}
+              Pour le résultat clé: {quarterlyKeyResultTitle}
             </p>
           )}
         </CardHeader>
@@ -127,26 +127,35 @@ export const ActionForm: React.FC<ActionFormProps> = ({
               )}
             </div>
 
-            {/* Sélection d'objectif trimestriel */}
-            {allowObjectiveSelection && quarterlyObjectives.length > 0 && (
+            {/* Sélection de résultat clé trimestriel */}
+            {allowKeyResultSelection && quarterlyKeyResults.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Objectif trimestriel *
+                  Résultat Clé (KR) *
                 </label>
                 <select
-                  {...register('quarterlyObjectiveId')}
+                  {...register('quarterlyKeyResultId')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 >
-                  <option value="">Sélectionner un objectif trimestriel</option>
-                  {quarterlyObjectives.map((objective) => (
-                    <option key={objective.id} value={objective.id}>
-                      {objective.title} ({objective.quarter} {objective.year})
+                  <option value="">Sélectionner un résultat clé</option>
+                  {quarterlyKeyResults.map((kr) => (
+                    <option key={kr.id} value={kr.id}>
+                      {kr.title} ({kr.current}/{kr.target} {kr.unit})
                     </option>
                   ))}
                 </select>
-                {errors.quarterlyObjectiveId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.quarterlyObjectiveId.message}</p>
+                {errors.quarterlyKeyResultId && (
+                  <p className="mt-1 text-sm text-red-600">{errors.quarterlyKeyResultId.message}</p>
                 )}
+              </div>
+            )}
+
+            {/* Affichage du KR sélectionné si pas de sélection */}
+            {!allowKeyResultSelection && quarterlyKeyResultTitle && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-800">
+                  <strong>Résultat Clé :</strong> {quarterlyKeyResultTitle}
+                </p>
               </div>
             )}
 

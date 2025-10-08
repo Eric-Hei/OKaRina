@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanCard } from './KanbanCard';
-import { Action, ActionStatus, Quarter } from '@/types';
+import { Action, ActionStatus, Quarter, QuarterlyKeyResult, QuarterlyObjective } from '@/types';
 
 interface KanbanBoardProps {
   actions: Action[];
@@ -28,7 +28,8 @@ interface KanbanBoardProps {
   onActionEdit: (action: Action) => void;
   onActionDelete: (actionId: string) => void;
   onAddAction: () => void;
-  quarterlyObjectives?: Array<{ id: string; title: string; quarter: Quarter; year: number }>;
+  quarterlyKeyResults?: QuarterlyKeyResult[];
+  quarterlyObjectives?: QuarterlyObjective[];
   selectedAmbition?: string;
   selectedQuarter?: Quarter;
   selectedYear?: number;
@@ -40,6 +41,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onActionEdit,
   onActionDelete,
   onAddAction,
+  quarterlyKeyResults = [],
   quarterlyObjectives = [],
   selectedAmbition,
   selectedQuarter,
@@ -64,14 +66,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
       return false;
     }
 
-    // Filtre par objectif trimestriel (qui peut être lié à une ambition/trimestre)
+    // Filtre par KR trimestriel (qui peut être lié à un objectif/ambition/trimestre)
     if (selectedAmbition || selectedQuarter || selectedYear) {
-      const relatedObjective = quarterlyObjectives.find(obj => obj.id === action.quarterlyObjectiveId);
+      const relatedKR = quarterlyKeyResults.find(kr => kr.id === action.quarterlyKeyResultId);
+      if (!relatedKR) return false;
+
+      const relatedObjective = quarterlyObjectives.find(obj => obj.id === relatedKR.quarterlyObjectiveId);
       if (!relatedObjective) return false;
 
       if (selectedQuarter && relatedObjective.quarter !== selectedQuarter) return false;
       if (selectedYear && relatedObjective.year !== selectedYear) return false;
-      // Note: Pour filtrer par ambition, il faudrait ajouter ambitionId dans QuarterlyObjective
+      if (selectedAmbition && relatedObjective.ambitionId !== selectedAmbition) return false;
     }
 
     return true;
