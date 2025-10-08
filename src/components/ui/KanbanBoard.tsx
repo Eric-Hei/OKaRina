@@ -208,7 +208,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                         action={action}
                         onEdit={() => onActionEdit(action)}
                         onDelete={() => onActionDelete(action.id)}
-                        quarterlyObjective={quarterlyObjectives.find(obj => obj.id === action.quarterlyObjectiveId)}
+                        quarterlyObjective={(() => {
+                          const kr = quarterlyKeyResults.find(kr => kr.id === action.quarterlyKeyResultId);
+                          return kr ? quarterlyObjectives.find(obj => obj.id === kr.quarterlyObjectiveId) : undefined;
+                        })()}
                       />
                     ))}
                   </div>
@@ -224,7 +227,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   action={activeAction}
                   onEdit={() => {}}
                   onDelete={() => {}}
-                  quarterlyObjective={quarterlyObjectives.find(obj => obj.id === activeAction.quarterlyObjectiveId)}
+                  quarterlyObjective={(() => {
+                    const kr = quarterlyKeyResults.find(kr => kr.id === activeAction.quarterlyKeyResultId);
+                    return kr ? quarterlyObjectives.find(obj => obj.id === kr.quarterlyObjectiveId) : undefined;
+                  })()}
                   isDragging
                 />
               </div>

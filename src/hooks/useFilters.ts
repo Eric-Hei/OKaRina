@@ -53,21 +53,27 @@ export const useFilters = ({
     return Array.from(new Set(years)).sort((a, b) => b - a);
   }, [quarterlyObjectives]);
 
-  // Filtrer les actions
+  // Filtrer les actions (via leur KR trimestriel → objectif)
   const filteredActions = useMemo(() => {
     return actions.filter(action => {
-      // Filtre par objectif trimestriel
+      // Retrouver le KR lié à cette action (nouveau schéma)
+      const relatedKR = quarterlyKeyResults.find(kr => kr.id === action.quarterlyKeyResultId);
+
+      // Filtre par objectif trimestriel (via le KR)
       if (filters.objectiveIds.length > 0) {
-        if (!filters.objectiveIds.includes(action.quarterlyObjectiveId)) {
+        if (!relatedKR) return false;
+        if (!filters.objectiveIds.includes(relatedKR.quarterlyObjectiveId)) {
           return false;
         }
       }
 
+      // Récupérer l'objectif trimestriel lié pour les filtres ambition/trimestre/année
+      const relatedObjective = relatedKR
+        ? quarterlyObjectives.find(obj => obj.id === relatedKR.quarterlyObjectiveId)
+        : undefined;
+
       // Filtre par ambition (via l'objectif trimestriel)
       if (filters.ambitionIds.length > 0) {
-        const relatedObjective = quarterlyObjectives.find(
-          obj => obj.id === action.quarterlyObjectiveId
-        );
         if (!relatedObjective || !filters.ambitionIds.includes(relatedObjective.ambitionId)) {
           return false;
         }
@@ -75,9 +81,6 @@ export const useFilters = ({
 
       // Filtre par trimestre (via l'objectif trimestriel)
       if (filters.quarters.length > 0) {
-        const relatedObjective = quarterlyObjectives.find(
-          obj => obj.id === action.quarterlyObjectiveId
-        );
         if (!relatedObjective || !filters.quarters.includes(relatedObjective.quarter)) {
           return false;
         }
@@ -85,9 +88,6 @@ export const useFilters = ({
 
       // Filtre par année (via l'objectif trimestriel)
       if (filters.years.length > 0) {
-        const relatedObjective = quarterlyObjectives.find(
-          obj => obj.id === action.quarterlyObjectiveId
-        );
         if (!relatedObjective || !filters.years.includes(relatedObjective.year)) {
           return false;
         }
@@ -109,7 +109,7 @@ export const useFilters = ({
 
       // Filtre par labels
       if (filters.labels.length > 0) {
-        const hasMatchingLabel = filters.labels.some(label => 
+        const hasMatchingLabel = filters.labels.some(label =>
           action.labels.includes(label)
         );
         if (!hasMatchingLabel) {
@@ -119,7 +119,7 @@ export const useFilters = ({
 
       return true;
     });
-  }, [actions, quarterlyObjectives, filters]);
+  }, [actions, quarterlyObjectives, quarterlyKeyResults, filters]);
 
   // Filtrer les ambitions
   const filteredAmbitions = useMemo(() => {

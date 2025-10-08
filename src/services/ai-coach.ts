@@ -316,8 +316,8 @@ export class AICoachService {
       confidence -= 15;
     }
 
-    if (!action.quarterlyObjectiveId) {
-      suggestions.push("Rattachez cette action à un objectif trimestriel");
+    if (!action.quarterlyKeyResultId) {
+      suggestions.push("Rattachez cette action à un résultat clé trimestriel");
       confidence -= 20;
     }
 
