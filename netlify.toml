@@ -1,16 +1,10 @@
 [build]
   publish = "out"
-  command = "echo 'Skipping build, using pre-built files'"
+  command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
-
-# Désactiver le plugin Next.js car nous utilisons un export statique
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    disable = true
 
 
 
