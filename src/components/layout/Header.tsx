@@ -16,6 +16,7 @@ import {
   FolderKanban,
   AlarmClock,
   FileUp,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -40,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
     { name: 'Gestion', href: '/management', icon: FolderKanban },
     { name: 'Suivi', href: '/progress', icon: Calendar },
     { name: 'Rapports', href: '/reports', icon: FileText },
+    { name: 'Rétrospective', href: '/retrospective', icon: History },
   ];
 
   const handleLogout = () => {
