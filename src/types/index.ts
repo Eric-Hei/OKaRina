@@ -428,7 +428,7 @@ export interface SharedObjective {
 export interface Comment {
   id: string;
   objectiveId: string;
-  objectiveType: 'ambition' | 'quarterly_objective';
+  objectiveType: 'ambition' | 'quarterly_objective' | 'quarterly_key_result';
   userId: string;
   content: string;
   mentions: string[]; // User IDs mentioned with @

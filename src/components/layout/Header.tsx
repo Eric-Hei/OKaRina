@@ -11,10 +11,11 @@ import {
   LogOut,
   Menu,
   X,
-  Pyramid,
   Building2,
   ChevronDown,
   FolderKanban,
+  AlarmClock,
+  FileUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -33,9 +34,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+    { name: 'Check-in', href: '/check-in', icon: AlarmClock },
+    { name: 'Focus', href: '/focus', icon: AlarmClock },
     { name: 'Canvas', href: '/canvas', icon: Target },
     { name: 'Gestion', href: '/management', icon: FolderKanban },
-    { name: 'Pyramide', href: '/pyramid', icon: Pyramid },
     { name: 'Suivi', href: '/progress', icon: Calendar },
     { name: 'Rapports', href: '/reports', icon: FileText },
   ];
@@ -139,6 +141,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                         >
                           <Building2 className="h-4 w-4 mr-3 text-gray-400" />
                           Profil d'entreprise
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            router.push('/import');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <FileUp className="h-4 w-4 mr-3 text-gray-400" />
+                          Import CSV
                         </button>
 
                         <button

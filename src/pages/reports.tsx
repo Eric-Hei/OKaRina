@@ -9,7 +9,10 @@ import {
   Target,
   CheckCircle,
   Clock,
-  Filter
+  Filter,
+  Brain,
+  Activity,
+  AlertTriangle
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -88,6 +91,8 @@ const ReportsPage: React.FC = () => {
   const monthlyProgress = analyticsService.calculateMonthlyProgress();
   const progressByCategory = analyticsService.getProgressByCategory();
   const quarterlyProgress = analyticsService.getQuarterlyProgress();
+  const healthOverview = analyticsService.getKRHealthOverview();
+  const riskAlerts = analyticsService.getRiskAlerts();
 
   // Données de performance simulées
   const performanceData = {
@@ -144,6 +149,14 @@ const ReportsPage: React.FC = () => {
 
               {/* Boutons d'export */}
               <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { if (typeof window !== 'undefined') window.location.href = '/retrospective'; }}
+                  leftIcon={<Brain className="h-4 w-4" />}
+                >
+                  Rétrospective IA
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -334,6 +347,62 @@ const ReportsPage: React.FC = () => {
             </Card>
           </motion.div>
 
+          {/* Health Score OKR + Alertes */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.55 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Activity className="h-5 w-5 mr-2 text-emerald-600" />
+                  Health Score des KR
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Santé moyenne (tous KR)</p>
+                    <p className="text-3xl font-bold text-gray-900">{healthOverview.averageHealth}%</p>
+                  </div>
+                  <Badge variant={healthOverview.averageHealth >= 70 ? 'success' : healthOverview.averageHealth >= 50 ? 'warning' : 'danger'}>
+                    {healthOverview.averageHealth >= 70 ? 'Sain' : healthOverview.averageHealth >= 50 ? 'Modéré' : 'Alerte'}
+                  </Badge>
+                </div>
+
+                {riskAlerts.length > 0 ? (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                      <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />
+                      KRs à risque
+                    </h4>
+                    <div className="space-y-3">
+                      {riskAlerts.slice(0,3).map((alert, idx) => (
+                        <div key={alert.kr.id} className="p-3 rounded-lg border border-red-100 bg-red-50">
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium text-gray-900 truncate pr-2">{alert.kr.title}</div>
+                            <Badge variant={alert.level === 'high' ? 'danger' : 'warning'} size="sm">
+                              {alert.level === 'high' ? 'Risque élevé' : 'Risque modéré'}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {alert.reasons.length > 0 ? alert.reasons.join(' • ') : 'Raison: score faible'}
+                            <span className="ml-2 text-gray-500">
+                              (Health: {analyticsService.calculateQuarterlyKRHealth(alert.kr)}%)
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">Aucun KR à risque détecté 🎉</p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* Statistiques détaillées */}
           {detailedStats && (
             <motion.div
@@ -370,9 +439,9 @@ const ReportsPage: React.FC = () => {
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <p className="text-2xl font-bold text-gray-900">
-                        {detailedStats.tasks.completed}
+                        {detailedStats.quarterlyKeyResults.completed}
                       </p>
-                      <p className="text-sm text-gray-600">Tâches Terminées</p>
+                      <p className="text-sm text-gray-600">KR Terminés</p>
                     </div>
                   </div>
                 </CardContent>

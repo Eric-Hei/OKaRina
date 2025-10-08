@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   PROGRESS: 'okarina_progress',
   SETTINGS: 'okarina_settings',
   CANVAS_STATE: 'okarina_canvas_state',
+  COMMENTS: 'okarina_comments',
 };
 
 // Messages de l'IA Coach

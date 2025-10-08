@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
   Circle,
   Brain,
   Lightbulb,
@@ -20,10 +20,13 @@ import { OKRStep } from '@/components/canvas/OKRStep';
 import { ActionsStep } from '@/components/canvas/ActionsStep';
 import QuarterlyObjectivesStep from '@/components/canvas/QuarterlyObjectivesStep';
 import AISuggestionsPanel from '@/components/canvas/AISuggestionsPanel';
+import { generateId, getCurrentQuarter } from '@/utils';
+import type { Ambition, QuarterlyObjective, QuarterlyKeyResult, Action } from '@/types';
+import { Priority, Status, ActionStatus } from '@/types';
 
 
 const CanvasPage: React.FC = () => {
-  const { user, setUser, hasHydrated } = useAppStore();
+  const { user, setUser, hasHydrated, addAmbition, addQuarterlyObjective, addQuarterlyKeyResult, addAction } = useAppStore();
   const {
     currentStep,
     steps,
@@ -110,10 +113,13 @@ const CanvasPage: React.FC = () => {
                   Transformez vos ambitions en objectifs mesurables en 4 étapes
                 </p>
               </div>
-              
+
               {isCompleted && (
                 <Badge variant="success" size="lg">
                   <CheckCircle className="h-4 w-4 mr-1" />
+
+
+
                   Terminé
                 </Badge>
               )}
@@ -139,7 +145,7 @@ const CanvasPage: React.FC = () => {
                       <span className="text-sm font-medium">{step.id}</span>
                     )}
                   </button>
-                  
+
                   <div className="ml-3 min-w-0 flex-1">
                     <p className={`text-sm font-medium ${
                       step.isActive ? 'text-primary-600' : 'text-gray-900'
@@ -150,7 +156,7 @@ const CanvasPage: React.FC = () => {
                       {step.description}
                     </p>
                   </div>
-                  
+
                   {index < steps.length - 1 && (
                     <ChevronRight className="h-5 w-5 text-gray-300 mx-4" />
                   )}
@@ -184,6 +190,78 @@ const CanvasPage: React.FC = () => {
                     </p>
                   </CardHeader>
                   <CardContent>
+
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const ambition: Ambition = {
+                      id: generateId(),
+                      userId: user!.id,
+                      title: 'SaaS: Accélérer la croissance',
+                      description: 'Modèle sectoriel SaaS (exemple)',
+                      year: new Date().getFullYear(),
+                      category: 'growth' as any,
+                      priority: Priority.HIGH,
+                      status: Status.ACTIVE,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    };
+                    addAmbition(ambition);
+                    const objective: QuarterlyObjective = {
+                      id: generateId(),
+                      title: "Augmenter l'ARR",
+                      description: "Structurer l'acquisition et la conversion",
+                      ambitionId: ambition.id,
+                      quarter: getCurrentQuarter(),
+                      year: new Date().getFullYear(),
+                      keyResults: [],
+                      actions: [],
+                      status: Status.ACTIVE,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    };
+                    addQuarterlyObjective(objective);
+                    const kr1: QuarterlyKeyResult = {
+                      id: generateId(),
+                      title: 'Passer de 100 à 200 MQL/mois',
+                      description: "Mettre en place 3 nouveaux canaux d'acquisition",
+                      quarterlyObjectiveId: objective.id,
+                      target: 200,
+                      current: 100,
+                      unit: 'MQL',
+                      deadline: new Date(new Date().getFullYear(), new Date().getMonth()+2, 28),
+                      status: Status.ACTIVE,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    };
+                    const kr2: QuarterlyKeyResult = {
+                      id: generateId(),
+                      title: 'Augmenter le taux de conversion MQL→Client de 12% à 18%',
+                      description: 'Optimiser le funnel et le pricing',
+                      quarterlyObjectiveId: objective.id,
+                      target: 18,
+                      current: 12,
+                      unit: '%',
+                      deadline: new Date(new Date().getFullYear(), new Date().getMonth()+2, 28),
+                      status: Status.ACTIVE,
+                      createdAt: new Date(),
+                      updatedAt: new Date(),
+                    };
+                    addQuarterlyKeyResult(kr1);
+                    addQuarterlyKeyResult(kr2);
+                    const actions: Action[] = [
+                      { id: generateId(), title: 'Lancer campagne LinkedIn Ads', quarterlyKeyResultId: kr1.id, status: ActionStatus.TODO, priority: Priority.MEDIUM, labels: ['template'], createdAt: new Date(), updatedAt: new Date() },
+                      { id: generateId(), title: 'Signer un partenariat contenu', quarterlyKeyResultId: kr1.id, status: ActionStatus.TODO, priority: Priority.MEDIUM, labels: ['template'], createdAt: new Date(), updatedAt: new Date() },
+                      { id: generateId(), title: "Tester une offre d'essai 21 jours", quarterlyKeyResultId: kr2.id, status: ActionStatus.TODO, priority: Priority.HIGH, labels: ['template'], createdAt: new Date(), updatedAt: new Date() },
+                    ];
+                    actions.forEach(addAction);
+                  }}
+                >
+                  Créer depuis template (SaaS)
+                </Button>
+              </div>
+
                     <AnimatePresence mode="wait">
                       {renderStepComponent()}
                     </AnimatePresence>
@@ -372,10 +450,10 @@ const CanvasPage: React.FC = () => {
                       <span>{steps.filter(s => s.isCompleted).length}/{steps.length}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${(steps.filter(s => s.isCompleted).length / steps.length) * 100}%` 
+                        style={{
+                          width: `${(steps.filter(s => s.isCompleted).length / steps.length) * 100}%`
                         }}
                       />
                     </div>

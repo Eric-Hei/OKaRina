@@ -73,8 +73,8 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/pyramid" className="text-sm text-gray-600 hover:text-primary-600 transition-colors">
-                  Pyramide
+                <Link href="/reports" className="text-sm text-gray-600 hover:text-primary-600 transition-colors">
+                  Rapports
                 </Link>
               </li>
             </ul>

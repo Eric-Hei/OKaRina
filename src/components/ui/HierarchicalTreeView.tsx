@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  Plus, 
-  Target, 
-  TrendingUp, 
+import {
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Target,
+  TrendingUp,
   Zap,
   Calendar,
   Building2,
   Edit2,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Sparkles,
+  Share2,
 } from 'lucide-react';
+import { CommentList } from '@/components/ui/CommentList';
+import { MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
-import { 
-  Ambition, 
-  QuarterlyObjective, 
-  QuarterlyKeyResult, 
-  Action, 
-  Quarter, 
+import {
+  Ambition,
+  QuarterlyObjective,
+  QuarterlyKeyResult,
+  Action,
+  Quarter,
   Priority,
-  ActionStatus 
+  ActionStatus
 } from '@/types';
 
 interface HierarchicalTreeViewProps {
@@ -44,6 +48,9 @@ interface HierarchicalTreeViewProps {
   onEditAction: (action: Action) => void;
   onDeleteAction: (actionId: string) => void;
   onViewKanban: (objectiveId?: string) => void;
+  onGenerateActionPlan?: (keyResult: QuarterlyKeyResult) => void;
+  onShareQuarterlyObjective?: (objectiveId: string) => void;
+  onShareQuarterlyKeyResult?: (keyResultId: string) => void;
 }
 
 export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
@@ -64,10 +71,15 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
   onEditAction,
   onDeleteAction,
   onViewKanban,
+  onGenerateActionPlan,
+  onShareQuarterlyObjective,
+  onShareQuarterlyKeyResult,
 }) => {
   const [expandedAmbitions, setExpandedAmbitions] = useState<Set<string>>(new Set());
   const [expandedObjectives, setExpandedObjectives] = useState<Set<string>>(new Set());
   const [expandedKeyResults, setExpandedKeyResults] = useState<Set<string>>(new Set());
+  const [openObjectiveComments, setOpenObjectiveComments] = useState<Set<string>>(new Set());
+  const [openKRComments, setOpenKRComments] = useState<Set<string>>(new Set());
 
   const toggleAmbition = (ambitionId: string) => {
     const newExpanded = new Set(expandedAmbitions);
@@ -119,7 +131,7 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
     [ActionStatus.DONE]: 'bg-green-100 text-green-800',
   };
 
-  const getObjectivesForAmbition = (ambitionId: string) => 
+  const getObjectivesForAmbition = (ambitionId: string) =>
     quarterlyObjectives.filter(obj => obj.ambitionId === ambitionId);
 
   const getKeyResultsForObjective = (objectiveId: string) =>
@@ -298,6 +310,24 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                     <Button
                                       size="sm"
                                       variant="ghost"
+                                      onClick={() => onShareQuarterlyObjective && onShareQuarterlyObjective(objective.id)}
+                                    >
+                                      <Share2 className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const s = new Set(openObjectiveComments);
+                                        s.has(objective.id) ? s.delete(objective.id) : s.add(objective.id);
+                                        setOpenObjectiveComments(s);
+                                      }}
+                                    >
+                                      <MessageSquare className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
                                       onClick={() => onDeleteQuarterlyObjective(objective.id)}
                                       className="text-red-600 hover:text-red-700"
                                     >
@@ -322,6 +352,13 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                   </div>
                                 )}
                               </div>
+
+                              {/* Commentaires Objectif (toggle) */}
+                              {openObjectiveComments.has(objective.id) && (
+                                <div className="px-3 pb-3">
+                                  <CommentList entityId={objective.id} entityType={'quarterly_objective'} />
+                                </div>
+                              )}
 
                               {/* KR et Actions */}
                               <AnimatePresence>
@@ -376,9 +413,35 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                                   <Button
                                                     size="sm"
                                                     variant="ghost"
+                                                    onClick={() => onGenerateActionPlan && onGenerateActionPlan(kr)}
+                                                  >
+                                                    <Sparkles className="h-3 w-3 mr-1" />
+                                                    Générer un plan
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
                                                     onClick={() => onEditQuarterlyKeyResult(kr)}
                                                   >
                                                     <Edit2 className="h-3 w-3" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onShareQuarterlyKeyResult && onShareQuarterlyKeyResult(kr.id)}
+                                                  >
+                                                    <Share2 className="h-3 w-3" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                      const s = new Set(openKRComments);
+                                                      s.has(kr.id) ? s.delete(kr.id) : s.add(kr.id);
+                                                      setOpenKRComments(s);
+                                                    }}
+                                                  >
+                                                    <MessageSquare className="h-3 w-3" />
                                                   </Button>
                                                   <Button
                                                     size="sm"
@@ -403,6 +466,11 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                                   className="overflow-hidden"
                                                 >
                                                   <div className="pl-6 pr-2 pb-2 space-y-1">
+                                                    {openKRComments.has(kr.id) && (
+                                                      <div className="mb-2">
+                                                        <CommentList entityId={kr.id} entityType={'quarterly_key_result'} />
+                                                      </div>
+                                                    )}
                                                     {krActions.map((action) => (
                                                       <div key={action.id} className="bg-orange-50 border-l-2 border-orange-400 p-2 rounded-r">
                                                         <div className="flex items-center justify-between">

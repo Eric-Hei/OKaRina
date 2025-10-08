@@ -134,6 +134,61 @@ export class GeminiService {
     }
   }
 
+  // Générer une rétrospective trimestrielle (résumé IA)
+  public async generateQuarterRetrospective(input: {
+    quarterName: string;
+    year: number;
+    keyResults: Array<Partial<KeyResult>>;
+    actionsDone: number;
+    actionsTotal: number;
+    companyProfile?: CompanyProfile;
+  }): Promise<string> {
+    if (!this.isAvailable()) {
+      throw new Error("L'API Gemini n'est pas configurée. Veuillez ajouter votre clé API dans le fichier .env.local");
+    }
+    const prompt = this.buildQuarterRetrospectivePrompt(input);
+    const result = await this.model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    return text?.trim() || 'Rétrospective indisponible.';
+  }
+
+  private buildQuarterRetrospectivePrompt(input: {
+    quarterName: string;
+    year: number;
+    keyResults: Array<Partial<KeyResult>>;
+    actionsDone: number;
+    actionsTotal: number;
+    companyProfile?: CompanyProfile;
+  }): string {
+    const { quarterName, year, keyResults, actionsDone, actionsTotal, companyProfile } = input;
+    const krLines = (keyResults || []).slice(0, 8).map((kr, i) => `- KR${i+1}: ${kr.title || 'Sans titre'} | Cible: ${kr.target ?? '-'} ${kr.unit ?? ''} | Actuel: ${kr.current ?? '-'} | Échéance: ${kr.deadline ? new Date(kr.deadline).toLocaleDateString() : '-'}`);
+    const execRate = actionsTotal > 0 ? Math.round((actionsDone / actionsTotal) * 100) : 0;
+
+    let prompt = `En tant que coach OKR senior, rédige une rétrospective concise et actionnable du trimestre ${quarterName} ${year}.
+
+Contexte:
+- Taux d'exécution des actions: ${execRate}% (${actionsDone}/${actionsTotal})
+- Résultats clés suivis:
+${krLines.join('\n')}
+`;
+    if (companyProfile) {
+      prompt += `\nProfil entreprise (optionnel): ${companyProfile.industry || ''}, taille ${companyProfile.size || ''}, stade ${companyProfile.stage || ''}`;
+    }
+
+    prompt += `
+
+FORMAT DE RÉPONSE:
+1) Résumé exécutif (3-4 phrases max)
+2) Réussites majeures (3 puces)
+3) Blocages/risques (3 puces)
+4) Priorités du prochain trimestre (3-5 puces, SMART et concrètes)
+
+Style: clair, concret, sans jargon, en français. Pas d'introduction ni de conclusion hors sections.`;
+
+    return prompt;
+  }
+
   // Construire le prompt pour les ambitions
   private buildAmbitionPrompt(ambition: Partial<Ambition>, companyProfile?: CompanyProfile): string {
     let prompt = `En tant qu'expert en stratégie d'entreprise et coach en OKR, analysez cette ambition et donnez EXACTEMENT 5 conseils concrets pour l'améliorer.

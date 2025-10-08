@@ -36,7 +36,7 @@ export class AnalyticsService {
     const totalAmbitions = ambitions.length;
     const activeOKRs = okrs.filter(okr => okr.status === Status.ACTIVE).length;
     const completedActions = actions.filter(action => action.status === 'done').length;
-    
+
     const overallProgress = this.calculateOverallProgress();
     const monthlyProgress = this.calculateMonthlyProgress();
     const upcomingDeadlines = this.getUpcomingDeadlinesCount();
@@ -104,7 +104,7 @@ export class AnalyticsService {
   public calculateMonthlyProgress(): number {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    
+
     const progressRecords = storageService.getProgress().filter(p => {
       const recordDate = new Date(p.recordedAt);
       return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear;
@@ -174,7 +174,7 @@ export class AnalyticsService {
   public getQuarterlyProgress(): ChartData[] {
     const okrs = storageService.getOKRs();
     const currentYear = new Date().getFullYear();
-    
+
     const quarterProgress: { [key: string]: { total: number; count: number } } = {};
 
     okrs.filter(okr => okr.year === currentYear).forEach(okr => {
@@ -191,7 +191,7 @@ export class AnalyticsService {
 
     return Object.values(Quarter).map(quarter => ({
       name: quarter,
-      value: quarterProgress[quarter] 
+      value: quarterProgress[quarter]
         ? Math.round(quarterProgress[quarter].total / quarterProgress[quarter].count)
         : 0,
     }));
@@ -220,7 +220,7 @@ export class AnalyticsService {
       const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
       const dateStr = date.toISOString().split('T')[0];
       const dayProgress = dailyProgress[dateStr] || [];
-      const avgProgress = dayProgress.length > 0 
+      const avgProgress = dayProgress.length > 0
         ? dayProgress.reduce((sum, val) => sum + val, 0) / dayProgress.length
         : 0;
 
@@ -379,6 +379,56 @@ export class AnalyticsService {
       return action.deadline && new Date(action.deadline) < now && action.status !== 'done';
     });
   }
+
+  // ===== Health score & risques (MVP) =====
+  public calculateQuarterlyKRHealth(kr: QuarterlyKeyResult): number {
+    const progress = kr.target > 0 ? Math.min(kr.current / kr.target, 1) : 0; // 0..1
+    const now = new Date();
+    const deadline = kr.deadline ? new Date(kr.deadline) : null;
+    const days = deadline ? Math.ceil((+deadline - +now) / (1000 * 60 * 60 * 24)) : 30;
+    const timeBuffer = Math.max(0, Math.min(days / 30, 1)); // 0..1 (≥30j => 1)
+
+    // Pénalités basées sur actions en retard
+    const actions = storageService.getActions().filter(a => a.quarterlyKeyResultId === kr.id);
+    const overdue = actions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;
+    const overdueRatio = actions.length > 0 ? overdue / actions.length : 0;
+
+    let score = 0.6 * progress + 0.4 * timeBuffer; // pondération simple
+    score = score * (1 - 0.2 * overdueRatio); // pénalité max -20%
+    return Math.round(score * 100);
+  }
+
+  public getKRHealthOverview(): { averageHealth: number; items: Array<{ kr: QuarterlyKeyResult; health: number; riskLevel: 'high'|'medium'|'low'; reasons: string[] }>; } {
+    const krs = storageService.getQuarterlyKeyResults();
+    if (krs.length === 0) {
+      return { averageHealth: 0, items: [] };
+    }
+    const items = krs.map(kr => {
+      const health = this.calculateQuarterlyKRHealth(kr);
+      const reasons: string[] = [];
+      const now = new Date();
+      const days = kr.deadline ? Math.ceil((+new Date(kr.deadline) - +now) / (1000*60*60*24)) : 30;
+      const progress = kr.target > 0 ? Math.min(kr.current / kr.target, 1) : 0;
+      if (days <= 7 && progress < 0.5) reasons.push('Échéance proche avec progression faible');
+      const actions = storageService.getActions().filter(a => a.quarterlyKeyResultId === kr.id);
+      const overdue = actions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;
+      if (overdue > 0) reasons.push(`${overdue} action(s) en retard`);
+      const riskLevel: 'high'|'medium'|'low' = health < 50 ? 'high' : health < 70 ? 'medium' : 'low';
+      return { kr, health, riskLevel, reasons };
+    });
+    const averageHealth = Math.round(items.reduce((s, i) => s + i.health, 0) / items.length);
+    return { averageHealth, items };
+  }
+
+  public getRiskAlerts(): Array<{ kr: QuarterlyKeyResult; level: 'high'|'medium'; reasons: string[] }>{
+    const { items } = this.getKRHealthOverview();
+    return items
+      .filter(i => i.riskLevel !== 'low')
+      .sort((a,b) => a.health - b.health)
+      .slice(0, 5)
+      .map(i => ({ kr: i.kr, level: i.riskLevel as 'high'|'medium', reasons: i.reasons }));
+  }
+
 }
 
 // Instance singleton

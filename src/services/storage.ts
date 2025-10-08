@@ -28,7 +28,7 @@ export class StorageService {
     try {
       const serializedData = JSON.stringify(data);
       localStorage.setItem(key, serializedData);
-      
+
       // Backup automatique
       this.createBackup();
     } catch (error) {
@@ -41,7 +41,7 @@ export class StorageService {
     try {
       const item = localStorage.getItem(key);
       if (!item) return null;
-      
+
       return JSON.parse(item) as T;
     } catch (error) {
       console.error(`Erreur lors de la lecture de ${key}:`, error);
@@ -89,7 +89,7 @@ export class StorageService {
   public updateAmbition(ambitionId: string, updates: Partial<Ambition>): void {
     const ambitions = this.getAmbitions();
     const index = ambitions.findIndex(a => a.id === ambitionId);
-    
+
     if (index !== -1) {
       ambitions[index] = { ...ambitions[index], ...updates, updatedAt: new Date() };
       this.saveAmbitions(ambitions);
@@ -119,7 +119,7 @@ export class StorageService {
   public updateKeyResult(keyResultId: string, updates: Partial<KeyResult>): void {
     const keyResults = this.getKeyResults();
     const index = keyResults.findIndex(kr => kr.id === keyResultId);
-    
+
     if (index !== -1) {
       keyResults[index] = { ...keyResults[index], ...updates, updatedAt: new Date() };
       this.saveKeyResults(keyResults);
@@ -149,7 +149,7 @@ export class StorageService {
   public updateOKR(okrId: string, updates: Partial<OKR>): void {
     const okrs = this.getOKRs();
     const index = okrs.findIndex(o => o.id === okrId);
-    
+
     if (index !== -1) {
       okrs[index] = { ...okrs[index], ...updates, updatedAt: new Date() };
       this.saveOKRs(okrs);
@@ -179,7 +179,7 @@ export class StorageService {
   public updateAction(actionId: string, updates: Partial<Action>): void {
     const actions = this.getActions();
     const index = actions.findIndex(a => a.id === actionId);
-    
+
     if (index !== -1) {
       actions[index] = { ...actions[index], ...updates, updatedAt: new Date() };
       this.saveActions(actions);
@@ -260,6 +260,26 @@ export class StorageService {
     return this.getItem<Progress[]>(STORAGE_KEYS.PROGRESS) || [];
   }
 
+	  // Gestion des commentaires
+	  public saveComments(comments: import('@/types').Comment[]): void {
+	    this.setItem(STORAGE_KEYS.COMMENTS, comments);
+	  }
+
+	  public getComments(): import('@/types').Comment[] {
+	    return this.getItem<import('@/types').Comment[]>(STORAGE_KEYS.COMMENTS) || [];
+	  }
+
+	  public addComment(comment: import('@/types').Comment): void {
+	    const comments = this.getComments();
+	    comments.push(comment);
+	    this.saveComments(comments);
+	  }
+
+	  public getCommentsFor(entityId: string, entityType: import('@/types').Comment['objectiveType']): import('@/types').Comment[] {
+	    return this.getComments().filter(c => c.objectiveId === entityId && c.objectiveType === entityType);
+	  }
+
+
   public addProgress(progress: Progress): void {
     const progressList = this.getProgress();
     progressList.push(progress);
@@ -292,7 +312,7 @@ export class StorageService {
   public importData(jsonData: string): void {
     try {
       const data = JSON.parse(jsonData);
-      
+
       if (data.user) this.saveUser(data.user);
       if (data.ambitions) this.saveAmbitions(data.ambitions);
       if (data.keyResults) this.saveKeyResults(data.keyResults);
@@ -301,7 +321,7 @@ export class StorageService {
       if (data.quarterlyObjectives) this.saveQuarterlyObjectives(data.quarterlyObjectives);
       if (data.quarterlyKeyResults) this.saveQuarterlyKeyResults(data.quarterlyKeyResults);
       if (data.progress) this.saveProgress(data.progress);
-      
+
     } catch (error) {
       console.error('Erreur lors de l\'import:', error);
       throw new Error('Format de données invalide');

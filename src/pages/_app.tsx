@@ -13,9 +13,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 export default function App({ Component, pageProps }: AppProps) {
   const { loadData, user, ambitions, actions, quarterlyKeyResults, updateAction, hasHydrated } = useAppStore();
 
-  // Charger les données au démarrage de l'application seulement si nécessaire
-  // Le middleware persist de Zustand restaure automatiquement les données
-  // On appelle loadData() seulement comme fallback si les données ne sont pas chargées
+  // Charger les données au démarrage de l'application
   useEffect(() => {
     // Attendre que Zustand ait fini de réhydrater avant de faire quoi que ce soit
     if (!hasHydrated) {
@@ -28,6 +26,10 @@ export default function App({ Component, pageProps }: AppProps) {
       ambitionsCount: ambitions.length,
       hasCompanyProfile: !!user?.companyProfile,
     });
+
+    // Toujours charger les données depuis localStorage pour s'assurer qu'elles sont à jour
+    console.log('🔄 Chargement des données depuis localStorage');
+    loadData();
 
     // Migration des actions vers les KR (storage)
     storageService.migrateActionsToKeyResults();
@@ -51,13 +53,6 @@ export default function App({ Component, pageProps }: AppProps) {
       }
     } catch (e) {
       console.warn('⚠️ Migration Zustand des actions échouée:', e);
-    }
-
-    // Si l'utilisateur existe mais qu'il n'y a pas d'ambitions chargées,
-    // c'est peut-être une migration depuis l'ancien système de stockage
-    if (user && ambitions.length === 0) {
-      console.log('🔄 Chargement des données depuis localStorage (fallback)');
-      loadData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasHydrated]); // Se déclenche quand la réhydratation est terminée
