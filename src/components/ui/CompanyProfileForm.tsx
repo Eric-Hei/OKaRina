@@ -20,7 +20,6 @@ interface FormData {
   size: CompanySize;
   stage: CompanyStage;
   mainChallenges: string;
-  currentGoals: string;
   marketPosition: string;
   targetMarket: string;
   businessModel: string;
@@ -55,7 +54,6 @@ export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
       size: initialData?.size || CompanySize.STARTUP,
       stage: initialData?.stage || CompanyStage.EARLY_STAGE,
       mainChallenges: initialData?.mainChallenges?.join(', ') || '',
-      currentGoals: initialData?.currentGoals?.join(', ') || '',
       marketPosition: initialData?.marketPosition || '',
       targetMarket: initialData?.targetMarket || '',
       businessModel: initialData?.businessModel || '',
@@ -66,7 +64,7 @@ export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
     const companyProfile: CompanyProfile = {
       ...data,
       mainChallenges: data.mainChallenges.split(',').map(s => s.trim()).filter(Boolean),
-      currentGoals: data.currentGoals.split(',').map(s => s.trim()).filter(Boolean),
+      currentGoals: [], // Champ supprimé du formulaire mais conservé dans le type
     };
     onSubmit(companyProfile);
   };
@@ -199,18 +197,6 @@ export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
                   placeholder="Séparez vos défis par des virgules (ex: acquisition client, recrutement, financement...)"
                   className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                   {...register('mainChallenges')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Objectifs actuels
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Séparez vos objectifs par des virgules (ex: croissance CA, expansion équipe, lancement produit...)"
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  {...register('currentGoals')}
                 />
               </div>
             </div>
