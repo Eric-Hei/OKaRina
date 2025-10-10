@@ -8,8 +8,8 @@
 | **Champ** | **Valeur** |
 |-----------|------------|
 | **Produit** | OKaRina - Outil de gestion d'objectifs avec IA |
-| **Version** | 1.0.0 |
-| **Date** | Décembre 2024 |
+| **Version** | 1.2.0 |
+| **Date** | Janvier 2025 |
 | **Statut** | ✅ Déployé en production |
 | **URL** | [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app) |
 | **Cible** | Entrepreneurs et dirigeants de PME |
@@ -69,8 +69,8 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 🎯 Ambitions Annuelles (max 3 recommandé)
 ├── 📊 Key Results d'Ambition (max 3 par ambition)
 ├── 📅 Objectifs Trimestriels (max 3 par ambition)
-│   ├── 📈 Key Results Trimestriels (multiples par objectif)
-│   └── ✅ Actions (plan d'actions par objectif)
+│   └──📈 Key Results Trimestriels (multiples par objectif)
+│      └── ✅ Actions (plan d'actions par objectif)
 └── 🗂️ Kanban Unique (toutes les actions par statut)
 ```
 
@@ -233,30 +233,47 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 
 ## 🚀 Roadmap Produit
 
-### ✅ Version 1.0 (Actuelle)
+### ✅ Version 1.0 (Décembre 2024)
 - Canvas guidé multi-entités
 - IA Coach contextuelle
 - Kanban des actions
 - Export complet
 - Déploiement production
+- RGPD et conformité légale
+- PWA (Progressive Web App)
 
-### 🔄 Version 1.1 (Q1 2025)
+### ✅ Version 1.1 (Décembre 2024)
+- Suppression vue Pyramide
+- Check-in hebdo guidé par l'IA
+- Focus du jour ultra-simple
+- Nudges intelligents (notifications locales)
+- Auto-cascade des actions depuis un KR
+- Templates sectoriels (SaaS)
+- Mode Rétrospective trimestrielle IA
+- Health score OKR + alertes de risque
+
+### ✅ Version 1.2 (Janvier 2025 - Actuelle)
+- Commentaires in-context + @mentions
+- Partage public en 1 clic (lecture seule)
+- Import CSV/Google Sheets
+- PDF amélioré avec design moderne
+- Correction chargement données localStorage
+- Footer mis à jour
+
+### 🔄 Version 1.3 (Q1 2025 - Planifiée)
+- Intégration Slack (slash commands)
+- Partage public avancé (expiration, masquage champs)
+- Scenario planning
 - Authentification utilisateurs
-- Collaboration équipe
-- Notifications push
-- Templates sectoriels
+- Collaboration équipe temps réel
 
-### 🎯 Version 1.2 (Q2 2025)
+### 🎯 Version 2.0 (Q2 2025)
 - Intégrations calendrier
 - API REST publique
-- Application mobile
+- Application mobile native
 - Analytics avancées
-
-### 🚀 Version 2.0 (Q3 2025)
 - IA multi-modèles
 - Analyse prédictive
-- Coaching personnalisé
-- Machine learning
 
 ---
 
@@ -279,7 +296,7 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 
 ---
 
-## 🆕 Nouvelles Fonctionnalités (Septembre 2025)
+## 🆕 Nouvelles Fonctionnalités
 
 ### 🔒 RGPD et Conformité Légale
 
@@ -331,6 +348,83 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 
 ---
 
+### 🎯 Killer Features (Version 1.1-1.2)
+
+**Statut** : ✅ Implémenté
+
+#### Check-in Hebdo Guidé par l'IA
+- ✅ Page `/check-in` : Revue hebdomadaire des objectifs
+- ✅ Suggestions IA pour débloquer les KR en retard
+- ✅ Création d'actions directement depuis les suggestions
+- ✅ Analyse contextuelle basée sur le profil d'entreprise
+
+#### Focus du Jour Ultra-Simple
+- ✅ Page `/focus` : Vue simplifiée des 3 actions prioritaires
+- ✅ Priorisation automatique par échéance et importance
+- ✅ Interface minimaliste pour éviter la surcharge cognitive
+- ✅ Engagement quotidien facilité
+
+#### Nudges Intelligents
+- ✅ Service de notifications locales
+- ✅ Rappels pour actions en retard
+- ✅ Alertes pour échéances proches
+- ✅ Suggestions de check-in hebdomadaire
+- ✅ Stockage des préférences de notification
+
+#### Auto-Cascade des Actions
+- ✅ Génération automatique d'un plan d'actions depuis un KR
+- ✅ IA suggère 3-5 actions concrètes
+- ✅ Création en masse avec un clic
+- ✅ Intégration dans la vue hiérarchique
+
+#### Templates Sectoriels
+- ✅ Template SaaS pré-configuré dans Canvas
+- ✅ Ambitions, objectifs et KR adaptés au secteur
+- ✅ Chargement en un clic
+- ✅ Base pour d'autres secteurs (e-commerce, services, etc.)
+
+#### Rétrospective Trimestrielle IA
+- ✅ Page `/retrospective` : Analyse de fin de trimestre
+- ✅ Génération IA : réussites, blocages, priorités Q+1
+- ✅ Export PDF de la rétrospective
+- ✅ Visualisation des KR et actions du trimestre
+
+#### Health Score OKR
+- ✅ Calcul automatique du score de santé (0-100) par KR
+- ✅ Alertes de risque pour KR en danger
+- ✅ Vue d'ensemble dans Dashboard
+- ✅ Top 5 des KR à risque
+
+#### Commentaires + @Mentions
+- ✅ Composant `CommentList` : Commentaires sur objectifs et KR
+- ✅ Support des @mentions avec extraction regex
+- ✅ Stockage localStorage (`okarina_comments`)
+- ✅ Intégration dans vue hiérarchique
+
+#### Partage Public en 1 Clic
+- ✅ Service de partage avec snapshot encodé Base64
+- ✅ Page `/share` : Vue publique lecture seule
+- ✅ Boutons "Partager" sur objectifs et KR
+- ✅ Copie automatique du lien dans le presse-papiers
+- ✅ Bannière "Vue publique" avec badges
+
+#### Import CSV/Google Sheets
+- ✅ Page `/import` : Upload et mapping de CSV
+- ✅ Service `importService` avec parsing PapaParse
+- ✅ Auto-détection des colonnes (FR/EN)
+- ✅ Création en masse : Ambitions → Objectifs → KR → Actions
+- ✅ Téléchargement de template pré-rempli
+- ✅ Aperçu et validation avant import
+
+**Impact** :
+- Adoption facilitée avec check-in et focus
+- Engagement quotidien/hebdomadaire accru
+- Productivité améliorée avec auto-cascade
+- Collaboration via partage et commentaires
+- Migration de données simplifiée avec import CSV
+
+---
+
 ### 👥 Collaboration d'Équipe (Fondations)
 
 **Statut** : ⏳ Backend implémenté, UI à développer
@@ -377,37 +471,72 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 - **Score Lighthouse PWA** : Objectif > 90/100
 - **Utilisation offline** : Suivi des sessions offline
 
+### Métriques Killer Features
+- **Taux d'utilisation Check-in** : Objectif > 60% des utilisateurs actifs/semaine
+- **Taux d'utilisation Focus** : Objectif > 80% des utilisateurs actifs/jour
+- **Actions auto-générées** : Objectif > 40% des KR utilisent l'auto-cascade
+- **Partages publics** : Objectif > 20% des objectifs partagés
+- **Imports CSV** : Objectif > 30% des nouveaux utilisateurs importent des données
+- **Commentaires** : Objectif > 3 commentaires par objectif en moyenne
+- **Rétrospectives** : Objectif > 70% des utilisateurs font une rétro/trimestre
+
 ### Métriques Collaboration (Futures)
 - **Taux d'invitation** : Objectif > 50% des utilisateurs invitent au moins 1 personne
-- **Commentaires par objectif** : Objectif > 3 commentaires en moyenne
-- **Partages d'objectifs** : Objectif > 40% des objectifs partagés
+- **Partages d'objectifs en équipe** : Objectif > 40% des objectifs partagés
 
 ---
 
 ## 🗺️ Roadmap Mise à Jour
 
-### ✅ Phase 1 : Production-Ready (TERMINÉ - Septembre 2025)
+### ✅ Phase 1 : Production-Ready (TERMINÉ - Décembre 2024)
 - ✅ RGPD et conformité légale
 - ✅ PWA et mode offline
 - ✅ Fondations collaboration
+- ✅ Canvas guidé multi-entités
+- ✅ IA Coach contextuelle
+- ✅ Kanban des actions
+- ✅ Export complet
 
-### ⏳ Phase 2 : Collaboration UI (En Cours - Octobre 2025)
-- ⏳ Page gestion d'équipe
-- ⏳ Commentaires et discussions
-- ⏳ Partage d'objectifs
-- ⏳ Centre de notifications
+### ✅ Phase 2 : Killer Features (TERMINÉ - Janvier 2025)
+- ✅ Suppression vue Pyramide
+- ✅ Check-in hebdo guidé par l'IA
+- ✅ Focus du jour ultra-simple
+- ✅ Nudges intelligents
+- ✅ Auto-cascade des actions
+- ✅ Templates sectoriels (SaaS)
+- ✅ Rétrospective trimestrielle IA
+- ✅ Health score OKR
+- ✅ Commentaires + @mentions
+- ✅ Partage public lecture seule
+- ✅ Import CSV/Google Sheets
+- ✅ PDF amélioré avec design moderne
 
-### 🔮 Phase 3 : Backend Supabase (Q4 2025)
+### 🔄 Phase 3 : Intégrations & Partage Avancé (Q1 2025 - En cours)
+- ⏳ Intégration Slack (slash commands + webhooks)
+- ⏳ Partage public avancé (expiration, masquage champs)
+- ⏳ Scenario planning (what-if analysis)
+- ⏳ Templates sectoriels additionnels (e-commerce, services, etc.)
+
+### 🔮 Phase 4 : Collaboration UI (Q2 2025)
+- 🔮 Page gestion d'équipe
+- 🔮 Commentaires et discussions en temps réel
+- 🔮 Partage d'objectifs avec permissions
+- 🔮 Centre de notifications
+- 🔮 Authentification utilisateurs
+
+### 🔮 Phase 5 : Backend Supabase (Q3 2025)
 - 🔮 Authentification (email + Google OAuth)
 - 🔮 Migration localStorage → Supabase
 - 🔮 Row Level Security (RLS)
 - 🔮 Synchronisation multi-appareils
 
-### 🔮 Phase 4 : Fonctionnalités Avancées (Q1 2026)
+### 🔮 Phase 6 : Fonctionnalités Avancées (Q4 2025)
 - 🔮 Notifications push
 - 🔮 Analytics avancés
-- 🔮 Intégrations (Slack, Google Sheets, Zapier)
-- 🔮 Templates par secteur
+- 🔮 Application mobile native
+- 🔮 API REST publique
+- 🔮 IA multi-modèles
+- 🔮 Analyse prédictive
 
 ---
 
@@ -429,21 +558,40 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 - `docs/ANALYSE_GLOBALE.md` - Analyse complète de l'application
 - `docs/RESUME_FINAL.md` - Résumé des travaux
 
-### Fichiers Créés (22 nouveaux fichiers)
-- 4 pages légales
-- 2 composants UI (CookieBanner, Footer)
-- 11 fichiers PWA (manifest, icônes, scripts)
-- 1 service collaboration
-- 3 documents de documentation
+### Pages Créées (Version 1.1-1.2)
+- `/check-in` - Check-in hebdomadaire guidé par l'IA
+- `/focus` - Focus du jour (3 actions prioritaires)
+- `/retrospective` - Rétrospective trimestrielle IA + export PDF
+- `/reports` - Rapports et analytics (amélioré)
+- `/share` - Vue publique lecture seule
+- `/import` - Import CSV/Google Sheets
+- 4 pages légales (`/legal/*`)
 
-### Fichiers Modifiés (4 fichiers)
-- `Layout.tsx` - Footer + CookieBanner
-- `_document.tsx` - Meta tags PWA
+### Composants Créés
+- `CommentList` - Commentaires avec @mentions
+- `CookieBanner` - Bannière de consentement cookies
+- `Footer` - Pied de page avec liens légaux (mis à jour)
+- `Header` - Navigation avec lien Rétrospective (mis à jour)
+
+### Services Créés
+- `nudgesService` - Notifications locales intelligentes
+- `shareService` - Partage public avec snapshot Base64
+- `importService` - Import CSV avec mapping automatique
+- `teamService` - Gestion d'équipes (fondations)
+- `commentService` - Commentaires et mentions
+- Services collaboration (invitations, notifications, etc.)
+
+### Fichiers Modifiés Majeurs
+- `src/services/export.ts` - PDF redesigné avec design moderne
+- `src/pages/_app.tsx` - Chargement données localStorage corrigé
+- `src/components/layout/Footer.tsx` - Lien Pyramide → Rapports
+- `src/components/layout/Header.tsx` - Ajout lien Rétrospective
+- `package.json` - Version 1.2.0
 - `next.config.js` - Configuration PWA
-- `types/index.ts` - Types collaboration
+- `types/index.ts` - Types collaboration et killer features
 
 ---
 
-*Document mis à jour le : 30 Septembre 2025*
-*Version : 1.1.0*
-*Dernières modifications : Ajout RGPD, PWA et Collaboration*
+*Document mis à jour le : 10 Janvier 2025*
+*Version : 1.2.0*
+*Dernières modifications : Killer Features (Check-in, Focus, Nudges, Auto-cascade, Rétrospective, Health Score, Commentaires, Partage, Import CSV), PDF amélioré*
