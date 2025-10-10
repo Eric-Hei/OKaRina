@@ -476,7 +476,7 @@ export const useAppStore = create<AppState>()(
         clearNotifications: () => set({ notifications: [] }),
       }),
       {
-        name: 'okarina-app-store',
+        name: 'oskar-app-store',
         partialize: (state) => ({
           user: state.user,
           isAuthenticated: state.isAuthenticated,
@@ -501,6 +501,6 @@ export const useAppStore = create<AppState>()(
         },
       }
     ),
-    { name: 'OKaRina App Store' }
+    { name: 'OsKaR App Store' }
   )
 );

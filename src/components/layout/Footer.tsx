@@ -15,7 +15,7 @@ export const Footer: React.FC = () => {
           {/* À propos */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
-              OKaRina
+              OsKaR
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               Votre coach IA pour définir et atteindre vos objectifs d'entreprise avec la méthode OKR.
@@ -160,14 +160,14 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             {/* Copyright et version */}
             <p className="text-sm text-gray-500">
-              © {currentYear} OKaRina v{packageJson.version}. Tous droits réservés.
+              © {currentYear} OsKaR v{packageJson.version}. Tous droits réservés.
             </p>
 
             {/* Bouton paramètres cookies */}
             <button
               onClick={() => {
                 // Supprimer le consentement pour réafficher la bannière
-                localStorage.removeItem('okarina_cookie_consent');
+                localStorage.removeItem('oskar_cookie_consent');
                 window.location.reload();
               }}
               className="text-sm text-gray-600 hover:text-primary-600 transition-colors flex items-center"
@@ -178,18 +178,18 @@ export const Footer: React.FC = () => {
 
             {/* Contact */}
             <a
-              href="mailto:contact@okarina.com"
+              href="mailto:contact@oskar.com"
               className="text-sm text-gray-600 hover:text-primary-600 transition-colors flex items-center"
             >
               <Mail className="h-4 w-4 mr-2" />
-              contact@okarina.com
+              contact@oskar.com
             </a>
           </div>
 
           {/* Mentions légales supplémentaires */}
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
-              OKaRina utilise l'IA Google Gemini pour fournir des conseils personnalisés.
+              OsKaR utilise l'IA Google Gemini pour fournir des conseils personnalisés.
               Les conseils fournis sont à titre informatif uniquement.
             </p>
           </div>

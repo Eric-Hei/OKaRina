@@ -11,7 +11,7 @@ import { CompanySize, CompanyStage } from '@/types';
 interface CompanyProfileFormProps {
   initialData?: Partial<CompanyProfile>;
   onSubmit: (data: CompanyProfile) => void;
-  onSkip?: () => void;
+
 }
 
 interface FormData {
@@ -45,7 +45,6 @@ const COMPANY_STAGES = [
 export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
   initialData,
   onSubmit,
-  onSkip,
 }) => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     defaultValues: {
@@ -203,15 +202,7 @@ export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
 
             {/* Actions */}
             <div className="flex justify-between pt-6 border-t border-gray-200">
-              {onSkip && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onSkip}
-                >
-                  Passer pour l'instant
-                </Button>
-              )}
+
               <div className="flex space-x-3 ml-auto">
                 <Button
                   type="submit"

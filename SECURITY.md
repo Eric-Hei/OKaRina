@@ -1,4 +1,4 @@
-# 🔒 Guide de Sécurité - OKaRina
+# 🔒 Guide de Sécurité - OsKaR
 
 ## Variables d'Environnement
 

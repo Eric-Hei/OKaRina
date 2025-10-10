@@ -1,8 +1,8 @@
-# Roadmap Prioritaire - OKaRina 🚀
+# Roadmap Prioritaire - OsKaR 🚀
 
 ## 🎯 Objectif
 
-Transformer OKaRina d'un **prototype fonctionnel** en un **produit SaaS production-ready** capable de générer des revenus et de scaler.
+Transformer OsKaR d'un **prototype fonctionnel** en un **produit SaaS production-ready** capable de générer des revenus et de scaler.
 
 ---
 

@@ -1,4 +1,4 @@
-# Configuration PWA - OKaRina
+# Configuration PWA - OsKaR
 
 ## ✅ Ce qui a été fait
 

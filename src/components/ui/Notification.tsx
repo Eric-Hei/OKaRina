@@ -61,7 +61,7 @@ const Notification: React.FC<NotificationProps> = ({
       exit={{ opacity: 0, y: -50, scale: 0.95 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden',
+        'max-w-md w-full sm:w-[420px] rounded-xl pointer-events-auto overflow-hidden shadow-lg border border-l-4',
         colors[type]
       )}
     >
@@ -70,9 +70,9 @@ const Notification: React.FC<NotificationProps> = ({
           <div className="flex-shrink-0">
             <Icon className={cn('h-6 w-6', iconColors[type])} />
           </div>
-          <div className="ml-3 w-0 flex-1 pt-0.5">
+          <div className="ml-3 min-w-0 flex-1 pt-0.5">
             <p className="text-sm font-medium">{title}</p>
-            <p className="mt-1 text-sm opacity-90">{message}</p>
+            <p className="mt-1 text-sm opacity-90 leading-relaxed break-words">{message}</p>
           </div>
           <div className="ml-4 flex-shrink-0 flex">
             <button
@@ -93,7 +93,7 @@ const NotificationContainer: React.FC = () => {
   const { notifications, removeNotification } = useNotifications();
 
   return (
-    <div className="fixed top-0 right-0 z-50 p-6 space-y-4">
+    <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 space-y-3 max-w-full">
       <AnimatePresence>
         {notifications.map((notification) => (
           <Notification

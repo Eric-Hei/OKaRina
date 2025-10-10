@@ -1,4 +1,4 @@
-# PRD - OKaRina 🎯
+# PRD - OsKaR 🎯
 **Product Requirements Document**
 
 ---
@@ -7,8 +7,8 @@
 
 | **Champ** | **Valeur** |
 |-----------|------------|
-| **Produit** | OKaRina - Outil de gestion d'objectifs avec IA |
-| **Version** | 1.2.0 |
+| **Produit** | OsKaR - Outil de gestion d'objectifs avec IA |
+| **Version** | 1.3.0 |
 | **Date** | Janvier 2025 |
 | **Statut** | ✅ Déployé en production |
 | **URL** | [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app) |
@@ -398,7 +398,7 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 #### Commentaires + @Mentions
 - ✅ Composant `CommentList` : Commentaires sur objectifs et KR
 - ✅ Support des @mentions avec extraction regex
-- ✅ Stockage localStorage (`okarina_comments`)
+- ✅ Stockage localStorage (`oskar_comments`)
 - ✅ Intégration dans vue hiérarchique
 
 #### Partage Public en 1 Clic

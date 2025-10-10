@@ -1,4 +1,4 @@
-# Implémentation RGPD + PWA + Collaboration
+# Implémentation RGPD + PWA + Collaboration - OsKaR
 
 ## ✅ Travaux Réalisés
 

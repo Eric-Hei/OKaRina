@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useAppStore } from '@/store/useAppStore';
 import { storageService } from '@/services/storage';
+import { migrateLocalStorageData } from '@/utils/migration';
 import '@/styles/globals.css';
 
 // Importer les fonctions de débogage (disponibles dans la console)
@@ -12,6 +13,11 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 
 export default function App({ Component, pageProps }: AppProps) {
   const { loadData, user, ambitions, actions, quarterlyKeyResults, updateAction, hasHydrated } = useAppStore();
+
+  // Migrer les données OKaRina → OsKaR au premier chargement
+  useEffect(() => {
+    migrateLocalStorageData();
+  }, []);
 
   // Charger les données au démarrage de l'application
   useEffect(() => {

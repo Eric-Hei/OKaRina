@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
-  Target,
   BarChart3,
   Calendar,
   FileText,
@@ -37,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Check-in', href: '/check-in', icon: AlarmClock },
     { name: 'Focus', href: '/focus', icon: AlarmClock },
-    { name: 'Canvas', href: '/canvas', icon: Target },
+    { name: 'Canvas', href: '/canvas', icon: FileText },
     { name: 'Gestion', href: '/management', icon: FolderKanban },
     { name: 'Suivi', href: '/progress', icon: Calendar },
     { name: 'Rapports', href: '/reports', icon: FileText },
@@ -69,9 +68,12 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
         <div className="flex justify-between items-center h-16">
           {/* Logo et navigation principale */}
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <Target className="h-8 w-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">OKaRina</span>
+            <Link href="/dashboard" className="flex items-center">
+              <img
+                src="/images/Oskar-logo.png"
+                alt="OsKaR"
+                className="h-16 w-auto object-contain"
+              />
             </Link>
 
             {/* Navigation desktop */}

@@ -1,4 +1,4 @@
-// Types principaux pour OKaRina
+// Types principaux pour OsKaR
 
 export interface User {
   id: string;

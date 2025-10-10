@@ -61,7 +61,7 @@ Lancer nouveau produit,Développer une nouvelle gamme,product,critical,2025,Fina
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'okarina_template.csv';
+    link.download = 'oskar_template.csv';
     link.click();
   };
 

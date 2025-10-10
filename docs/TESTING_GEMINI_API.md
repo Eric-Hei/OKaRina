@@ -1,6 +1,6 @@
 # Tests de l'API Gemini
 
-Ce document explique comment tester l'intégration de l'API Gemini dans OKaRina.
+Ce document explique comment tester l'intégration de l'API Gemini dans OsKaR.
 
 ## 📋 Table des matières
 
@@ -13,7 +13,7 @@ Ce document explique comment tester l'intégration de l'API Gemini dans OKaRina.
 
 ## 🎯 Vue d'ensemble
 
-OKaRina utilise l'API Google Gemini pour fournir des conseils intelligents et contextuels aux entrepreneurs. Plusieurs types de tests sont disponibles pour vérifier que l'intégration fonctionne correctement.
+OsKaR utilise l'API Google Gemini pour fournir des conseils intelligents et contextuels aux entrepreneurs. Plusieurs types de tests sont disponibles pour vérifier que l'intégration fonctionne correctement.
 
 ## ⚙️ Configuration
 
@@ -152,7 +152,7 @@ npm run dev
 ✅ Clé API valide et fonctionnelle
 ✅ Modèle gemini-2.5-flash accessible
 ✅ Génération de contenu opérationnelle
-✅ L'API Gemini est prête à être utilisée dans OKaRina
+✅ L'API Gemini est prête à être utilisée dans OsKaR
 ```
 
 ### ⚠️ Avertissements courants

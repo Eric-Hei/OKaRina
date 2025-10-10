@@ -55,7 +55,7 @@ const HomePage: React.FC = () => {
     {
       name: 'Marie Dubois',
       role: 'CEO, TechStart',
-      content: 'OKaRina m\'a aidée à structurer ma vision et à la transformer en résultats concrets. En 6 mois, nous avons doublé notre chiffre d\'affaires !',
+      content: 'OsKaR m\'a aidée à structurer ma vision et à la transformer en résultats concrets. En 6 mois, nous avons doublé notre chiffre d\'affaires !',
       rating: 5,
     },
     {
@@ -67,7 +67,7 @@ const HomePage: React.FC = () => {
     {
       name: 'Sophie Laurent',
       role: 'Directrice, InnoLab',
-      content: 'Enfin un outil simple et efficace ! Fini les méthodes complexes, OKaRina rend la gestion d\'objectifs accessible à tous.',
+      content: 'Enfin un outil simple et efficace ! Fini les méthodes complexes, OsKaR rend la gestion d\'objectifs accessible à tous.',
       rating: 5,
     },
   ];
@@ -75,7 +75,7 @@ const HomePage: React.FC = () => {
   return (
     <Layout
       title="Accueil"
-      description="Transformez vos ambitions en résultats avec OKaRina - L'outil de gestion d'objectifs avec IA coach intégrée"
+      description="Transformez vos ambitions en résultats avec OsKaR - L'outil de gestion d'objectifs avec IA coach intégrée"
     >
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white">
@@ -131,7 +131,7 @@ const HomePage: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Pourquoi choisir OKaRina ?
+              Pourquoi choisir OsKaR ?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Une approche simple et guidée pour transformer vos idées en objectifs mesurables,
@@ -182,7 +182,7 @@ const HomePage: React.FC = () => {
                 Les bénéfices pour votre entreprise
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                OKaRina vous aide à créer une culture du résultat sans complexité inutile.
+                OsKaR vous aide à créer une culture du résultat sans complexité inutile.
                 Gagnez en clarté, en focus et en motivation grâce à notre approche guidée.
               </p>
               <ul className="space-y-4">

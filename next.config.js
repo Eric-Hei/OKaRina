@@ -6,7 +6,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    CUSTOM_KEY: 'okarina-app',
+    CUSTOM_KEY: 'oskar-app',
   },
 }
 

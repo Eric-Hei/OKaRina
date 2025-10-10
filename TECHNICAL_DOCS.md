@@ -1,6 +1,6 @@
-# Documentation Technique - OKaRina 🎯
+# Documentation Technique - OsKaR 🎯
 
-Guide technique complet pour les développeurs travaillant sur OKaRina.
+Guide technique complet pour les développeurs travaillant sur OsKaR.
 
 ---
 
@@ -368,13 +368,13 @@ interface Action {
 ```typescript
 // Clés de stockage
 const STORAGE_KEYS = {
-  USER: 'okarina_user',
-  AMBITIONS: 'okarina_ambitions',
-  KEY_RESULTS: 'okarina_key_results',
-  QUARTERLY_OBJECTIVES: 'okarina_quarterly_objectives',
-  QUARTERLY_KEY_RESULTS: 'okarina_quarterly_key_results',
-  ACTIONS: 'okarina_actions',
-  CANVAS_STATE: 'okarina_canvas_state',
+  USER: 'oskar_user',
+  AMBITIONS: 'oskar_ambitions',
+  KEY_RESULTS: 'oskar_key_results',
+  QUARTERLY_OBJECTIVES: 'oskar_quarterly_objectives',
+  QUARTERLY_KEY_RESULTS: 'oskar_quarterly_key_results',
+  ACTIONS: 'oskar_actions',
+  CANVAS_STATE: 'oskar_canvas_state',
 }
 
 // Persistance automatique avec Zustand
@@ -384,7 +384,7 @@ const useAppStore = create<AppStore>()(
       // Store implementation
     }),
     {
-      name: 'okarina-store',
+      name: 'oskar-store',
       storage: createJSONStorage(() => localStorage),
     }
   )

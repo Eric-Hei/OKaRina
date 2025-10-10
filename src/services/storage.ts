@@ -331,7 +331,7 @@ export class StorageService {
   private createBackup(): void {
     try {
       const backup = this.exportData();
-      localStorage.setItem('okarina_backup', backup);
+      localStorage.setItem('oskar_backup', backup);
     } catch (error) {
       console.error('Erreur lors de la création du backup:', error);
     }
@@ -339,7 +339,7 @@ export class StorageService {
 
   public restoreFromBackup(): boolean {
     try {
-      const backup = localStorage.getItem('okarina_backup');
+      const backup = localStorage.getItem('oskar_backup');
       if (backup) {
         this.importData(backup);
         return true;

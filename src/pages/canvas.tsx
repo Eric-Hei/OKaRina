@@ -46,18 +46,27 @@ const CanvasPage: React.FC = () => {
     if (!hasHydrated) return;
 
     try {
-      const persisted = typeof window !== 'undefined' ? localStorage.getItem('okarina-app-store') : null;
+      const persisted = typeof window !== 'undefined' ? localStorage.getItem('oskar-app-store') : null;
       const hasPersistedUser = !!persisted && (() => { try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; } })();
       if (!user && !hasPersistedUser) {
         console.log('📝 Canvas - Création utilisateur démo (aucun utilisateur persistant)');
         setUser({
           id: 'demo-user',
           name: 'Entrepreneur Démo',
-          email: 'demo@okarina.com',
+          email: 'demo@oskar.com',
           company: 'Ma Startup',
           role: 'CEO',
           createdAt: new Date(),
           lastLoginAt: new Date(),
+          companyProfile: {
+            name: 'Ma Startup',
+            sector: 'Technology',
+            size: 'small',
+            stage: 'growth',
+            mainGoals: ['Croissance', 'Innovation'],
+            challenges: ['Recrutement', 'Financement'],
+            market: 'B2B SaaS',
+          },
         });
       }
     } catch {}
@@ -107,7 +116,7 @@ const CanvasPage: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Canvas Guidé OKaRina
+                  Canvas Guidé OsKaR
                 </h1>
                 <p className="text-gray-600 mt-1">
                   Transformez vos ambitions en objectifs mesurables en 4 étapes

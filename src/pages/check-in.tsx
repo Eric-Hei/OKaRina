@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { geminiService } from '@/services/gemini';
+import { AISuggestionsPanel } from '@/components/canvas/AISuggestionsPanel';
 import { generateId, getDaysUntilDeadline, formatDate } from '@/utils';
 import type { Action, QuarterlyKeyResult } from '@/types';
 import { ActionStatus, Priority } from '@/types';
@@ -57,22 +58,20 @@ export default function CheckInPage() {
     }
   };
 
-  const createActionsFromSuggestions = (kr: QuarterlyKeyResult) => {
-    const ideas = suggestionsByKr[kr.id] || [];
-    ideas.slice(0, MAX_SUGGESTIONS).forEach((title) => {
-      const newAction: Action = {
-        id: generateId(),
-        title: title.substring(0, 120),
-        description: `Issue du check-in hebdo du ${formatDate(new Date())}`,
-        quarterlyKeyResultId: kr.id,
-        status: ActionStatus.TODO,
-        priority: Priority.MEDIUM,
-        labels: ['check-in'],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addAction(newAction);
-    });
+  const createActionFromSuggestion = (kr: QuarterlyKeyResult, text: string) => {
+    const title = text.substring(0, 120);
+    const newAction: Action = {
+      id: generateId(),
+      title,
+      description: `Issue du check-in hebdo du ${formatDate(new Date())}`,
+      quarterlyKeyResultId: kr.id,
+      status: ActionStatus.TODO,
+      priority: Priority.MEDIUM,
+      labels: ['check-in'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    addAction(newAction);
   };
 
   return (
@@ -131,16 +130,14 @@ export default function CheckInPage() {
                         {loadingKrId === kr.id ? 'Proposition en cours…' : 'Proposer 3 actions'}
                       </Button>
                     ) : (
-                      <div className="space-y-2">
-                        <ul className="list-disc pl-5 text-sm text-gray-700">
-                          {ideas.map((s, idx) => (
-                            <li key={idx}>{s}</li>
-                          ))}
-                        </ul>
+                      <div className="space-y-3">
+                        <AISuggestionsPanel
+                          suggestions={ideas}
+                          onAdd={(text) => createActionFromSuggestion(kr, text)}
+                          enableCopy
+                          showToggleAll
+                        />
                         <div className="flex items-center space-x-2">
-                          <Button onClick={() => createActionsFromSuggestions(kr)} leftIcon={<CheckCircle2 className="h-4 w-4" />}>
-                            Ajouter ces actions
-                          </Button>
                           <Button variant="ghost" onClick={() => proposeNextActions(kr)}>
                             Re-générer
                           </Button>

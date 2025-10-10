@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Target, ArrowRight, CheckCircle } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { CompanyProfileForm } from '@/components/ui/CompanyProfileForm';
-import { Button } from '@/components/ui/Button';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAppStore } from '@/store/useAppStore';
 import type { CompanyProfile } from '@/types';
@@ -26,7 +26,7 @@ const OnboardingPage: React.FC = () => {
     if (!hasHydrated) return;
 
     try {
-      const persisted = typeof window !== 'undefined' ? localStorage.getItem('okarina-app-store') : null;
+      const persisted = typeof window !== 'undefined' ? localStorage.getItem('oskar-app-store') : null;
       const hasPersistedUser = !!persisted && (() => {
         try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; }
       })();
@@ -35,7 +35,7 @@ const OnboardingPage: React.FC = () => {
         const defaultUser = {
           id: 'demo-user',
           name: 'Utilisateur Demo',
-          email: 'demo@okarina.com',
+          email: 'demo@oskar.com',
           createdAt: new Date(),
           lastLoginAt: new Date(),
         };
@@ -49,9 +49,7 @@ const OnboardingPage: React.FC = () => {
     router.push('/dashboard');
   };
 
-  const handleSkip = () => {
-    router.push('/dashboard');
-  };
+
 
   const steps = [
     {
@@ -75,7 +73,7 @@ const OnboardingPage: React.FC = () => {
   ];
 
   return (
-    <Layout title="Bienvenue dans OKaRina" skipOnboarding>
+    <Layout title="Bienvenue dans OsKaR" skipOnboarding>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* En-tête de bienvenue */}
@@ -91,7 +89,7 @@ const OnboardingPage: React.FC = () => {
               </div>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Bienvenue dans OKaRina ! 🎯
+              Bienvenue dans OsKaR ! 🎯
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Transformez vos ambitions en résultats concrets grâce à notre approche guidée 
@@ -148,7 +146,6 @@ const OnboardingPage: React.FC = () => {
           >
             <CompanyProfileForm
               onSubmit={handleCompanyProfileSubmit}
-              onSkip={handleSkip}
             />
           </motion.div>
 
@@ -211,24 +208,7 @@ const OnboardingPage: React.FC = () => {
             </Card>
           </motion.div>
 
-          {/* Call to action alternatif */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-12 text-center"
-          >
-            <p className="text-gray-500 mb-4">
-              Vous préférez découvrir l'application d'abord ?
-            </p>
-            <Button
-              variant="outline"
-              onClick={handleSkip}
-              leftIcon={<ArrowRight className="h-4 w-4" />}
-            >
-              Passer cette étape pour l'instant
-            </Button>
-          </motion.div>
+
         </div>
       </div>
     </Layout>

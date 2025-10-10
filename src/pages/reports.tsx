@@ -46,11 +46,20 @@ const ReportsPage: React.FC = () => {
       setUser({
         id: 'demo-user',
         name: 'Entrepreneur Démo',
-        email: 'demo@okarina.com',
+        email: 'demo@oskar.com',
         company: 'Ma Startup',
         role: 'CEO',
         createdAt: new Date(),
         lastLoginAt: new Date(),
+        companyProfile: {
+          name: 'Ma Startup',
+          sector: 'Technology',
+          size: 'small',
+          stage: 'growth',
+          mainGoals: ['Croissance', 'Innovation'],
+          challenges: ['Recrutement', 'Financement'],
+          market: 'B2B SaaS',
+        },
       });
     }
   }, [user, setUser]);

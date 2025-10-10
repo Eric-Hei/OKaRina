@@ -95,8 +95,8 @@ configFiles.forEach(file => {
 const envPath = path.join(process.cwd(), '.env.local');
 if (!fs.existsSync(envPath)) {
   console.log('\n🔧 Création du fichier .env.local...');
-  const envContent = `# Configuration locale pour OKaRina
-NEXT_PUBLIC_APP_NAME=OKaRina
+  const envContent = `# Configuration locale pour OsKaR
+NEXT_PUBLIC_APP_NAME=OsKaR
 NEXT_PUBLIC_APP_VERSION=${packageJson.version}
 NEXT_PUBLIC_APP_ENV=development
 

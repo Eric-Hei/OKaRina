@@ -12,7 +12,7 @@ Le problème vient de la configuration du store Zustand avec `persist`. Actuelle
 persist(
   (set, get) => ({ /* ... */ }),
   {
-    name: 'okarina-app-store',
+    name: 'oskar-app-store',
     partialize: (state) => ({
       user: state.user,
       isAuthenticated: state.isAuthenticated,
@@ -42,11 +42,11 @@ Ouvrez la console du navigateur (F12) et tapez :
 
 ```javascript
 // Vérifier le localStorage
-console.log('Ambitions:', JSON.parse(localStorage.getItem('okarina_ambitions') || '[]'));
-console.log('KeyResults:', JSON.parse(localStorage.getItem('okarina_keyResults') || '[]'));
-console.log('OKRs:', JSON.parse(localStorage.getItem('okarina_okrs') || '[]'));
-console.log('Actions:', JSON.parse(localStorage.getItem('okarina_actions') || '[]'));
-console.log('Quarterly Objectives:', JSON.parse(localStorage.getItem('okarina_quarterlyObjectives') || '[]'));
+console.log('Ambitions:', JSON.parse(localStorage.getItem('oskar_ambitions') || '[]'));
+console.log('KeyResults:', JSON.parse(localStorage.getItem('oskar_key_results') || '[]'));
+console.log('OKRs:', JSON.parse(localStorage.getItem('oskar_okrs') || '[]'));
+console.log('Actions:', JSON.parse(localStorage.getItem('oskar_actions') || '[]'));
+console.log('Quarterly Objectives:', JSON.parse(localStorage.getItem('oskar_quarterly_objectives') || '[]'));
 ```
 
 ### 2. Vérifier que loadData() est appelé
@@ -98,7 +98,7 @@ Si le problème persiste, il faut peut-être modifier la configuration du `persi
 persist(
   (set, get) => ({ /* ... */ }),
   {
-    name: 'okarina-app-store',
+    name: 'oskar-app-store',
     partialize: (state) => ({
       user: state.user,
       isAuthenticated: state.isAuthenticated,
@@ -130,7 +130,7 @@ persist(
                                                 ▼
                                     ┌───────────────────────┐
                                     │   localStorage        │
-                                    │  okarina_ambitions    │
+                                    │  oskar_ambitions      │
                                     └───────────────────────┘
                                                 │
                                                 ▼

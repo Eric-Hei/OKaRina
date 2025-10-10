@@ -19,12 +19,12 @@ import {
 } from '@/types';
 
 const STORAGE_KEYS = {
-  TEAMS: 'okarina_teams',
-  TEAM_MEMBERS: 'okarina_team_members',
-  INVITATIONS: 'okarina_invitations',
-  SHARED_OBJECTIVES: 'okarina_shared_objectives',
-  COMMENTS: 'okarina_comments',
-  NOTIFICATIONS: 'okarina_notifications',
+  TEAMS: 'oskar_teams',
+  TEAM_MEMBERS: 'oskar_team_members',
+  INVITATIONS: 'oskar_invitations',
+  SHARED_OBJECTIVES: 'oskar_shared_objectives',
+  COMMENTS: 'oskar_comments',
+  NOTIFICATIONS: 'oskar_notifications',
 };
 
 // ============================================

@@ -2,10 +2,10 @@ import { AmbitionCategory, Priority, Quarter } from '@/types';
 
 // Configuration de l'application
 export const APP_CONFIG = {
-  name: 'OKaRina',
-  version: '1.0.0',
+  name: 'OsKaR',
+  version: '1.3.6',
   description: 'Outil de gestion d\'objectifs pour entrepreneurs avec IA coach',
-  author: 'OKaRina Team',
+  author: 'OsKaR Team',
   maxAmbitionsPerYear: 5,
   maxKeyResultsPerAmbition: 3,
   maxOKRsPerQuarter: 10,
@@ -15,17 +15,17 @@ export const APP_CONFIG = {
 
 // Clés pour le localStorage
 export const STORAGE_KEYS = {
-  USER: 'okarina_user',
-  AMBITIONS: 'okarina_ambitions',
-  KEY_RESULTS: 'okarina_key_results',
-  OKRS: 'okarina_okrs',
-  ACTIONS: 'okarina_actions',
-  QUARTERLY_OBJECTIVES: 'okarina_quarterly_objectives',
-  QUARTERLY_KEY_RESULTS: 'okarina_quarterly_key_results',
-  PROGRESS: 'okarina_progress',
-  SETTINGS: 'okarina_settings',
-  CANVAS_STATE: 'okarina_canvas_state',
-  COMMENTS: 'okarina_comments',
+  USER: 'oskar_user',
+  AMBITIONS: 'oskar_ambitions',
+  KEY_RESULTS: 'oskar_key_results',
+  OKRS: 'oskar_okrs',
+  ACTIONS: 'oskar_actions',
+  QUARTERLY_OBJECTIVES: 'oskar_quarterly_objectives',
+  QUARTERLY_KEY_RESULTS: 'oskar_quarterly_key_results',
+  PROGRESS: 'oskar_progress',
+  SETTINGS: 'oskar_settings',
+  CANVAS_STATE: 'oskar_canvas_state',
+  COMMENTS: 'oskar_comments',
 };
 
 // Messages de l'IA Coach

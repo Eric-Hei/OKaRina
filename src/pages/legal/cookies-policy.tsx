@@ -7,7 +7,7 @@ const CookiesPolicyPage: React.FC = () => {
   return (
     <Layout
       title="Politique de Cookies"
-      description="Politique d'utilisation des cookies - OKaRina"
+      description="Politique d'utilisation des cookies - OsKaR"
       skipOnboarding
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -61,12 +61,12 @@ const CookiesPolicyPage: React.FC = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b">
-                    <td className="py-2"><code>okarina-app-store</code></td>
+                    <td className="py-2"><code>oskar-app-store</code></td>
                     <td className="py-2">Sauvegarde de vos données (objectifs, ambitions)</td>
                     <td className="py-2">Persistant</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-2"><code>okarina_consent</code></td>
+                    <td className="py-2"><code>oskar_cookie_consent</code></td>
                     <td className="py-2">Mémorisation de vos choix de cookies</td>
                     <td className="py-2">13 mois</td>
                   </tr>
@@ -119,12 +119,12 @@ const CookiesPolicyPage: React.FC = () => {
                 </thead>
                 <tbody>
                   <tr className="border-b">
-                    <td className="py-2"><code>okarina_theme</code></td>
+                    <td className="py-2"><code>oskar_theme</code></td>
                     <td className="py-2">Mémorisation du thème (clair/sombre)</td>
                     <td className="py-2">1 an</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-2"><code>okarina_lang</code></td>
+                    <td className="py-2"><code>oskar_lang</code></td>
                     <td className="py-2">Mémorisation de la langue</td>
                     <td className="py-2">1 an</td>
                   </tr>

@@ -1,8 +1,8 @@
-# Analyse Globale de OKaRina 🎯
+# Analyse Globale de OsKaR 🎯
 
 ## 📊 Vue d'Ensemble
 
-**OKaRina** est une application de gestion d'objectifs OKR avec IA coach intégrée, ciblant les entrepreneurs et dirigeants de PME. L'application est **techniquement solide** et **fonctionnellement riche**, avec une architecture moderne et une UX soignée.
+**OsKaR** est une application de gestion d'objectifs OKR avec IA coach intégrée, ciblant les entrepreneurs et dirigeants de PME. L'application est **techniquement solide** et **fonctionnellement riche**, avec une architecture moderne et une UX soignée.
 
 ---
 
@@ -552,7 +552,7 @@ import CookieConsent from 'react-cookie-consent';
 
 ## 🎉 Conclusion
 
-**OKaRina est une excellente base** avec :
+**OsKaR est une excellente base** avec :
 - ✅ Architecture technique solide
 - ✅ UX soignée
 - ✅ Fonctionnalités riches
@@ -564,6 +564,6 @@ import CookieConsent from 'react-cookie-consent';
 - 🟡 Collaboration d'équipe
 - 🟡 PWA pour mobile
 
-**Avec ces améliorations, OKaRina peut devenir un produit SaaS viable et compétitif sur le marché des outils OKR pour PME ! 🚀**
+**Avec ces améliorations, OsKaR peut devenir un produit SaaS viable et compétitif sur le marché des outils OKR pour PME ! 🚀**
 
 

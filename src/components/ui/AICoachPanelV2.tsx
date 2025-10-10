@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
 import { Badge } from './Badge';
 import { aiCoachService } from '@/services/ai-coach';
+import { AISuggestionsPanel } from '@/components/canvas/AISuggestionsPanel';
 import { useAppStore } from '@/store/useAppStore';
 import type { AIValidation, Ambition, KeyResult, CompanyProfile } from '@/types';
 
@@ -239,32 +240,12 @@ export const AICoachPanelV2: React.FC<AICoachPanelV2Props> = ({
 
                   {/* Suggestions */}
                   {validation.suggestions.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Lightbulb className="h-4 w-4 text-blue-600" />
-                        <h4 className="text-sm font-semibold text-gray-900">
-                          Conseils d'amélioration ({validation.suggestions.length})
-                        </h4>
-                      </div>
-                      <div className="space-y-2">
-                        {validation.suggestions.map((suggestion, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
-                          >
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 mt-0.5">
-                              {index + 1}
-                            </div>
-                            <p className="text-sm text-gray-700 flex-1 leading-relaxed">
-                              {suggestion.replace(/^🤖\s*/, '')}
-                            </p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
+                    <AISuggestionsPanel
+                      suggestions={validation.suggestions}
+                      enableCopy
+                      showToggleAll
+                      className="shadow-none"
+                    />
                   )}
 
                   {/* Avertissements */}

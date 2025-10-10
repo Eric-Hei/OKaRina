@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
 import { Badge } from './Badge';
 import { aiCoachService } from '@/services/ai-coach';
+import { AISuggestionsPanel } from '@/components/canvas/AISuggestionsPanel';
 import { useAppStore } from '@/store/useAppStore';
 import type { AIValidation, Ambition, KeyResult, CompanyProfile } from '@/types';
 
@@ -139,26 +140,12 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
               <CardContent className="pt-0">
                 {/* Suggestions */}
                 {validation.suggestions.length > 0 && (
-                  <div className="mb-3">
-                    <h4 className="text-xs font-medium text-gray-700 mb-2 flex items-center">
-                      <Lightbulb className="h-3 w-3 mr-1" />
-                      Suggestions d'amélioration
-                    </h4>
-                    <ul className="space-y-2">
-                      {validation.suggestions.map((suggestion, index) => (
-                        <motion.li
-                          key={index}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="text-xs text-gray-600 flex items-start bg-white rounded p-2 border"
-                        >
-                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-1 mr-2 flex-shrink-0" />
-                          {suggestion}
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </div>
+                  <AISuggestionsPanel
+                    suggestions={validation.suggestions}
+                    enableCopy
+                    showToggleAll
+                    className="shadow-none"
+                  />
                 )}
 
                 {/* Avertissements */}

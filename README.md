@@ -1,8 +1,8 @@
-# OKaRina 🎯
+# OsKaR 🎯
 
 **L'outil de gestion d'objectifs avec IA coach intégrée pour entrepreneurs et dirigeants de PME**
 
-OKaRina transforme vos ambitions en résultats concrets grâce à une approche guidée multi-entités et un accompagnement IA personnalisé basé sur votre profil d'entreprise.
+OsKaR transforme vos ambitions en résultats concrets grâce à une approche guidée multi-entités et un accompagnement IA personnalisé basé sur votre profil d'entreprise.
 
 🌐 **Application déployée :** [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app)
 

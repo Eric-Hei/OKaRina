@@ -76,7 +76,7 @@ describe('StorageService', () => {
       storageService.saveAmbitions(ambitions);
       
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_ambitions',
+        'oskar_ambitions',
         JSON.stringify(ambitions)
       );
     });
@@ -87,7 +87,7 @@ describe('StorageService', () => {
       
       const result = storageService.getAmbitions();
       
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('okarina_ambitions');
+      expect(localStorageMock.getItem).toHaveBeenCalledWith('oskar_ambitions');
       expect(result).toEqual(ambitions);
     });
 
@@ -108,7 +108,7 @@ describe('StorageService', () => {
       storageService.addAmbition(newAmbition);
       
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_ambitions',
+        'oskar_ambitions',
         JSON.stringify([...existingAmbitions, newAmbition])
       );
     });
@@ -126,7 +126,7 @@ describe('StorageService', () => {
       ];
       
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_ambitions',
+        'oskar_ambitions',
         JSON.stringify(expectedAmbitions)
       );
     });
@@ -141,7 +141,7 @@ describe('StorageService', () => {
       const expectedAmbitions = [{ ...mockAmbition, id: 'other-ambition' }];
       
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_ambitions',
+        'oskar_ambitions',
         JSON.stringify(expectedAmbitions)
       );
     });
@@ -159,19 +159,19 @@ describe('StorageService', () => {
 
       localStorageMock.getItem.mockImplementation((key) => {
         switch (key) {
-          case 'okarina_user':
+          case 'oskar_user':
             return JSON.stringify(mockUser);
-          case 'okarina_ambitions':
+          case 'oskar_ambitions':
             return JSON.stringify([]);
-          case 'okarina_key_results':
+          case 'oskar_key_results':
             return JSON.stringify([]);
-          case 'okarina_okrs':
+          case 'oskar_okrs':
             return JSON.stringify([]);
-          case 'okarina_actions':
+          case 'oskar_actions':
             return JSON.stringify([]);
-          case 'okarina_tasks':
+          case 'oskar_tasks':
             return JSON.stringify([]);
-          case 'okarina_progress':
+          case 'oskar_progress':
             return JSON.stringify([]);
           default:
             return null;
@@ -212,11 +212,11 @@ describe('StorageService', () => {
       storageService.importData(JSON.stringify(mockData));
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_user',
+        'oskar_user',
         JSON.stringify(mockData.user)
       );
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_ambitions',
+        'oskar_ambitions',
         JSON.stringify(mockData.ambitions)
       );
     });
@@ -269,7 +269,7 @@ describe('StorageService', () => {
       // Verify that backup was created (setItem called twice: once for user, once for backup)
       expect(localStorageMock.setItem).toHaveBeenCalledTimes(2);
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'okarina_backup',
+        'oskar_backup',
         expect.any(String)
       );
     });
@@ -297,7 +297,7 @@ describe('StorageService', () => {
       const result = storageService.restoreFromBackup();
 
       expect(result).toBe(true);
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('okarina_backup');
+      expect(localStorageMock.getItem).toHaveBeenCalledWith('oskar_backup');
     });
 
     it('should return false when no backup exists', () => {
