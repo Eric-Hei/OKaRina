@@ -16,6 +16,7 @@ import {
   AlarmClock,
   FileUp,
   History,
+  CheckSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -38,9 +39,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
     { name: 'Focus', href: '/focus', icon: AlarmClock },
     { name: 'Canvas', href: '/canvas', icon: FileText },
     { name: 'Gestion', href: '/management', icon: FolderKanban },
+    { name: 'Actions', href: '/actions', icon: CheckSquare },
     { name: 'Suivi', href: '/progress', icon: Calendar },
-    { name: 'Rapports', href: '/reports', icon: FileText },
-    { name: 'Rétrospective', href: '/retrospective', icon: History },
   ];
 
   const handleLogout = () => {
@@ -136,6 +136,28 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
 
                       {/* Options du menu */}
                       <div className="py-1">
+                        <button
+                          onClick={() => {
+                            router.push('/reports');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <FileText className="h-4 w-4 mr-3 text-gray-400" />
+                          Rapports
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            router.push('/retrospective');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <History className="h-4 w-4 mr-3 text-gray-400" />
+                          Rétrospective
+                        </button>
+
                         <button
                           onClick={() => {
                             router.push('/company-profile');
