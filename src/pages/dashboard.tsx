@@ -22,6 +22,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { analyticsService } from '@/services/analytics';
 import { formatDate, formatRelativeDate, getDaysUntilDeadline } from '@/utils';
 import type { DashboardMetrics, ChartData } from '@/types';
+import { CompanySize, CompanyStage } from '@/types';
 
 const DashboardPage: React.FC = () => {
   const router = useRouter();
@@ -62,12 +63,14 @@ const DashboardPage: React.FC = () => {
           lastLoginAt: new Date(),
           companyProfile: {
             name: 'Ma Startup',
-            sector: 'Technology',
-            size: 'small',
-            stage: 'growth',
-            mainGoals: ['Croissance', 'Innovation'],
-            challenges: ['Recrutement', 'Financement'],
-            market: 'B2B SaaS',
+            industry: 'Technology',
+            size: CompanySize.SMALL,
+            stage: CompanyStage.GROWTH,
+            mainChallenges: ['Recrutement', 'Financement'],
+            currentGoals: ['Croissance', 'Innovation'],
+            marketPosition: 'Challenger',
+            targetMarket: 'B2B SaaS',
+            businessModel: 'SaaS',
           },
         });
       }

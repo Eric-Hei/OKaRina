@@ -22,7 +22,7 @@ import QuarterlyObjectivesStep from '@/components/canvas/QuarterlyObjectivesStep
 import AISuggestionsPanel from '@/components/canvas/AISuggestionsPanel';
 import { generateId, getCurrentQuarter } from '@/utils';
 import type { Ambition, QuarterlyObjective, QuarterlyKeyResult, Action } from '@/types';
-import { Priority, Status, ActionStatus } from '@/types';
+import { Priority, Status, ActionStatus, CompanySize, CompanyStage } from '@/types';
 
 
 const CanvasPage: React.FC = () => {
@@ -60,12 +60,14 @@ const CanvasPage: React.FC = () => {
           lastLoginAt: new Date(),
           companyProfile: {
             name: 'Ma Startup',
-            sector: 'Technology',
-            size: 'small',
-            stage: 'growth',
-            mainGoals: ['Croissance', 'Innovation'],
-            challenges: ['Recrutement', 'Financement'],
-            market: 'B2B SaaS',
+            industry: 'Technology',
+            size: CompanySize.SMALL,
+            stage: CompanyStage.GROWTH,
+            mainChallenges: ['Recrutement', 'Financement'],
+            currentGoals: ['Croissance', 'Innovation'],
+            marketPosition: 'Challenger',
+            targetMarket: 'B2B SaaS',
+            businessModel: 'SaaS',
           },
         });
       }

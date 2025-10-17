@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { analyticsService } from '@/services/analytics';
 import { exportService } from '@/services/export';
-import { ReportType } from '@/types';
+import { ReportType, CompanySize, CompanyStage } from '@/types';
 import { formatDate, formatCurrency, formatPercentage } from '@/utils';
 
 const ReportsPage: React.FC = () => {
@@ -53,12 +53,14 @@ const ReportsPage: React.FC = () => {
         lastLoginAt: new Date(),
         companyProfile: {
           name: 'Ma Startup',
-          sector: 'Technology',
-          size: 'small',
-          stage: 'growth',
-          mainGoals: ['Croissance', 'Innovation'],
-          challenges: ['Recrutement', 'Financement'],
-          market: 'B2B SaaS',
+          industry: 'Technology',
+          size: CompanySize.SMALL,
+          stage: CompanyStage.GROWTH,
+          mainChallenges: ['Recrutement', 'Financement'],
+          currentGoals: ['Croissance', 'Innovation'],
+          marketPosition: 'Challenger',
+          targetMarket: 'B2B SaaS',
+          businessModel: 'SaaS',
         },
       });
     }
