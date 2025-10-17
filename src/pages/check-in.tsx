@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlarmClock, Target, Sparkles, CheckCircle2 } from 'lucide-react';
+import { AlarmClock, Target, Sparkles, CheckCircle2, RefreshCw, History } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { ProgressUpdateModal } from '@/components/ui/ProgressUpdateModal';
+import { ProgressHistoryPanel } from '@/components/ui/ProgressHistoryPanel';
 import { useAppStore } from '@/store/useAppStore';
 import { geminiService } from '@/services/gemini';
 import { AISuggestionsPanel } from '@/components/canvas/AISuggestionsPanel';
@@ -32,9 +34,13 @@ const fallbackActionIdeas = (kr: QuarterlyKeyResult): string[] => {
 };
 
 export default function CheckInPage() {
-  const { quarterlyKeyResults, addAction } = useAppStore();
+  const { quarterlyKeyResults, addAction, updateQuarterlyKeyResultProgress } = useAppStore();
   const [loadingKrId, setLoadingKrId] = useState<string | null>(null);
   const [suggestionsByKr, setSuggestionsByKr] = useState<Record<string, string[]>>({});
+  const [selectedKR, setSelectedKR] = useState<QuarterlyKeyResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
+  const [historyKR, setHistoryKR] = useState<QuarterlyKeyResult | null>(null);
 
   const rankedKRs = useMemo(() => {
     return [...(quarterlyKeyResults || [])]
@@ -72,6 +78,24 @@ export default function CheckInPage() {
       updatedAt: new Date(),
     };
     addAction(newAction);
+  };
+
+  const handleOpenProgressModal = (kr: QuarterlyKeyResult) => {
+    setSelectedKR(kr);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateProgress = (newCurrent: number, note?: string) => {
+    if (selectedKR) {
+      updateQuarterlyKeyResultProgress(selectedKR.id, newCurrent, note);
+      setIsModalOpen(false);
+      setSelectedKR(null);
+    }
+  };
+
+  const handleOpenHistoryPanel = (kr: QuarterlyKeyResult) => {
+    setHistoryKR(kr);
+    setIsHistoryPanelOpen(true);
   };
 
   return (
@@ -113,12 +137,32 @@ export default function CheckInPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between mb-3">
-                      <Badge variant="secondary" size="sm">{progress}%</Badge>
-                      {typeof days === 'number' && (
-                        <span className={`text-sm ${days < 0 ? 'text-red-600' : days <= 7 ? 'text-orange-600' : 'text-gray-500'}`}>
-                          {days < 0 ? `En retard de ${Math.abs(days)} j` : days === 0 ? 'Aujourd\'hui' : `Échéance dans ${days} j`}
-                        </span>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="secondary" size="sm">{progress}%</Badge>
+                        {typeof days === 'number' && (
+                          <span className={`text-sm ${days < 0 ? 'text-red-600' : days <= 7 ? 'text-orange-600' : 'text-gray-500'}`}>
+                            {days < 0 ? `En retard de ${Math.abs(days)} j` : days === 0 ? 'Aujourd\'hui' : `Échéance dans ${days} j`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          leftIcon={<RefreshCw className="h-3 w-3" />}
+                          onClick={() => handleOpenProgressModal(kr)}
+                        >
+                          Mettre à jour
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          leftIcon={<History className="h-3 w-3" />}
+                          onClick={() => handleOpenHistoryPanel(kr)}
+                        >
+                          Historique
+                        </Button>
+                      </div>
                     </div>
 
                     {!ideas ? (
@@ -151,6 +195,31 @@ export default function CheckInPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de mise à jour de progression */}
+      {selectedKR && (
+        <ProgressUpdateModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedKR(null);
+          }}
+          keyResult={selectedKR}
+          onUpdate={handleUpdateProgress}
+        />
+      )}
+
+      {/* Panneau d'historique */}
+      {historyKR && (
+        <ProgressHistoryPanel
+          isOpen={isHistoryPanelOpen}
+          onClose={() => {
+            setIsHistoryPanelOpen(false);
+            setHistoryKR(null);
+          }}
+          keyResult={historyKR}
+        />
+      )}
     </Layout>
   );
 }

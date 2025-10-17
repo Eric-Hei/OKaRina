@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { storageService } from '@/services/storage';
 import { analyticsService } from '@/services/analytics';
+import { generateId } from '@/utils';
+import { EntityType } from '@/types';
 import type {
   User,
   Ambition,
@@ -78,11 +80,12 @@ interface AppState {
   // Actions KR trimestriels
   addQuarterlyKeyResult: (keyResult: QuarterlyKeyResult) => void;
   updateQuarterlyKeyResult: (id: string, updates: Partial<QuarterlyKeyResult>) => void;
+  updateQuarterlyKeyResultProgress: (id: string, newCurrent: number, note?: string) => void;
   deleteQuarterlyKeyResult: (id: string) => void;
 
   // Actions kanban
   moveAction: (actionId: string, newStatus: ActionStatus) => void;
-  
+
   // Actions progrès
   addProgress: (progress: Progress) => void;
   
@@ -406,6 +409,38 @@ export const useAppStore = create<AppState>()(
           set({ quarterlyKeyResults });
           storageService.updateQuarterlyKeyResult(id, updates);
           get().refreshMetrics();
+        },
+
+        updateQuarterlyKeyResultProgress: (id, newCurrent, note) => {
+          const kr = get().quarterlyKeyResults.find(kr => kr.id === id);
+          if (!kr) return;
+
+          const oldCurrent = kr.current;
+          const oldProgress = kr.target > 0 ? (oldCurrent / kr.target) * 100 : 0;
+          const newProgress = kr.target > 0 ? (newCurrent / kr.target) * 100 : 0;
+
+          // Mettre à jour le KR
+          get().updateQuarterlyKeyResult(id, { current: newCurrent });
+
+          // Enregistrer dans l'historique
+          const progress: Progress = {
+            id: generateId(),
+            entityId: id,
+            entityType: EntityType.QUARTERLY_KEY_RESULT,
+            value: newProgress,
+            note: note,
+            recordedAt: new Date(),
+            recordedBy: 'demo-user', // TODO: Use actual user ID
+          };
+          get().addProgress(progress);
+
+          // Notification
+          const diff = newProgress - oldProgress;
+          get().addNotification({
+            type: diff > 0 ? 'success' : 'info',
+            title: 'Progression mise à jour',
+            message: `${kr.title}: ${oldCurrent} → ${newCurrent} ${kr.unit} (${diff > 0 ? '+' : ''}${diff.toFixed(1)}%)`,
+          });
         },
 
         deleteQuarterlyKeyResult: (id) => {

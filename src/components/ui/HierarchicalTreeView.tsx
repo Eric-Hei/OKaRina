@@ -14,6 +14,8 @@ import {
   MoreHorizontal,
   Sparkles,
   Share2,
+  RefreshCw,
+  History,
 } from 'lucide-react';
 import { CommentList } from '@/components/ui/CommentList';
 import { MessageSquare } from 'lucide-react';
@@ -51,6 +53,8 @@ interface HierarchicalTreeViewProps {
   onGenerateActionPlan?: (keyResult: QuarterlyKeyResult) => void;
   onShareQuarterlyObjective?: (objectiveId: string) => void;
   onShareQuarterlyKeyResult?: (keyResultId: string) => void;
+  onUpdateQuarterlyKeyResultProgress?: (keyResult: QuarterlyKeyResult) => void;
+  onViewQuarterlyKeyResultHistory?: (keyResult: QuarterlyKeyResult) => void;
 }
 
 export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
@@ -74,6 +78,8 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
   onGenerateActionPlan,
   onShareQuarterlyObjective,
   onShareQuarterlyKeyResult,
+  onUpdateQuarterlyKeyResultProgress,
+  onViewQuarterlyKeyResultHistory,
 }) => {
   const [expandedAmbitions, setExpandedAmbitions] = useState<Set<string>>(new Set());
   const [expandedObjectives, setExpandedObjectives] = useState<Set<string>>(new Set());
@@ -402,6 +408,22 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                                                   </Badge>
                                                 </div>
                                                 <div className="flex items-center space-x-1">
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => onUpdateQuarterlyKeyResultProgress && onUpdateQuarterlyKeyResultProgress(kr)}
+                                                  >
+                                                    <RefreshCw className="h-3 w-3 mr-1" />
+                                                    Mettre à jour
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => onViewQuarterlyKeyResultHistory && onViewQuarterlyKeyResultHistory(kr)}
+                                                  >
+                                                    <History className="h-3 w-3 mr-1" />
+                                                    Historique
+                                                  </Button>
                                                   <Button
                                                     size="sm"
                                                     variant="ghost"

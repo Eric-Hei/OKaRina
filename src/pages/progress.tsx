@@ -9,17 +9,21 @@ import {
   AlertTriangle,
   BarChart3,
   Plus,
-  Edit
+  Edit,
+  RefreshCw,
+  History
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { ProgressUpdateModal } from '@/components/ui/ProgressUpdateModal';
+import { ProgressHistoryPanel } from '@/components/ui/ProgressHistoryPanel';
 import { useAppStore } from '@/store/useAppStore';
 import { analyticsService } from '@/services/analytics';
 import { formatDate, formatRelativeDate, getDaysUntilDeadline } from '@/utils';
-import { CompanySize, CompanyStage } from '@/types';
+import { CompanySize, CompanyStage, QuarterlyKeyResult } from '@/types';
 
 const ProgressPage: React.FC = () => {
   const {
@@ -32,11 +36,16 @@ const ProgressPage: React.FC = () => {
     quarterlyKeyResults,
     setUser,
     refreshMetrics,
+    updateQuarterlyKeyResultProgress,
     hasHydrated
   } = useAppStore();
 
   const [progressData, setProgressData] = useState<any[]>([]);
   const [trendAnalysis, setTrendAnalysis] = useState<any>(null);
+  const [selectedKR, setSelectedKR] = useState<QuarterlyKeyResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
+  const [historyKR, setHistoryKR] = useState<QuarterlyKeyResult | null>(null);
 
   // Ne pas écraser un utilisateur persistant. Créer un compte démo uniquement si aucun utilisateur n'est sauvegardé.
   useEffect(() => {
@@ -130,6 +139,24 @@ const ProgressPage: React.FC = () => {
         daysLeft: getDaysUntilDeadline(action.deadline!),
       })),
   ].sort((a, b) => a.daysLeft - b.daysLeft);
+
+  const handleOpenProgressModal = (kr: QuarterlyKeyResult) => {
+    setSelectedKR(kr);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateProgress = (newCurrent: number, note?: string) => {
+    if (selectedKR) {
+      updateQuarterlyKeyResultProgress(selectedKR.id, newCurrent, note);
+      setIsModalOpen(false);
+      setSelectedKR(null);
+    }
+  };
+
+  const handleOpenHistoryPanel = (kr: QuarterlyKeyResult) => {
+    setHistoryKR(kr);
+    setIsHistoryPanelOpen(true);
+  };
 
   if (!user) {
     return (
@@ -344,6 +371,99 @@ const ProgressPage: React.FC = () => {
               </Card>
             </motion.div>
 
+            {/* Objectifs trimestriels */}
+            {quarterlyKeyResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.45 }}
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+                      Résultats Clés Trimestriels
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {quarterlyKeyResults.map((kr) => {
+                        const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
+                        const objective = quarterlyObjectives.find(obj => obj.id === kr.quarterlyObjectiveId);
+                        const daysLeft = kr.deadline ? getDaysUntilDeadline(kr.deadline) : null;
+
+                        return (
+                          <div key={kr.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 mb-1">
+                                  {kr.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-2">
+                                  {kr.description}
+                                </p>
+                                {objective && (
+                                  <Badge variant="info" size="sm" className="mb-2">
+                                    {objective.title}
+                                  </Badge>
+                                )}
+                                {daysLeft !== null && (
+                                  <p className={`text-xs ${
+                                    daysLeft < 0 ? 'text-red-600' :
+                                    daysLeft <= 7 ? 'text-orange-600' : 'text-gray-500'
+                                  }`}>
+                                    <Clock className="inline h-3 w-3 mr-1" />
+                                    {daysLeft < 0
+                                      ? `En retard de ${Math.abs(daysLeft)} jour${Math.abs(daysLeft) > 1 ? 's' : ''}`
+                                      : daysLeft === 0
+                                      ? "Échéance aujourd'hui"
+                                      : `${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}`
+                                    }
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  leftIcon={<RefreshCw className="h-3 w-3" />}
+                                  onClick={() => handleOpenProgressModal(kr)}
+                                >
+                                  Mettre à jour
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  leftIcon={<History className="h-3 w-3" />}
+                                  onClick={() => handleOpenHistoryPanel(kr)}
+                                >
+                                  Historique
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="mb-2">
+                              <ProgressBar
+                                value={progress}
+                                showLabel
+                                label={`${progress.toFixed(1)}% complété`}
+                                size="md"
+                              />
+                            </div>
+
+                            <div className="flex justify-between text-sm text-gray-600">
+                              <span>{kr.current} {kr.unit}</span>
+                              <span>{kr.target} {kr.unit}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
             {/* Actions récentes */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -510,6 +630,31 @@ const ProgressPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de mise à jour de progression */}
+      {selectedKR && (
+        <ProgressUpdateModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedKR(null);
+          }}
+          keyResult={selectedKR}
+          onUpdate={handleUpdateProgress}
+        />
+      )}
+
+      {/* Panneau d'historique */}
+      {historyKR && (
+        <ProgressHistoryPanel
+          isOpen={isHistoryPanelOpen}
+          onClose={() => {
+            setIsHistoryPanelOpen(false);
+            setHistoryKR(null);
+          }}
+          keyResult={historyKR}
+        />
+      )}
     </Layout>
   );
 };
