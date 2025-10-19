@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { KanbanBoard } from '@/components/ui/KanbanBoard';
+import { ActionsTableView } from '@/components/ui/ActionsTableView';
+import { ActionsChecklistView } from '@/components/ui/ActionsChecklistView';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { FilterPanel } from '@/components/ui/FilterPanel';
 import { Button } from '@/components/ui/Button';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, LayoutGrid, Table, ListChecks } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useFilters } from '@/hooks/useFilters';
 import { generateId } from '@/utils';
 import type { Action, ActionFormData, ActionStatus, FilterState } from '@/types';
+
+type ViewMode = 'kanban' | 'table' | 'checklist';
 
 const ActionsPage: React.FC = () => {
   const {
@@ -24,6 +28,7 @@ const ActionsPage: React.FC = () => {
   const [formMode, setFormMode] = useState<'action' | null>(null);
   const [editingAction, setEditingAction] = useState<Action | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
 
   const [filters, setFilters] = useState<FilterState>({
     ambitionIds: [],
@@ -91,15 +96,10 @@ const ActionsPage: React.FC = () => {
   };
 
   const handleActionMove = (actionId: string, newStatus: ActionStatus) => {
-    const action = actions.find(a => a.id === actionId);
-    if (action) {
-      updateAction(actionId, {
-        ...action,
-        status: newStatus,
-        updatedAt: new Date(),
-        ...(newStatus === 'done' ? { completedAt: new Date() } : {}),
-      });
-    }
+    updateAction(actionId, {
+      status: newStatus,
+      ...(newStatus === 'done' ? { completedAt: new Date() } : {}),
+    });
   };
 
   // Compter les actions filtrées
@@ -129,13 +129,50 @@ const ActionsPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Kanban des Actions</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Actions</h1>
               <p className="mt-2 text-gray-600">
-                Organisez et suivez toutes vos actions par statut
+                Organisez et suivez toutes vos actions
               </p>
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Sélecteur de vue */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'kanban'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Kanban
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'table'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Table className="h-4 w-4 mr-2" />
+                  Tableau
+                </button>
+                <button
+                  onClick={() => setViewMode('checklist')}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'checklist'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <ListChecks className="h-4 w-4 mr-2" />
+                  Checklist
+                </button>
+              </div>
+
               {/* Bouton Filtres */}
               <Button
                 variant="outline"
@@ -178,25 +215,57 @@ const ActionsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Kanban Board */}
+        {/* Contenu principal */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <KanbanBoard
-              actions={filteredActions}
-              onActionMove={handleActionMove}
-              onActionEdit={handleEditAction}
-              onActionDelete={(id) => {
-                if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
-                  deleteAction(id);
-                }
-              }}
-              onAddAction={handleAddAction}
-              quarterlyKeyResults={quarterlyKeyResults}
-              quarterlyObjectives={quarterlyObjectives}
-              selectedAmbition={filters.ambitionIds[0]}
-              selectedQuarter={filters.quarters[0]}
-              selectedYear={filters.years[0]}
-            />
+            {viewMode === 'kanban' && (
+              <KanbanBoard
+                actions={filteredActions}
+                onActionMove={handleActionMove}
+                onActionEdit={handleEditAction}
+                onActionDelete={(id) => {
+                  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
+                    deleteAction(id);
+                  }
+                }}
+                onAddAction={handleAddAction}
+                quarterlyKeyResults={quarterlyKeyResults}
+                quarterlyObjectives={quarterlyObjectives}
+                selectedAmbition={filters.ambitionIds[0]}
+                selectedQuarter={filters.quarters[0]}
+                selectedYear={filters.years[0]}
+              />
+            )}
+
+            {viewMode === 'table' && (
+              <ActionsTableView
+                actions={filteredActions}
+                onActionEdit={handleEditAction}
+                onActionDelete={(id) => {
+                  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
+                    deleteAction(id);
+                  }
+                }}
+                onActionStatusChange={handleActionMove}
+                quarterlyKeyResults={quarterlyKeyResults}
+                quarterlyObjectives={quarterlyObjectives}
+              />
+            )}
+
+            {viewMode === 'checklist' && (
+              <ActionsChecklistView
+                actions={filteredActions}
+                onActionEdit={handleEditAction}
+                onActionDelete={(id) => {
+                  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
+                    deleteAction(id);
+                  }
+                }}
+                onActionStatusChange={handleActionMove}
+                quarterlyKeyResults={quarterlyKeyResults}
+                quarterlyObjectives={quarterlyObjectives}
+              />
+            )}
           </div>
         </div>
 

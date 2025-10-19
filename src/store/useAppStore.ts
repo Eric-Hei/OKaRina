@@ -42,36 +42,36 @@ interface AppState {
   error: string | null;
   notifications: Notification[];
   hasHydrated: boolean;
-  
+
   // Actions utilisateur
   setUser: (user: User) => void;
   updateCompanyProfile: (companyProfile: CompanyProfile) => void;
   logout: () => void;
-  
+
   // Actions données
   loadData: () => void;
   refreshMetrics: () => void;
-  
+
   // Actions ambitions
   addAmbition: (ambition: Ambition) => void;
   updateAmbition: (id: string, updates: Partial<Ambition>) => void;
   deleteAmbition: (id: string) => void;
-  
+
   // Actions résultats clés
   addKeyResult: (keyResult: KeyResult) => void;
   updateKeyResult: (id: string, updates: Partial<KeyResult>) => void;
   deleteKeyResult: (id: string) => void;
-  
+
   // Actions OKRs
   addOKR: (okr: OKR) => void;
   updateOKR: (id: string, updates: Partial<OKR>) => void;
   deleteOKR: (id: string) => void;
-  
+
   // Actions actions
   addAction: (action: Action) => void;
   updateAction: (id: string, updates: Partial<Action>) => void;
   deleteAction: (id: string) => void;
-  
+
   // Actions objectifs trimestriels
   addQuarterlyObjective: (objective: QuarterlyObjective) => void;
   updateQuarterlyObjective: (id: string, updates: Partial<QuarterlyObjective>) => void;
@@ -85,10 +85,12 @@ interface AppState {
 
   // Actions kanban
   moveAction: (actionId: string, newStatus: ActionStatus) => void;
+  reorderActionsInStatus: (status: ActionStatus, orderedIds: string[]) => void;
+
 
   // Actions progrès
   addProgress: (progress: Progress) => void;
-  
+
   // Actions UI
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -155,7 +157,7 @@ export const useAppStore = create<AppState>()(
         // Actions données
         loadData: () => {
           set({ isLoading: true, error: null });
-          
+
           try {
             const user = storageService.getUser();
             const ambitions = storageService.getAmbitions();
@@ -181,9 +183,9 @@ export const useAppStore = create<AppState>()(
               isLoading: false,
             });
           } catch (error) {
-            set({ 
-              error: 'Erreur lors du chargement des données', 
-              isLoading: false 
+            set({
+              error: 'Erreur lors du chargement des données',
+              isLoading: false
             });
           }
         },
@@ -207,7 +209,7 @@ export const useAppStore = create<AppState>()(
         },
 
         updateAmbition: (id, updates) => {
-          const ambitions = get().ambitions.map(a => 
+          const ambitions = get().ambitions.map(a =>
             a.id === id ? { ...a, ...updates, updatedAt: new Date() } : a
           );
           set({ ambitions });
@@ -218,15 +220,15 @@ export const useAppStore = create<AppState>()(
         deleteAmbition: (id) => {
           const ambition = get().ambitions.find(a => a.id === id);
           const ambitions = get().ambitions.filter(a => a.id !== id);
-          
+
           // Supprimer aussi les KR associés
           const keyResults = get().keyResults.filter(kr => kr.ambitionId !== id);
-          
+
           set({ ambitions, keyResults });
           storageService.deleteAmbition(id);
           storageService.saveKeyResults(keyResults);
           get().refreshMetrics();
-          
+
           if (ambition) {
             get().addNotification({
               type: 'info',
@@ -250,7 +252,7 @@ export const useAppStore = create<AppState>()(
         },
 
         updateKeyResult: (id, updates) => {
-          const keyResults = get().keyResults.map(kr => 
+          const keyResults = get().keyResults.map(kr =>
             kr.id === id ? { ...kr, ...updates, updatedAt: new Date() } : kr
           );
           set({ keyResults });
@@ -264,7 +266,7 @@ export const useAppStore = create<AppState>()(
           set({ keyResults });
           storageService.deleteKeyResult(id);
           get().refreshMetrics();
-          
+
           if (keyResult) {
             get().addNotification({
               type: 'info',
@@ -288,7 +290,7 @@ export const useAppStore = create<AppState>()(
         },
 
         updateOKR: (id, updates) => {
-          const okrs = get().okrs.map(o => 
+          const okrs = get().okrs.map(o =>
             o.id === id ? { ...o, ...updates, updatedAt: new Date() } : o
           );
           set({ okrs });
@@ -299,13 +301,13 @@ export const useAppStore = create<AppState>()(
         deleteOKR: (id) => {
           const okr = get().okrs.find(o => o.id === id);
           const okrs = get().okrs.filter(o => o.id !== id);
-          
+
           // Les actions sont maintenant liées aux objectifs trimestriels, pas aux OKRs
 
           set({ okrs });
           storageService.deleteOKR(id);
           get().refreshMetrics();
-          
+
           if (okr) {
             get().addNotification({
               type: 'info',
@@ -329,7 +331,7 @@ export const useAppStore = create<AppState>()(
         },
 
         updateAction: (id, updates) => {
-          const actions = get().actions.map(a => 
+          const actions = get().actions.map(a =>
             a.id === id ? { ...a, ...updates, updatedAt: new Date() } : a
           );
           set({ actions });
@@ -340,13 +342,13 @@ export const useAppStore = create<AppState>()(
         deleteAction: (id) => {
           const action = get().actions.find(a => a.id === id);
           const actions = get().actions.filter(a => a.id !== id);
-          
+
           // Les tâches n'existent plus dans la nouvelle architecture
 
           set({ actions });
           storageService.deleteAction(id);
           get().refreshMetrics();
-          
+
           if (action) {
             get().addNotification({
               type: 'info',
@@ -475,6 +477,30 @@ export const useAppStore = create<AppState>()(
             });
           }
         },
+
+      // Réordonner les actions à l'intérieur d'une colonne (statut)
+      reorderActionsInStatus: (status: ActionStatus, orderedIds: string[]) => {
+        const all = get().actions;
+
+        // Séparer actions par statut cible / autres
+        const inStatus = all.filter(a => a.status === status);
+
+        // Construire la nouvelle liste triée pour ce statut
+        const orderedSet = new Set(orderedIds);
+        const mapped = orderedIds
+          .map(id => inStatus.find(a => a.id === id))
+          .filter(Boolean) as typeof inStatus;
+        const remaining = inStatus.filter(a => !orderedSet.has(a.id));
+        const finalInStatus = [...mapped, ...remaining];
+
+        // Reconstruire le tableau global en remplaçant, à positions d'origine,
+        // uniquement les éléments du statut cible par l'ordre final
+        const iterator = finalInStatus[Symbol.iterator]();
+        const newActions = all.map(a => (a.status === status ? iterator.next().value || a : a));
+
+        set({ actions: newActions });
+        storageService.saveActions(newActions);
+      },
 
         // Actions progrès
         addProgress: (progress) => {

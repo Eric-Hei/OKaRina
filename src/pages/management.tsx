@@ -339,15 +339,10 @@ const ManagementPage: React.FC = () => {
 
   // Handler pour le déplacement d'actions dans le kanban
   const handleActionMove = (actionId: string, newStatus: ActionStatus) => {
-    const action = actions.find(a => a.id === actionId);
-    if (action) {
-      updateAction(actionId, {
-        ...action,
-        status: newStatus,
-        updatedAt: new Date(),
-        ...(newStatus === ActionStatus.DONE ? { completedAt: new Date() } : {}),
-      });
-    }
+    updateAction(actionId, {
+      status: newStatus,
+      ...(newStatus === ActionStatus.DONE ? { completedAt: new Date() } : {}),
+    });
   };
 
   // Handler pour voir le kanban d'un objectif spécifique

@@ -12,6 +12,7 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
+  arrayMove,
 } from '@dnd-kit/sortable';
 import { motion } from 'framer-motion';
 import { Plus, Filter, Search } from 'lucide-react';
@@ -20,6 +21,8 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanCard } from './KanbanCard';
+import { useAppStore } from '@/store/useAppStore';
+
 import { Action, ActionStatus, Quarter, QuarterlyKeyResult, QuarterlyObjective } from '@/types';
 
 interface KanbanBoardProps {
@@ -59,6 +62,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   );
 
   // Filtrer les actions
+  const { reorderActionsInStatus } = useAppStore();
+
   const filteredActions = actions.filter(action => {
     // Filtre par terme de recherche
     if (searchTerm && !action.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -121,17 +126,49 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveAction(null);
-
     if (!over) return;
 
     const actionId = active.id as string;
-    const newStatus = over.id as ActionStatus;
+    const overId = over.id as string;
 
-    // Vérifier si le statut a changé
-    const action = filteredActions.find(a => a.id === actionId);
-    if (action && action.status !== newStatus) {
-      onActionMove(actionId, newStatus);
+    // Déterminer le statut cible: soit un id de colonne, soit l'id d'une carte
+    const columnIds = [ActionStatus.TODO, ActionStatus.IN_PROGRESS, ActionStatus.DONE] as const;
+    let newStatus: ActionStatus | null = null;
+
+    if (columnIds.includes(overId as ActionStatus)) {
+      newStatus = overId as ActionStatus;
+    } else {
+      const overAction = filteredActions.find(a => a.id === overId);
+      if (overAction) newStatus = overAction.status;
     }
+
+    if (!newStatus) return;
+
+    const action = filteredActions.find(a => a.id === actionId);
+    const idsInTarget = actionsByStatus[newStatus].map(a => a.id);
+
+    // Réorganisation dans la même colonne
+    if (action && action.status === newStatus) {
+      const oldIndex = idsInTarget.indexOf(actionId);
+      const newIndex = columnIds.includes(overId as ActionStatus)
+        ? idsInTarget.length - 1
+        : Math.max(idsInTarget.indexOf(overId), 0);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newOrdered = arrayMove(idsInTarget, oldIndex, newIndex);
+        reorderActionsInStatus(newStatus, newOrdered);
+      }
+      return;
+    }
+
+    // Déplacement vers une autre colonne
+    onActionMove(actionId, newStatus);
+    const insertIndex = columnIds.includes(overId as ActionStatus)
+      ? idsInTarget.length
+      : Math.max(idsInTarget.indexOf(overId), 0);
+    const newOrdered = [...idsInTarget];
+    newOrdered.splice(insertIndex, 0, actionId);
+    reorderActionsInStatus(newStatus, newOrdered);
   };
 
   return (
