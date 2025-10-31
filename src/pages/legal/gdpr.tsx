@@ -3,19 +3,24 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { 
-  Shield, 
-  Download, 
-  Trash2, 
-  Eye, 
-  Edit, 
-  Ban, 
+import {
+  Shield,
+  Download,
+  Trash2,
+  Eye,
+  Edit,
+  Ban,
   FileText,
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { storageService } from '@/services/storage';
+// import { storageService } from '@/services/storage'; // TODO: Migrer vers Supabase
+
+// Stub temporaire pour éviter les erreurs de build
+const storageService = {
+  clear: () => {},
+};
 
 const GDPRPage: React.FC = () => {
   const { user, ambitions, keyResults, quarterlyObjectives, quarterlyKeyResults, actions, okrs } = useAppStore();

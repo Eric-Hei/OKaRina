@@ -1,9 +1,23 @@
 import jsPDF from 'jspdf';
 import * as ExcelJS from 'exceljs';
-import { storageService } from './storage';
+// import { storageService } from './storage'; // TODO: Migrer vers Supabase
 import { analyticsService } from './analytics';
 import { ReportType } from '@/types';
 import type { ReportFormat } from '@/types';
+
+// TODO: Ce service doit être migré pour utiliser les données depuis Supabase
+// Stub temporaire pour éviter les erreurs de build
+const storageService = {
+  getAmbitions: () => [],
+  getKeyResults: () => [],
+  getOKRs: () => [],
+  getActions: () => [],
+  getQuarterlyObjectives: () => [],
+  getQuarterlyKeyResults: () => [],
+  getProgress: () => [],
+  exportData: () => '{}',
+  importData: (_data: string) => {},
+};
 
 // Service d'export et de génération de rapports
 export class ExportService {

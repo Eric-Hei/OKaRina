@@ -1,4 +1,3 @@
-import { storageService } from './storage';
 import type {
   Ambition,
   KeyResult,
@@ -26,20 +25,20 @@ export class AnalyticsService {
   }
 
   // Calcul des métriques du dashboard
-  public getDashboardMetrics(): DashboardMetrics {
-    const ambitions = storageService.getAmbitions();
-    const okrs = storageService.getOKRs();
-    const actions = storageService.getActions();
-    const quarterlyObjectives = storageService.getQuarterlyObjectives();
-    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
-
+  public getDashboardMetrics(
+    ambitions: Ambition[],
+    okrs: OKR[],
+    actions: Action[],
+    quarterlyObjectives: QuarterlyObjective[],
+    quarterlyKeyResults: QuarterlyKeyResult[]
+  ): DashboardMetrics {
     const totalAmbitions = ambitions.length;
     const activeOKRs = okrs.filter(okr => okr.status === Status.ACTIVE).length;
     const completedActions = actions.filter(action => action.status === 'done').length;
 
-    const overallProgress = this.calculateOverallProgress();
-    const monthlyProgress = this.calculateMonthlyProgress();
-    const upcomingDeadlines = this.getUpcomingDeadlinesCount();
+    const overallProgress = this.calculateOverallProgress(quarterlyKeyResults);
+    const monthlyProgress = this.calculateMonthlyProgress(quarterlyKeyResults);
+    const upcomingDeadlines = this.getUpcomingDeadlinesCount(actions);
 
     return {
       totalAmbitions,
@@ -52,39 +51,42 @@ export class AnalyticsService {
   }
 
   // Calcul du progrès global
-  public calculateOverallProgress(): number {
-    const ambitions = storageService.getAmbitions();
-    if (ambitions.length === 0) return 0;
+  public calculateOverallProgress(quarterlyKeyResults: QuarterlyKeyResult[]): number {
+    if (quarterlyKeyResults.length === 0) return 0;
 
     let totalProgress = 0;
-    let totalWeight = 0;
-
-    ambitions.forEach(ambition => {
-      const ambitionProgress = this.calculateAmbitionProgress(ambition.id);
-      totalProgress += ambitionProgress;
-      totalWeight += 1;
-    });
-
-    return totalWeight > 0 ? Math.round(totalProgress / totalWeight) : 0;
-  }
-
-  // Calcul du progrès d'une ambition
-  public calculateAmbitionProgress(ambitionId: string): number {
-    const keyResults = storageService.getKeyResults().filter(kr => kr.ambitionId === ambitionId);
-    if (keyResults.length === 0) return 0;
-
-    let totalProgress = 0;
-    keyResults.forEach(kr => {
-      const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
+    quarterlyKeyResults.forEach(qkr => {
+      const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
       totalProgress += Math.min(progress, 100);
     });
 
-    return Math.round(totalProgress / keyResults.length);
+    return Math.round(totalProgress / quarterlyKeyResults.length);
+  }
+
+  // Calcul du progrès d'une ambition
+  public calculateAmbitionProgress(ambitionId: string, quarterlyObjectives: QuarterlyObjective[] = [], quarterlyKeyResults: QuarterlyKeyResult[] = []): number {
+    const objectives = quarterlyObjectives.filter(qo => qo.ambitionId === ambitionId);
+    if (objectives.length === 0) return 0;
+
+    let totalProgress = 0;
+    objectives.forEach(obj => {
+      const objKRs = quarterlyKeyResults.filter(qkr => qkr.quarterlyObjectiveId === obj.id);
+      if (objKRs.length > 0) {
+        let objProgress = 0;
+        objKRs.forEach(qkr => {
+          const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+          objProgress += Math.min(progress, 100);
+        });
+        totalProgress += objProgress / objKRs.length;
+      }
+    });
+
+    return objectives.length > 0 ? Math.round(totalProgress / objectives.length) : 0;
   }
 
   // Calcul du progrès d'un OKR
-  public calculateOKRProgress(okrId: string): number {
-    const okr = storageService.getOKRs().find(o => o.id === okrId);
+  public calculateOKRProgress(okrId: string, okrs: OKR[] = []): number {
+    const okr = okrs.find(o => o.id === okrId);
     if (!okr || !okr.keyResults.length) return 0;
 
     let totalProgress = 0;
@@ -101,36 +103,33 @@ export class AnalyticsService {
   }
 
   // Calcul du progrès mensuel
-  public calculateMonthlyProgress(): number {
+  public calculateMonthlyProgress(quarterlyKeyResults: QuarterlyKeyResult[]): number {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
-    const progressRecords = storageService.getProgress().filter(p => {
-      const recordDate = new Date(p.recordedAt);
-      return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear;
+    // Filtrer les KR du mois en cours
+    const currentMonthKRs = quarterlyKeyResults.filter(qkr => {
+      const createdDate = new Date(qkr.createdAt);
+      return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
     });
 
-    if (progressRecords.length === 0) return 0;
+    if (currentMonthKRs.length === 0) return 0;
 
-    const totalProgress = progressRecords.reduce((sum, p) => sum + p.value, 0);
-    return Math.round(totalProgress / progressRecords.length);
+    let totalProgress = 0;
+    currentMonthKRs.forEach(qkr => {
+      const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+      totalProgress += Math.min(progress, 100);
+    });
+
+    return Math.round(totalProgress / currentMonthKRs.length);
   }
 
   // Nombre d'échéances à venir (7 prochains jours)
-  public getUpcomingDeadlinesCount(): number {
+  public getUpcomingDeadlinesCount(actions: Action[]): number {
     const now = new Date();
     const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const keyResults = storageService.getKeyResults();
-    const actions = storageService.getActions();
-    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
-
     let count = 0;
-
-    keyResults.forEach(kr => {
-      const deadline = new Date(kr.deadline);
-      if (deadline >= now && deadline <= nextWeek) count++;
-    });
 
     actions.forEach(action => {
       if (action.deadline) {
@@ -139,21 +138,15 @@ export class AnalyticsService {
       }
     });
 
-    quarterlyKeyResults.forEach(qkr => {
-      const deadline = new Date(qkr.deadline);
-      if (deadline >= now && deadline <= nextWeek) count++;
-    });
-
     return count;
   }
 
   // Données pour graphique de progression par catégorie
-  public getProgressByCategory(): ChartData[] {
-    const ambitions = storageService.getAmbitions();
+  public getProgressByCategory(ambitions: Ambition[], quarterlyObjectives: QuarterlyObjective[], quarterlyKeyResults: QuarterlyKeyResult[]): ChartData[] {
     const categoryProgress: { [key: string]: { total: number; count: number } } = {};
 
     ambitions.forEach(ambition => {
-      const progress = this.calculateAmbitionProgress(ambition.id);
+      const progress = this.calculateAmbitionProgress(ambition.id, quarterlyObjectives, quarterlyKeyResults);
       const category = ambition.category;
 
       if (!categoryProgress[category]) {
@@ -171,22 +164,29 @@ export class AnalyticsService {
   }
 
   // Données pour graphique de progression trimestrielle
-  public getQuarterlyProgress(): ChartData[] {
-    const okrs = storageService.getOKRs();
+  public getQuarterlyProgress(quarterlyObjectives: QuarterlyObjective[], quarterlyKeyResults: QuarterlyKeyResult[]): ChartData[] {
     const currentYear = new Date().getFullYear();
 
     const quarterProgress: { [key: string]: { total: number; count: number } } = {};
 
-    okrs.filter(okr => okr.year === currentYear).forEach(okr => {
-      const progress = this.calculateOKRProgress(okr.id);
-      const quarter = okr.quarter;
+    quarterlyObjectives.filter(qo => qo.year === currentYear).forEach(qo => {
+      const qoKRs = quarterlyKeyResults.filter(qkr => qkr.quarterlyObjectiveId === qo.id);
+      if (qoKRs.length > 0) {
+        let qoProgress = 0;
+        qoKRs.forEach(qkr => {
+          const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+          qoProgress += Math.min(progress, 100);
+        });
+        const avgProgress = qoProgress / qoKRs.length;
+        const quarter = qo.quarter;
 
-      if (!quarterProgress[quarter]) {
-        quarterProgress[quarter] = { total: 0, count: 0 };
+        if (!quarterProgress[quarter]) {
+          quarterProgress[quarter] = { total: 0, count: 0 };
+        }
+
+        quarterProgress[quarter].total += avgProgress;
+        quarterProgress[quarter].count += 1;
       }
-
-      quarterProgress[quarter].total += progress;
-      quarterProgress[quarter].count += 1;
     });
 
     return Object.values(Quarter).map(quarter => ({
@@ -198,21 +198,21 @@ export class AnalyticsService {
   }
 
   // Évolution du progrès dans le temps
-  public getProgressEvolution(days: number = 30): ChartData[] {
-    const progressRecords = storageService.getProgress();
+  public getProgressEvolution(quarterlyKeyResults: QuarterlyKeyResult[], days: number = 30): ChartData[] {
     const now = new Date();
     const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
     const dailyProgress: { [key: string]: number[] } = {};
 
-    progressRecords
-      .filter(p => new Date(p.recordedAt) >= startDate)
-      .forEach(p => {
-        const date = new Date(p.recordedAt).toISOString().split('T')[0];
+    quarterlyKeyResults
+      .filter(qkr => new Date(qkr.updatedAt) >= startDate)
+      .forEach(qkr => {
+        const date = new Date(qkr.updatedAt).toISOString().split('T')[0];
+        const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
         if (!dailyProgress[date]) {
           dailyProgress[date] = [];
         }
-        dailyProgress[date].push(p.value);
+        dailyProgress[date].push(Math.min(progress, 100));
       });
 
     const result: ChartData[] = [];
@@ -234,13 +234,13 @@ export class AnalyticsService {
   }
 
   // Analyse des tendances
-  public getTrendAnalysis(): {
+  public getTrendAnalysis(quarterlyKeyResults: QuarterlyKeyResult[]): {
     trend: 'up' | 'down' | 'stable';
     percentage: number;
     message: string;
   } {
-    const last7Days = this.getProgressEvolution(7);
-    const last14Days = this.getProgressEvolution(14);
+    const last7Days = this.getProgressEvolution(quarterlyKeyResults, 7);
+    const last14Days = this.getProgressEvolution(quarterlyKeyResults, 14);
 
     if (last7Days.length < 2 || last14Days.length < 2) {
       return {
@@ -274,14 +274,14 @@ export class AnalyticsService {
   }
 
   // Statistiques détaillées
-  public getDetailedStats() {
-    const ambitions = storageService.getAmbitions();
-    const keyResults = storageService.getKeyResults();
-    const okrs = storageService.getOKRs();
-    const actions = storageService.getActions();
-    const quarterlyObjectives = storageService.getQuarterlyObjectives();
-    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
-
+  public getDetailedStats(
+    ambitions: Ambition[],
+    keyResults: KeyResult[],
+    okrs: OKR[],
+    actions: Action[],
+    quarterlyObjectives: QuarterlyObjective[],
+    quarterlyKeyResults: QuarterlyKeyResult[]
+  ) {
     return {
       ambitions: {
         total: ambitions.length,
@@ -291,17 +291,17 @@ export class AnalyticsService {
       keyResults: {
         total: keyResults.length,
         completed: keyResults.filter(kr => kr.current >= kr.target).length,
-        averageProgress: this.calculateAverageKRProgress(),
+        averageProgress: this.calculateAverageKRProgress(keyResults),
       },
       okrs: {
         total: okrs.length,
         byQuarter: this.groupOKRsByQuarter(okrs),
-        averageProgress: this.calculateAverageOKRProgress(),
+        averageProgress: this.calculateAverageOKRProgress(okrs),
       },
       actions: {
         total: actions.length,
         completed: actions.filter(a => a.status === 'done').length,
-        overdue: this.getOverdueActions().length,
+        overdue: this.getOverdueActions(actions).length,
       },
       quarterlyObjectives: {
         total: quarterlyObjectives.length,
@@ -309,8 +309,8 @@ export class AnalyticsService {
       },
       quarterlyKeyResults: {
         total: quarterlyKeyResults.length,
-        completed: quarterlyKeyResults.filter(qkr => qkr.current >= qkr.target).length,
-        averageProgress: this.calculateAverageKRProgress(),
+        completed: quarterlyKeyResults.filter(qkr => qkr.currentValue >= qkr.targetValue).length,
+        averageProgress: this.calculateAverageQKRProgress(quarterlyKeyResults),
       },
     };
   }
@@ -350,8 +350,7 @@ export class AnalyticsService {
     }, {} as { [key: string]: number });
   }
 
-  private calculateAverageKRProgress(): number {
-    const keyResults = storageService.getKeyResults();
+  private calculateAverageKRProgress(keyResults: KeyResult[]): number {
     if (keyResults.length === 0) return 0;
 
     const totalProgress = keyResults.reduce((sum, kr) => {
@@ -362,56 +361,65 @@ export class AnalyticsService {
     return Math.round(totalProgress / keyResults.length);
   }
 
-  private calculateAverageOKRProgress(): number {
-    const okrs = storageService.getOKRs();
+  private calculateAverageQKRProgress(quarterlyKeyResults: QuarterlyKeyResult[]): number {
+    if (quarterlyKeyResults.length === 0) return 0;
+
+    const totalProgress = quarterlyKeyResults.reduce((sum, qkr) => {
+      const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+      return sum + Math.min(progress, 100);
+    }, 0);
+
+    return Math.round(totalProgress / quarterlyKeyResults.length);
+  }
+
+  private calculateAverageOKRProgress(okrs: OKR[]): number {
     if (okrs.length === 0) return 0;
 
     const totalProgress = okrs.reduce((sum, okr) => {
-      return sum + this.calculateOKRProgress(okr.id);
+      return sum + this.calculateOKRProgress(okr.id, okrs);
     }, 0);
 
     return Math.round(totalProgress / okrs.length);
   }
 
-  private getOverdueActions(): Action[] {
+  private getOverdueActions(actions: Action[]): Action[] {
     const now = new Date();
-    return storageService.getActions().filter(action => {
+    return actions.filter(action => {
       return action.deadline && new Date(action.deadline) < now && action.status !== 'done';
     });
   }
 
   // ===== Health score & risques (MVP) =====
-  public calculateQuarterlyKRHealth(kr: QuarterlyKeyResult): number {
-    const progress = kr.target > 0 ? Math.min(kr.current / kr.target, 1) : 0; // 0..1
+  public calculateQuarterlyKRHealth(kr: QuarterlyKeyResult, actions: Action[]): number {
+    const progress = kr.targetValue > 0 ? Math.min(kr.currentValue / kr.targetValue, 1) : 0; // 0..1
     const now = new Date();
     const deadline = kr.deadline ? new Date(kr.deadline) : null;
     const days = deadline ? Math.ceil((+deadline - +now) / (1000 * 60 * 60 * 24)) : 30;
     const timeBuffer = Math.max(0, Math.min(days / 30, 1)); // 0..1 (≥30j => 1)
 
     // Pénalités basées sur actions en retard
-    const actions = storageService.getActions().filter(a => a.quarterlyKeyResultId === kr.id);
-    const overdue = actions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;
-    const overdueRatio = actions.length > 0 ? overdue / actions.length : 0;
+    const krActions = actions.filter(a => a.quarterlyKeyResultId === kr.id);
+    const overdue = krActions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;
+    const overdueRatio = krActions.length > 0 ? overdue / krActions.length : 0;
 
     let score = 0.6 * progress + 0.4 * timeBuffer; // pondération simple
     score = score * (1 - 0.2 * overdueRatio); // pénalité max -20%
     return Math.round(score * 100);
   }
 
-  public getKRHealthOverview(): { averageHealth: number; items: Array<{ kr: QuarterlyKeyResult; health: number; riskLevel: 'high'|'medium'|'low'; reasons: string[] }>; } {
-    const krs = storageService.getQuarterlyKeyResults();
-    if (krs.length === 0) {
+  public getKRHealthOverview(quarterlyKeyResults: QuarterlyKeyResult[], actions: Action[]): { averageHealth: number; items: Array<{ kr: QuarterlyKeyResult; health: number; riskLevel: 'high'|'medium'|'low'; reasons: string[] }>; } {
+    if (quarterlyKeyResults.length === 0) {
       return { averageHealth: 0, items: [] };
     }
-    const items = krs.map(kr => {
-      const health = this.calculateQuarterlyKRHealth(kr);
+    const items = quarterlyKeyResults.map(kr => {
+      const health = this.calculateQuarterlyKRHealth(kr, actions);
       const reasons: string[] = [];
       const now = new Date();
       const days = kr.deadline ? Math.ceil((+new Date(kr.deadline) - +now) / (1000*60*60*24)) : 30;
-      const progress = kr.target > 0 ? Math.min(kr.current / kr.target, 1) : 0;
+      const progress = kr.targetValue > 0 ? Math.min(kr.currentValue / kr.targetValue, 1) : 0;
       if (days <= 7 && progress < 0.5) reasons.push('Échéance proche avec progression faible');
-      const actions = storageService.getActions().filter(a => a.quarterlyKeyResultId === kr.id);
-      const overdue = actions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;
+      const krActions = actions.filter(a => a.quarterlyKeyResultId === kr.id);
+      const overdue = krActions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;
       if (overdue > 0) reasons.push(`${overdue} action(s) en retard`);
       const riskLevel: 'high'|'medium'|'low' = health < 50 ? 'high' : health < 70 ? 'medium' : 'low';
       return { kr, health, riskLevel, reasons };
@@ -420,8 +428,8 @@ export class AnalyticsService {
     return { averageHealth, items };
   }
 
-  public getRiskAlerts(): Array<{ kr: QuarterlyKeyResult; level: 'high'|'medium'; reasons: string[] }>{
-    const { items } = this.getKRHealthOverview();
+  public getRiskAlerts(quarterlyKeyResults: QuarterlyKeyResult[], actions: Action[]): Array<{ kr: QuarterlyKeyResult; level: 'high'|'medium'; reasons: string[] }>{
+    const { items } = this.getKRHealthOverview(quarterlyKeyResults, actions);
     return items
       .filter(i => i.riskLevel !== 'low')
       .sort((a,b) => a.health - b.health)

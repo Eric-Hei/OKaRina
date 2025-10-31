@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { storageService } from '@/services/storage';
+import { devtools } from 'zustand/middleware';
 import { analyticsService } from '@/services/analytics';
 import { generateId } from '@/utils';
 import { EntityType } from '@/types';
@@ -107,87 +106,64 @@ interface Notification {
   duration?: number;
 }
 
-// Store principal de l'application
+// Store principal de l'application (sans persistence localStorage)
 export const useAppStore = create<AppState>()(
   devtools(
-    persist(
-      (set, get) => ({
-        // État initial
-        user: null,
-        isAuthenticated: false,
-        ambitions: [],
-        keyResults: [],
-        okrs: [],
-        actions: [],
-        quarterlyObjectives: [],
-        quarterlyKeyResults: [],
-        progress: [],
-        metrics: null,
-        isLoading: false,
-        error: null,
-        notifications: [],
-        hasHydrated: false,
+    (set, get) => ({
+      // État initial
+      user: null,
+      isAuthenticated: false,
+      ambitions: [],
+      keyResults: [],
+      okrs: [],
+      actions: [],
+      quarterlyObjectives: [],
+      quarterlyKeyResults: [],
+      progress: [],
+      metrics: null,
+      isLoading: false,
+      error: null,
+      notifications: [],
+      hasHydrated: true, // Toujours true car pas de persistence
 
-        // Actions utilisateur
-        setUser: (user) => {
-          set({ user, isAuthenticated: true });
-          storageService.saveUser(user);
-        },
+      // Actions utilisateur
+      setUser: (user) => {
+        set({ user, isAuthenticated: true });
+      },
 
-        updateCompanyProfile: (companyProfile) => {
-          const currentUser = get().user;
-          console.log('🔄 updateCompanyProfile appelé avec:', companyProfile);
-          console.log('👤 Utilisateur actuel:', currentUser);
-          if (currentUser) {
-            const updatedUser = { ...currentUser, companyProfile };
-            console.log('💾 Sauvegarde de l\'utilisateur mis à jour:', updatedUser);
-            set({ user: updatedUser });
-            storageService.saveUser(updatedUser);
-            console.log('✅ Utilisateur sauvegardé dans localStorage');
-          } else {
-            console.warn('⚠️ Aucun utilisateur connecté, impossible de mettre à jour le profil');
-          }
-        },
+      updateCompanyProfile: (companyProfile) => {
+        const currentUser = get().user;
+        console.log('🔄 updateCompanyProfile appelé avec:', companyProfile);
+        console.log('👤 Utilisateur actuel:', currentUser);
+        if (currentUser) {
+          const updatedUser = { ...currentUser, companyProfile };
+          console.log('💾 Mise à jour du profil utilisateur:', updatedUser);
+          set({ user: updatedUser });
+          console.log('✅ Profil utilisateur mis à jour (Supabase uniquement)');
+        } else {
+          console.warn('⚠️ Aucun utilisateur connecté, impossible de mettre à jour le profil');
+        }
+      },
 
-        logout: () => {
-          set({ user: null, isAuthenticated: false });
-          storageService.removeUser();
-        },
+      logout: () => {
+        set({
+          user: null,
+          isAuthenticated: false,
+          ambitions: [],
+          keyResults: [],
+          okrs: [],
+          actions: [],
+          quarterlyObjectives: [],
+          quarterlyKeyResults: [],
+          progress: [],
+        });
+      },
 
-        // Actions données
+        // Actions données (désormais vide, les données viennent de Supabase)
         loadData: () => {
-          set({ isLoading: true, error: null });
-
-          try {
-            const user = storageService.getUser();
-            const ambitions = storageService.getAmbitions();
-            const keyResults = storageService.getKeyResults();
-            const okrs = storageService.getOKRs();
-            const actions = storageService.getActions();
-            const quarterlyObjectives = storageService.getQuarterlyObjectives();
-    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
-            const progress = storageService.getProgress();
-            const metrics = analyticsService.getDashboardMetrics();
-
-            set({
-              user,
-              isAuthenticated: !!user,
-              ambitions,
-              keyResults,
-              okrs,
-              actions,
-              quarterlyObjectives,
-              quarterlyKeyResults,
-              progress,
-              metrics,
-              isLoading: false,
-            });
-          } catch (error) {
-            set({
-              error: 'Erreur lors du chargement des données',
-              isLoading: false
-            });
-          }
+          console.log('⚠️ loadData() appelé mais désactivé (migration Supabase)');
+          // Les données sont maintenant chargées directement depuis Supabase
+          // via les composants et les services DB
         },
 
         refreshMetrics: () => {
@@ -195,11 +171,10 @@ export const useAppStore = create<AppState>()(
           set({ metrics });
         },
 
-        // Actions ambitions
+        // Actions ambitions (store local uniquement, pas de persistence)
         addAmbition: (ambition) => {
           const ambitions = [...get().ambitions, ambition];
           set({ ambitions });
-          storageService.addAmbition(ambition);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -213,7 +188,6 @@ export const useAppStore = create<AppState>()(
             a.id === id ? { ...a, ...updates, updatedAt: new Date() } : a
           );
           set({ ambitions });
-          storageService.updateAmbition(id, updates);
           get().refreshMetrics();
         },
 
@@ -225,8 +199,6 @@ export const useAppStore = create<AppState>()(
           const keyResults = get().keyResults.filter(kr => kr.ambitionId !== id);
 
           set({ ambitions, keyResults });
-          storageService.deleteAmbition(id);
-          storageService.saveKeyResults(keyResults);
           get().refreshMetrics();
 
           if (ambition) {
@@ -238,11 +210,10 @@ export const useAppStore = create<AppState>()(
           }
         },
 
-        // Actions résultats clés
+        // Actions résultats clés (store local uniquement)
         addKeyResult: (keyResult) => {
           const keyResults = [...get().keyResults, keyResult];
           set({ keyResults });
-          storageService.addKeyResult(keyResult);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -256,7 +227,6 @@ export const useAppStore = create<AppState>()(
             kr.id === id ? { ...kr, ...updates, updatedAt: new Date() } : kr
           );
           set({ keyResults });
-          storageService.updateKeyResult(id, updates);
           get().refreshMetrics();
         },
 
@@ -264,7 +234,6 @@ export const useAppStore = create<AppState>()(
           const keyResult = get().keyResults.find(kr => kr.id === id);
           const keyResults = get().keyResults.filter(kr => kr.id !== id);
           set({ keyResults });
-          storageService.deleteKeyResult(id);
           get().refreshMetrics();
 
           if (keyResult) {
@@ -276,11 +245,10 @@ export const useAppStore = create<AppState>()(
           }
         },
 
-        // Actions OKRs
+        // Actions OKRs (store local uniquement)
         addOKR: (okr) => {
           const okrs = [...get().okrs, okr];
           set({ okrs });
-          storageService.addOKR(okr);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -294,7 +262,6 @@ export const useAppStore = create<AppState>()(
             o.id === id ? { ...o, ...updates, updatedAt: new Date() } : o
           );
           set({ okrs });
-          storageService.updateOKR(id, updates);
           get().refreshMetrics();
         },
 
@@ -302,10 +269,7 @@ export const useAppStore = create<AppState>()(
           const okr = get().okrs.find(o => o.id === id);
           const okrs = get().okrs.filter(o => o.id !== id);
 
-          // Les actions sont maintenant liées aux objectifs trimestriels, pas aux OKRs
-
           set({ okrs });
-          storageService.deleteOKR(id);
           get().refreshMetrics();
 
           if (okr) {
@@ -317,11 +281,10 @@ export const useAppStore = create<AppState>()(
           }
         },
 
-        // Actions actions
+        // Actions actions (store local uniquement)
         addAction: (action) => {
           const actions = [...get().actions, action];
           set({ actions });
-          storageService.addAction(action);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -335,7 +298,6 @@ export const useAppStore = create<AppState>()(
             a.id === id ? { ...a, ...updates, updatedAt: new Date() } : a
           );
           set({ actions });
-          storageService.updateAction(id, updates);
           get().refreshMetrics();
         },
 
@@ -343,10 +305,7 @@ export const useAppStore = create<AppState>()(
           const action = get().actions.find(a => a.id === id);
           const actions = get().actions.filter(a => a.id !== id);
 
-          // Les tâches n'existent plus dans la nouvelle architecture
-
           set({ actions });
-          storageService.deleteAction(id);
           get().refreshMetrics();
 
           if (action) {
@@ -358,11 +317,10 @@ export const useAppStore = create<AppState>()(
           }
         },
 
-        // Actions objectifs trimestriels
+        // Actions objectifs trimestriels (store local uniquement)
         addQuarterlyObjective: (objective) => {
           const quarterlyObjectives = [...get().quarterlyObjectives, objective];
           set({ quarterlyObjectives });
-          storageService.addQuarterlyObjective(objective);
           get().refreshMetrics();
           get().addNotification({
             type: 'success',
@@ -376,7 +334,6 @@ export const useAppStore = create<AppState>()(
             obj.id === id ? { ...obj, ...updates, updatedAt: new Date() } : obj
           );
           set({ quarterlyObjectives });
-          storageService.updateQuarterlyObjective(id, updates);
           get().refreshMetrics();
         },
 
@@ -385,7 +342,6 @@ export const useAppStore = create<AppState>()(
           if (objective) {
             const quarterlyObjectives = get().quarterlyObjectives.filter(obj => obj.id !== id);
             set({ quarterlyObjectives });
-            storageService.deleteQuarterlyObjective(id);
             get().refreshMetrics();
 
             get().addNotification({
@@ -396,11 +352,10 @@ export const useAppStore = create<AppState>()(
           }
         },
 
-        // Actions KR trimestriels
+        // Actions KR trimestriels (store local uniquement)
         addQuarterlyKeyResult: (keyResult) => {
           const quarterlyKeyResults = [...get().quarterlyKeyResults, keyResult];
           set({ quarterlyKeyResults });
-          storageService.addQuarterlyKeyResult(keyResult);
           get().refreshMetrics();
         },
 
@@ -409,7 +364,6 @@ export const useAppStore = create<AppState>()(
             kr.id === id ? { ...kr, ...updates, updatedAt: new Date() } : kr
           );
           set({ quarterlyKeyResults });
-          storageService.updateQuarterlyKeyResult(id, updates);
           get().refreshMetrics();
         },
 
@@ -448,11 +402,10 @@ export const useAppStore = create<AppState>()(
         deleteQuarterlyKeyResult: (id) => {
           const quarterlyKeyResults = get().quarterlyKeyResults.filter(kr => kr.id !== id);
           set({ quarterlyKeyResults });
-          storageService.deleteQuarterlyKeyResult(id);
           get().refreshMetrics();
         },
 
-        // Actions kanban
+        // Actions kanban (store local uniquement)
         moveAction: (actionId, newStatus) => {
           const actions = get().actions.map(action =>
             action.id === actionId
@@ -460,7 +413,6 @@ export const useAppStore = create<AppState>()(
               : action
           );
           set({ actions });
-          storageService.updateAction(actionId, { status: newStatus });
 
           const action = actions.find(a => a.id === actionId);
           if (action) {
@@ -499,14 +451,12 @@ export const useAppStore = create<AppState>()(
         const newActions = all.map(a => (a.status === status ? iterator.next().value || a : a));
 
         set({ actions: newActions });
-        storageService.saveActions(newActions);
       },
 
-        // Actions progrès
+        // Actions progrès (store local uniquement)
         addProgress: (progress) => {
           const progressList = [...get().progress, progress];
           set({ progress: progressList });
-          storageService.addProgress(progress);
           get().refreshMetrics();
         },
 
@@ -536,32 +486,6 @@ export const useAppStore = create<AppState>()(
 
         clearNotifications: () => set({ notifications: [] }),
       }),
-      {
-        name: 'oskar-app-store',
-        partialize: (state) => ({
-          user: state.user,
-          isAuthenticated: state.isAuthenticated,
-          ambitions: state.ambitions,
-          keyResults: state.keyResults,
-          okrs: state.okrs,
-          actions: state.actions,
-          quarterlyObjectives: state.quarterlyObjectives,
-          quarterlyKeyResults: state.quarterlyKeyResults,
-          progress: state.progress,
-        }),
-        onRehydrateStorage: () => (state) => {
-          console.log('🔄 Zustand persist - Réhydratation terminée');
-          console.log('📊 Données restaurées:', {
-            user: state?.user ? `${state.user.name} (${state.user.id})` : 'null',
-            ambitionsCount: state?.ambitions?.length || 0,
-            hasCompanyProfile: !!state?.user?.companyProfile,
-          });
-          if (state) {
-            state.hasHydrated = true;
-          }
-        },
-      }
-    ),
     { name: 'OsKaR App Store' }
   )
 );

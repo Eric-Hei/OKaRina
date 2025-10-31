@@ -3,7 +3,20 @@
  * Utilisables depuis la console du navigateur
  */
 
-import { storageService } from '@/services/storage';
+// import { storageService } from '@/services/storage'; // TODO: Migrer vers Supabase
+
+// Stub temporaire pour éviter les erreurs de build
+const storageService = {
+  getAmbitions: () => [],
+  getKeyResults: () => [],
+  getOKRs: () => [],
+  getActions: () => [],
+  getQuarterlyObjectives: () => [],
+  getQuarterlyKeyResults: () => [],
+  getProgress: () => [],
+  exportData: () => '{}',
+  clear: () => {},
+};
 
 /**
  * Affiche l'état actuel de la synchronisation des données

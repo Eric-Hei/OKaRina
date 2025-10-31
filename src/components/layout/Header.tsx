@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
+import { AuthService } from '@/services/auth';
+import { isSupabaseConfigured } from '@/lib/supabaseClient';
 import { cn } from '@/utils';
 
 interface HeaderProps {
@@ -43,9 +45,27 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
     { name: 'Suivi', href: '/progress', icon: Calendar },
   ];
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    console.log('🔴 Déconnexion en cours...');
+    try {
+      // Déconnexion Supabase si configuré
+      if (isSupabaseConfigured()) {
+        console.log('🔴 Déconnexion Supabase...');
+        await AuthService.signOut();
+        console.log('✅ Déconnexion Supabase réussie');
+      }
+      // Déconnexion locale (Zustand + localStorage)
+      console.log('🔴 Déconnexion locale...');
+      logout();
+      console.log('✅ Déconnexion locale réussie');
+      console.log('🔴 Redirection vers /...');
+      router.push('/');
+    } catch (error) {
+      console.error('❌ Erreur lors de la déconnexion:', error);
+      // Déconnexion locale même en cas d'erreur
+      logout();
+      router.push('/');
+    }
   };
 
   // Fermer le menu utilisateur quand on clique ailleurs

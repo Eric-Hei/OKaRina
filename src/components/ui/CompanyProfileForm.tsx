@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { Building2, Users, Target, AlertCircle } from 'lucide-react';
+import { Building2, Users, Target, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from './Button';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Badge } from './Badge';
@@ -11,7 +11,8 @@ import { CompanySize, CompanyStage } from '@/types';
 interface CompanyProfileFormProps {
   initialData?: Partial<CompanyProfile>;
   onSubmit: (data: CompanyProfile) => void;
-
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 interface FormData {
@@ -45,6 +46,8 @@ const COMPANY_STAGES = [
 export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
   initialData,
   onSubmit,
+  isLoading = false,
+  error = null,
 }) => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     defaultValues: {
@@ -200,15 +203,27 @@ export const CompanyProfileForm: React.FC<CompanyProfileFormProps> = ({
               </div>
             </div>
 
+            {/* Message d'erreur */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start"
+              >
+                <AlertCircle className="h-5 w-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800">{error}</p>
+              </motion.div>
+            )}
+
             {/* Actions */}
             <div className="flex justify-between pt-6 border-t border-gray-200">
-
               <div className="flex space-x-3 ml-auto">
                 <Button
                   type="submit"
-                  leftIcon={<Target className="h-4 w-4" />}
+                  disabled={isLoading}
+                  leftIcon={isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Target className="h-4 w-4" />}
                 >
-                  Enregistrer le profil
+                  {isLoading ? 'Enregistrement...' : 'Enregistrer le profil'}
                 </Button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { Target, ArrowRight, CheckCircle } from 'lucide-react';
@@ -7,11 +7,15 @@ import { CompanyProfileForm } from '@/components/ui/CompanyProfileForm';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAppStore } from '@/store/useAppStore';
+import { AuthService } from '@/services/auth';
+import { isSupabaseConfigured } from '@/lib/supabaseClient';
 import type { CompanyProfile } from '@/types';
 
 const OnboardingPage: React.FC = () => {
   const router = useRouter();
   const { user, updateCompanyProfile, setUser, hasHydrated } = useAppStore();
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Rediriger si l'utilisateur a déjà un profil d'entreprise
   useEffect(() => {
@@ -44,9 +48,44 @@ const OnboardingPage: React.FC = () => {
     } catch {}
   }, [user, setUser, hasHydrated]);
 
-  const handleCompanyProfileSubmit = (companyProfile: CompanyProfile) => {
-    updateCompanyProfile(companyProfile);
-    router.push('/dashboard');
+  const handleCompanyProfileSubmit = async (companyProfile: CompanyProfile) => {
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      // Sauvegarder dans Supabase si configuré
+      if (isSupabaseConfigured() && user?.id) {
+        console.log('💾 Sauvegarde du profil d\'entreprise dans Supabase...');
+        console.log('📊 Données à sauvegarder:', companyProfile);
+        console.log('👤 User ID:', user.id);
+
+        const updatedProfile = await AuthService.updateCompanyProfile(user.id, companyProfile);
+
+        console.log('✅ Profil mis à jour:', updatedProfile);
+
+        // Mettre à jour l'utilisateur avec le profil complet
+        const updatedUser = AuthService.profileToUser(updatedProfile);
+        setUser(updatedUser);
+
+        console.log('✅ Profil d\'entreprise sauvegardé dans Supabase');
+      } else {
+        // Fallback localStorage si Supabase non configuré
+        console.log('💾 Sauvegarde du profil d\'entreprise dans localStorage...');
+        console.log('⚠️ User ID:', user?.id);
+        console.log('⚠️ Supabase configuré:', isSupabaseConfigured());
+        updateCompanyProfile(companyProfile);
+      }
+
+      console.log('🔄 Redirection vers /dashboard...');
+      router.push('/dashboard');
+    } catch (err: any) {
+      console.error('❌ Erreur lors de la sauvegarde du profil:', err);
+      console.error('❌ Message d\'erreur:', err.message);
+      console.error('❌ Détails:', err);
+      setError(`Erreur: ${err.message || 'Une erreur est survenue lors de la sauvegarde.'}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
 
@@ -146,6 +185,8 @@ const OnboardingPage: React.FC = () => {
           >
             <CompanyProfileForm
               onSubmit={handleCompanyProfileSubmit}
+              isLoading={isSaving}
+              error={error}
             />
           </motion.div>
 

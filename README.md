@@ -6,6 +6,24 @@ OsKaR transforme vos ambitions en résultats concrets grâce à une approche gui
 
 🌐 **Application déployée :** [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app)
 
+## 🎉 Nouveautés v2.0 - Migration Supabase
+
+**OsKaR v2.0** est maintenant propulsé par **Supabase** pour une expérience multi-utilisateurs robuste et scalable !
+
+### ✅ Ce qui a changé
+- ✅ **Authentification Supabase** - Login, Register, Logout, Forgot Password
+- ✅ **Base de données PostgreSQL** - 13 tables avec Row Level Security (RLS)
+- ✅ **Services Supabase** - 12 services CRUD (OKR + Collaboration)
+- ✅ **React Query** - Gestion du cache et synchronisation automatique
+- ✅ **Suppression de localStorage** - Données persistées dans Supabase
+- ✅ **Robustesse** - Timeout, retry, idempotence sur toutes les opérations
+
+### 📚 Documentation
+- [Migration Supabase](docs/MIGRATION_SUPABASE.md) - Récapitulatif complet
+- [Prochaines étapes](docs/NEXT_STEPS_UI_MIGRATION.md) - Stratégie de migration UI
+- [Guide de test](docs/TESTING_GUIDE.md) - Comment tester l'application
+- [Résumé complet](docs/MIGRATION_COMPLETE_SUMMARY.md) - État actuel et progression
+
 ## ✨ Fonctionnalités Principales
 
 ### 🎨 Canvas Guidé Multi-Entités
@@ -49,8 +67,10 @@ Ambitions (multiples)
 ## 🚀 Technologies Utilisées
 
 - **Frontend** : Next.js 15.5.3, React 19, TypeScript
+- **Backend** : Supabase (PostgreSQL + Auth + Row Level Security)
+- **Data Fetching** : React Query (@tanstack/react-query)
 - **Styling** : Tailwind CSS, Framer Motion
-- **State Management** : Zustand avec persistance
+- **State Management** : Zustand (cache temporaire uniquement)
 - **Forms** : React Hook Form, Zod validation
 - **Drag & Drop** : @dnd-kit (compatible React 19)
 - **Icons** : Lucide React

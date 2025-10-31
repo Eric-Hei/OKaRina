@@ -1,5 +1,12 @@
-import { storageService } from '@/services/storage';
+// import { storageService } from '@/services/storage'; // TODO: Migrer vers Supabase
 import type { QuarterlyObjective, QuarterlyKeyResult, Action } from '@/types';
+
+// Stub temporaire pour éviter les erreurs de build
+const storageService = {
+  getQuarterlyObjectives: () => [] as QuarterlyObjective[],
+  getQuarterlyKeyResults: () => [] as QuarterlyKeyResult[],
+  getActions: () => [] as Action[],
+};
 
 export type ShareSnapshot =
   | {

@@ -71,3 +71,4 @@ const Layout: React.FC<LayoutProps> = ({
 };
 
 export { Layout };
+export default Layout;

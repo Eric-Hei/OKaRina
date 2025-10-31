@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Supabase - OsKaR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .step p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .step ol {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+        .step ol li {
+            margin-bottom: 8px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #28a745;
+        }
+        .btn-secondary:hover {
+            background: #218838;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background: #218838;
+        }
+        .copy-btn:active {
+            background: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Configuration Supabase</h1>
+            <p>Initialisation de la base de données OskarDB</p>
+        </div>
+        
+        <div class="content">
+            <div class="step success">
+                <h2>✅ Étape 1 : Connexion vérifiée</h2>
+                <p>La connexion à votre base Supabase fonctionne correctement !</p>
+                <div class="code-block">URL: https://tgtgrnuekgsczszdjxqr.supabase.co</div>
+            </div>
+
+            <div class="step">
+                <h2>📋 Étape 2 : Ouvrir le SQL Editor</h2>
+                <p>Cliquez sur le bouton ci-dessous pour ouvrir le SQL Editor de Supabase :</p>
+                <a href="https://supabase.com/dashboard/project/tgtgrnuekgsczszdjxqr/sql/new" target="_blank" class="btn">
+                    Ouvrir SQL Editor →
+                </a>
+            </div>
+
+            <div class="step">
+                <h2>📝 Étape 3 : Copier le schéma SQL</h2>
+                <p>Le fichier <code>supabase/schema.sql</code> contient tout le schéma de la base de données.</p>
+                <p><strong>Méthode 1 (Recommandée) :</strong></p>
+                <ol>
+                    <li>Ouvrez le fichier <code>supabase/schema.sql</code> dans VS Code</li>
+                    <li>Sélectionnez tout (Ctrl+A)</li>
+                    <li>Copiez (Ctrl+C)</li>
+                    <li>Collez dans le SQL Editor de Supabase</li>
+                    <li>Cliquez sur "Run" (ou F5)</li>
+                </ol>
+                <p><strong>Méthode 2 (Ligne de commande) :</strong></p>
+                <div class="code-block">Get-Content supabase/schema.sql | Set-Clipboard</div>
+                <p>Puis collez dans le SQL Editor et cliquez sur "Run"</p>
+            </div>
+
+            <div class="step warning">
+                <h2>⚠️ Étape 4 : Exécuter le schéma</h2>
+                <p><strong>Important :</strong> L'exécution peut prendre quelques secondes.</p>
+                <p>Le schéma va créer :</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>✅ 13 tables (profiles, teams, ambitions, etc.)</li>
+                    <li>✅ Toutes les politiques RLS (sécurité)</li>
+                    <li>✅ Les triggers automatiques</li>
+                    <li>✅ Les fonctions utilitaires</li>
+                    <li>✅ Les vues pour les calculs</li>
+                    <li>✅ Les index pour les performances</li>
+                </ul>
+            </div>
+
+            <div class="step info">
+                <h2>🔍 Étape 5 : Vérifier l'installation</h2>
+                <p>Après l'exécution du schéma, vérifiez que tout s'est bien passé :</p>
+                <ol>
+                    <li>Allez dans <strong>Table Editor</strong> dans Supabase</li>
+                    <li>Vous devriez voir 13 tables créées</li>
+                    <li>Vérifiez que la table <code>profiles</code> existe</li>
+                </ol>
+                <p style="margin-top: 15px;">Ou utilisez ce script de vérification :</p>
+                <div class="code-block">node scripts/test-supabase-connection.js</div>
+            </div>
+
+            <div class="step success">
+                <h2>🎉 Étape 6 : Tester l'application</h2>
+                <p>Une fois le schéma créé, vous pouvez tester l'authentification :</p>
+                <ol>
+                    <li>Lancez l'application : <code>npm run dev</code></li>
+                    <li>Allez sur <a href="http://localhost:3000/auth/register" target="_blank">http://localhost:3000/auth/register</a></li>
+                    <li>Créez un compte</li>
+                    <li>Vérifiez dans Supabase que le profil est créé automatiquement</li>
+                </ol>
+                <a href="http://localhost:3000/auth/register" target="_blank" class="btn btn-secondary">
+                    Tester l'inscription →
+                </a>
+            </div>
+
+            <div class="step">
+                <h2>📚 Ressources</h2>
+                <p>Documentation utile :</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><a href="https://supabase.com/docs" target="_blank">Documentation Supabase</a></li>
+                    <li><a href="https://supabase.com/docs/guides/auth" target="_blank">Guide Auth</a></li>
+                    <li><a href="https://supabase.com/docs/guides/auth/row-level-security" target="_blank">Guide RLS</a></li>
+                    <li><a href="file:///c:/Users/lihe3/Documents/augment-projects/OKaRina/supabase/README.md" target="_blank">README Supabase (local)</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Copier le chemin du fichier schema.sql dans le presse-papier
+        function copySchemaPath() {
+            const path = 'c:\\Users\\lihe3\\Documents\\augment-projects\\OKaRina\\supabase\\schema.sql';
+            navigator.clipboard.writeText(path).then(() => {
+                alert('Chemin copié dans le presse-papier !');
+            });
+        }
+    </script>
+</body>
+</html>
+
