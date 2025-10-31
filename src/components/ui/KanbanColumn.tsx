@@ -46,13 +46,14 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       <div
         ref={setNodeRef}
         className={`
-          flex-1 ${color} border-l-2 border-r-2 border-b-2 rounded-b-lg p-4 
+          flex-1 ${color} border-l-2 border-r-2 border-b-2 rounded-b-lg p-4
           min-h-[400px] overflow-y-auto
-          ${isOver ? 'ring-2 ring-blue-400 bg-opacity-75' : ''}
+          ${isOver ? 'ring-2 ring-blue-400 bg-blue-50/50' : ''}
           transition-all duration-200
         `}
       >
         {children}
+
       </div>
     </motion.div>
   );

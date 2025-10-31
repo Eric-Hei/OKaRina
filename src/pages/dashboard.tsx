@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import {
@@ -19,99 +19,67 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useAppStore } from '@/store/useAppStore';
+import { useAmbitions } from '@/hooks/useAmbitions';
+import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
+import { useActions } from '@/hooks/useActions';
 import { analyticsService } from '@/services/analytics';
 import { formatDate, formatRelativeDate, getDaysUntilDeadline } from '@/utils';
-import type { DashboardMetrics, ChartData } from '@/types';
+import type { DashboardMetrics, ChartData, Action, QuarterlyObjective, QuarterlyKeyResult, Ambition } from '@/types';
 import { CompanySize, CompanyStage } from '@/types';
 
 const DashboardPage: React.FC = () => {
   const router = useRouter();
-  const {
-    user,
-    ambitions,
-    keyResults,
-    okrs,
-    actions,
-    quarterlyObjectives,
-    quarterlyKeyResults,
-    metrics,
-    refreshMetrics,
-    setUser,
-    hasHydrated
-  } = useAppStore();
+  const { user } = useAppStore();
+
+  // React Query hooks
+  const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
+  const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
+  const { data: actions = [], isLoading: actionsLoading } = useActions(user?.id);
 
   const [progressData, setProgressData] = useState<ChartData[]>([]);
   const [trendAnalysis, setTrendAnalysis] = useState<any>(null);
 
-  // Ne pas écraser un utilisateur persistant. Créer un compte démo uniquement si aucun utilisateur n'est sauvegardé.
-  useEffect(() => {
-    // Attendre que Zustand ait fini de réhydrater
-    if (!hasHydrated) return;
+  // Calculer les métriques à partir des données React Query
+  const metrics = useMemo<DashboardMetrics>(() => {
+    if (!ambitions || !quarterlyObjectives || !actions) {
+      return {
+        totalAmbitions: 0,
+        activeOKRs: 0,
+        completedActions: 0,
+        overallProgress: 0,
+        monthlyProgress: 0,
+        upcomingDeadlines: 0,
+      };
+    }
 
-    try {
-      const persisted = typeof window !== 'undefined' ? localStorage.getItem('oskar-app-store') : null;
-      const hasPersistedUser = !!persisted && (() => { try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; } })();
-      if (!user && !hasPersistedUser) {
-        console.log('📝 Dashboard - Création utilisateur démo (aucun utilisateur persistant)');
-        setUser({
-          id: 'demo-user',
-          name: 'Entrepreneur Démo',
-          email: 'demo@oskar.com',
-          company: 'Ma Startup',
-          role: 'CEO',
-          createdAt: new Date(),
-          lastLoginAt: new Date(),
-          companyProfile: {
-            name: 'Ma Startup',
-            industry: 'Technology',
-            size: CompanySize.SMALL,
-            stage: CompanyStage.GROWTH,
-            mainChallenges: ['Recrutement', 'Financement'],
-            currentGoals: ['Croissance', 'Innovation'],
-            marketPosition: 'Challenger',
-            targetMarket: 'B2B SaaS',
-            businessModel: 'SaaS',
-          },
-        });
-      }
-    } catch {}
-  }, [user, setUser, hasHydrated]);
+    // Calculer les métriques
+    const totalAmbitions = ambitions.filter(a => a.status === 'active').length;
+    const activeOKRs = quarterlyObjectives.filter(o => o.status === 'active').length;
+    const completedActions = actions.filter(a => a.status === 'done').length;
 
-  useEffect(() => {
-    refreshMetrics();
-    
-    // Charger les données analytiques
-    const progressByCategory = analyticsService.getProgressByCategory();
-    const trend = analyticsService.getTrendAnalysis();
-    
-    setProgressData(progressByCategory);
-    setTrendAnalysis(trend);
-  }, [refreshMetrics]);
+    // Calculer la progression globale (moyenne des objectifs)
+    const overallProgress = quarterlyObjectives.length > 0
+      ? quarterlyObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / quarterlyObjectives.length
+      : 0;
 
-  // Métriques par défaut si pas de données
-  const defaultMetrics: DashboardMetrics = {
-    totalAmbitions: 0,
-    activeOKRs: 0,
-    completedActions: 0,
-    overallProgress: 0,
-    monthlyProgress: 0,
-    upcomingDeadlines: 0,
-  };
+    // Échéances à venir (7 prochains jours)
+    const upcomingDeadlines = actions.filter(
+      a => a.deadline && getDaysUntilDeadline(a.deadline) <= 7 && getDaysUntilDeadline(a.deadline) > 0
+    ).length;
 
-  const currentMetrics = metrics || defaultMetrics;
+    return {
+      totalAmbitions,
+      activeOKRs,
+      completedActions,
+      overallProgress,
+      monthlyProgress: 0, // TODO: Calculer à partir de l'historique
+      upcomingDeadlines,
+    };
+  }, [ambitions, quarterlyObjectives, actions]);
 
   // Prochaines échéances
-  const upcomingDeadlines = [
-    ...keyResults
-      .filter(kr => getDaysUntilDeadline(kr.deadline) <= 7 && getDaysUntilDeadline(kr.deadline) > 0)
-      .map(kr => ({
-        id: kr.id,
-        title: kr.title,
-        type: 'Résultat clé',
-        deadline: kr.deadline,
-        daysLeft: getDaysUntilDeadline(kr.deadline),
-      })),
-    ...actions
+  const upcomingDeadlines = useMemo(() => {
+    return actions
       .filter(action => action.deadline && getDaysUntilDeadline(action.deadline) <= 7 && getDaysUntilDeadline(action.deadline) > 0)
       .map(action => ({
         id: action.id,
@@ -119,19 +87,22 @@ const DashboardPage: React.FC = () => {
         type: 'Action',
         deadline: action.deadline!,
         daysLeft: getDaysUntilDeadline(action.deadline!),
-      })),
-  ].sort((a, b) => a.daysLeft - b.daysLeft);
+      }))
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  }, [actions]);
 
   // Actions récentes
-  const recentActions = actions
-    .filter(action => action.status === 'done')
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 5);
+  const recentActions = useMemo(() => {
+    return actions
+      .filter(action => action.status === 'done')
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5);
+  }, [actions]);
 
   const metricCards = [
     {
       title: 'Ambitions',
-      value: currentMetrics.totalAmbitions,
+      value: metrics.totalAmbitions,
       icon: Target,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
@@ -139,7 +110,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'OKRs Actifs',
-      value: currentMetrics.activeOKRs,
+      value: metrics.activeOKRs,
       icon: BarChart3,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
@@ -147,7 +118,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'Actions Terminées',
-      value: currentMetrics.completedActions,
+      value: metrics.completedActions,
       icon: CheckCircle,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
@@ -155,7 +126,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'Échéances à venir',
-      value: currentMetrics.upcomingDeadlines,
+      value: metrics.upcomingDeadlines,
       icon: Clock,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
@@ -163,7 +134,10 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
-  if (!user) {
+  // État de chargement
+  const isLoading = ambitionsLoading || objectivesLoading || actionsLoading;
+
+  if (!user || isLoading) {
     return (
       <Layout title="Dashboard" requireAuth>
         <div className="flex items-center justify-center min-h-screen">
@@ -252,27 +226,27 @@ const DashboardPage: React.FC = () => {
                           Progression générale
                         </span>
                         <span className="text-sm text-gray-500">
-                          {currentMetrics.overallProgress}%
+                          {Math.round(metrics.overallProgress)}%
                         </span>
                       </div>
                       <ProgressBar
-                        value={currentMetrics.overallProgress}
+                        value={metrics.overallProgress}
                         size="lg"
                         animated
                       />
                     </div>
-                    
+
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-gray-700">
                           Progrès mensuel
                         </span>
                         <span className="text-sm text-gray-500">
-                          {currentMetrics.monthlyProgress}%
+                          {Math.round(metrics.monthlyProgress)}%
                         </span>
                       </div>
                       <ProgressBar
-                        value={currentMetrics.monthlyProgress}
+                        value={metrics.monthlyProgress}
                         size="md"
                       />
                     </div>
@@ -324,7 +298,8 @@ const DashboardPage: React.FC = () => {
                   {ambitions.length > 0 ? (
                     <div className="space-y-4">
                       {ambitions.slice(0, 3).map((ambition) => {
-                        const progress = analyticsService.calculateAmbitionProgress(ambition.id);
+                        // TODO: Calculer la progression réelle à partir des KR
+                        const progress = 0;
                         return (
                           <div key={ambition.id} className="border rounded-lg p-4">
                             <div className="flex justify-between items-start mb-2">

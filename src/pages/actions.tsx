@@ -11,19 +11,29 @@ import { useAppStore } from '@/store/useAppStore';
 import { useFilters } from '@/hooks/useFilters';
 import { generateId } from '@/utils';
 import type { Action, ActionFormData, ActionStatus, FilterState } from '@/types';
+import { useAmbitions } from '@/hooks/useAmbitions';
+import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
+import { useQuarterlyKeyResults } from '@/hooks/useQuarterlyKeyResults';
+import { useActions, useCreateAction, useUpdateAction, useDeleteAction, useUpdateActionStatus, useUpdateActionsOrder, useMoveAction } from '@/hooks/useActions';
 
 type ViewMode = 'kanban' | 'table' | 'checklist';
 
 const ActionsPage: React.FC = () => {
-  const {
-    actions,
-    ambitions,
-    quarterlyObjectives,
-    quarterlyKeyResults,
-    addAction,
-    updateAction,
-    deleteAction,
-  } = useAppStore();
+  const { user } = useAppStore();
+
+  // React Query - Données
+  const { data: ambitions = [] } = useAmbitions(user?.id);
+  const { data: quarterlyObjectives = [] } = useQuarterlyObjectives(user?.id);
+  const { data: quarterlyKeyResults = [] } = useQuarterlyKeyResults(user?.id);
+  const { data: actions = [] } = useActions(user?.id);
+
+  // React Query - Mutations
+  const createAction = useCreateAction();
+  const updateActionMutation = useUpdateAction(user?.id);
+  const updateActionStatus = useUpdateActionStatus(user?.id);
+  const updateActionsOrder = useUpdateActionsOrder(user?.id);
+  const moveAction = useMoveAction(user?.id);
+  const deleteActionMutation = useDeleteAction(user?.id);
 
   const [formMode, setFormMode] = useState<'action' | null>(null);
   const [editingAction, setEditingAction] = useState<Action | null>(null);
@@ -63,31 +73,37 @@ const ActionsPage: React.FC = () => {
     setFormMode('action');
   };
 
-  const handleActionSubmit = (data: ActionFormData) => {
-    if (editingAction) {
-      updateAction(editingAction.id, {
-        ...data,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-        labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
-        updatedAt: new Date(),
-      });
-    } else {
-      const keyResultId = data.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '';
+  const handleActionSubmit = async (data: ActionFormData) => {
+    if (!user) return;
 
-      const newAction: Action = {
-        ...data,
-        id: generateId(),
-        quarterlyKeyResultId: keyResultId,
-        status: data.status || 'todo',
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-        labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addAction(newAction);
+    try {
+      if (editingAction) {
+        await updateActionMutation.mutateAsync({
+          id: editingAction.id,
+          updates: {
+            ...data,
+            deadline: data.deadline ? new Date(data.deadline) : undefined,
+            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+          },
+        });
+      } else {
+        await createAction.mutateAsync({
+          action: {
+            ...data,
+            quarterlyKeyResultId: data.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '',
+            status: data.status || 'todo',
+            deadline: data.deadline ? new Date(data.deadline) : undefined,
+            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+          },
+          userId: user.id
+        });
+      }
+      setFormMode(null);
+      setEditingAction(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'action:', error);
+      alert('Erreur lors de la sauvegarde de l\'action');
     }
-    setFormMode(null);
-    setEditingAction(null);
   };
 
   const handleCancelForm = () => {
@@ -95,11 +111,30 @@ const ActionsPage: React.FC = () => {
     setEditingAction(null);
   };
 
-  const handleActionMove = (actionId: string, newStatus: ActionStatus) => {
-    updateAction(actionId, {
-      status: newStatus,
-      ...(newStatus === 'done' ? { completedAt: new Date() } : {}),
-    });
+  const handleActionMove = async (
+    actionId: string,
+    newStatus: ActionStatus,
+    orderUpdates: { id: string; order_index: number }[]
+  ) => {
+    try {
+      console.debug('➡️ handleActionMove', { actionId, newStatus, orderUpdates: orderUpdates.length });
+      // Utiliser la mutation combinée pour éviter les conflits
+      moveAction.mutate({ actionId, newStatus, orderUpdates });
+    } catch (error) {
+      console.error('❌ Erreur lors du déplacement de l\'action:', error);
+      alert('Erreur lors du déplacement de l\'action');
+    }
+  };
+
+  const handleActionReorder = async (updates: { id: string; order_index: number }[]) => {
+    try {
+      console.debug('🔄 handleActionReorder', { count: updates.length });
+      // Ne pas attendre la fin de la mutation pour que l'optimistic update fonctionne
+      updateActionsOrder.mutate(updates);
+    } catch (error) {
+      console.error('❌ Erreur lors de la réorganisation des actions:', error);
+      alert('Erreur lors de la réorganisation des actions');
+    }
   };
 
   // Compter les actions filtrées
@@ -222,10 +257,16 @@ const ActionsPage: React.FC = () => {
               <KanbanBoard
                 actions={filteredActions}
                 onActionMove={handleActionMove}
+                onActionReorder={handleActionReorder}
                 onActionEdit={handleEditAction}
-                onActionDelete={(id) => {
+                onActionDelete={async (id) => {
                   if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
-                    deleteAction(id);
+                    try {
+                      await deleteActionMutation.mutateAsync(id);
+                    } catch (error) {
+                      console.error('❌ Erreur lors de la suppression:', error);
+                      alert('Erreur lors de la suppression de l\'action');
+                    }
                   }
                 }}
                 onAddAction={handleAddAction}
@@ -241,9 +282,14 @@ const ActionsPage: React.FC = () => {
               <ActionsTableView
                 actions={filteredActions}
                 onActionEdit={handleEditAction}
-                onActionDelete={(id) => {
+                onActionDelete={async (id) => {
                   if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
-                    deleteAction(id);
+                    try {
+                      await deleteActionMutation.mutateAsync(id);
+                    } catch (error) {
+                      console.error('❌ Erreur lors de la suppression:', error);
+                      alert('Erreur lors de la suppression de l\'action');
+                    }
                   }
                 }}
                 onActionStatusChange={handleActionMove}
@@ -256,9 +302,14 @@ const ActionsPage: React.FC = () => {
               <ActionsChecklistView
                 actions={filteredActions}
                 onActionEdit={handleEditAction}
-                onActionDelete={(id) => {
+                onActionDelete={async (id) => {
                   if (window.confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) {
-                    deleteAction(id);
+                    try {
+                      await deleteActionMutation.mutateAsync(id);
+                    } catch (error) {
+                      console.error('❌ Erreur lors de la suppression:', error);
+                      alert('Erreur lors de la suppression de l\'action');
+                    }
                   }
                 }}
                 onActionStatusChange={handleActionMove}

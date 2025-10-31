@@ -12,19 +12,28 @@ import { FORM_OPTIONS } from '@/constants';
 import { generateId, formatDate } from '@/utils';
 import type { ActionFormData } from '@/types';
 import { Priority, ActionStatus } from '@/types';
+import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
+import { useCreateAction } from '@/hooks/useActions';
 
 const ActionsStep: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  
-  const { 
-    actionsData, 
-    addAction, 
-    updateAction, 
+
+  const { user } = useAppStore();
+
+  const {
+    actionsData,
+    addAction,
+    updateAction,
     removeAction,
-    completeStep 
+    completeStep
   } = useCanvasStore();
-  const { addAction: addActionToStore, okrs } = useAppStore();
+
+  // React Query - Données
+  const { data: quarterlyKeyResults = [] } = useQuarterlyKeyResultsByUser(user?.id);
+
+  // React Query - Mutations
+  const createAction = useCreateAction();
 
   const {
     register,
@@ -42,39 +51,39 @@ const ActionsStep: React.FC = () => {
     },
   });
 
-  const onSubmit = (data: ActionFormData) => {
-    if (isEditing && editingIndex !== null) {
-      updateAction(editingIndex, data);
-      setEditingIndex(null);
-    } else {
-      addAction(data);
+  const onSubmit = async (data: ActionFormData) => {
+    if (!user) return;
 
-      // Ajouter aussi au store principal
-      // Note: Les actions du canvas ne sont pas directement liées aux KR
-      // Elles seront converties lors de la création des objectifs trimestriels
-      if (data.quarterlyKeyResultId) {
-        const newAction = {
-          id: generateId(),
-          quarterlyKeyResultId: data.quarterlyKeyResultId,
-          title: data.title,
-          description: data.description,
-          deadline: data.deadline ? new Date(data.deadline) : undefined,
-          priority: data.priority,
-          status: ActionStatus.TODO,
-          labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        addActionToStore(newAction);
+    try {
+      if (isEditing && editingIndex !== null) {
+        updateAction(editingIndex, data);
+        setEditingIndex(null);
+      } else {
+        // Ajouter au Canvas store pour le workflow
+        addAction(data);
+
+        // Créer l'action dans Supabase si elle est liée à un KR
+        if (data.quarterlyKeyResultId) {
+          await createAction.mutateAsync({
+            action: {
+              quarterlyKeyResultId: data.quarterlyKeyResultId,
+              title: data.title,
+              description: data.description,
+              deadline: data.deadline ? new Date(data.deadline) : undefined,
+              priority: data.priority,
+              status: ActionStatus.TODO,
+              labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+            },
+            userId: user.id
+          });
+        }
       }
-    }
 
-    reset();
-    setIsEditing(false);
-    
-    // Compléter l'étape si on a au moins une action
-    if (actionsData.length >= 0) {
-      completeStep(4);
+      reset();
+      setIsEditing(false);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'action:', error);
+      alert('Erreur lors de la sauvegarde de l\'action');
     }
   };
 
@@ -294,6 +303,16 @@ const ActionsStep: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Bouton Terminer */}
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => completeStep(3)}
+              size="lg"
+            >
+              Terminer le Canvas
+            </Button>
+          </div>
         </motion.div>
       )}
 

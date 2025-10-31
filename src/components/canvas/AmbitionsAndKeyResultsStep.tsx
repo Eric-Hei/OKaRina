@@ -10,6 +10,8 @@ import { AmbitionForm, AmbitionFormData } from '@/components/forms/AmbitionForm'
 import { KeyResultForm, KeyResultFormData } from '@/components/forms/KeyResultForm';
 import { generateId } from '@/utils';
 import type { Ambition, KeyResult, Status } from '@/types';
+import { useAmbitions, useCreateAmbition, useUpdateAmbition, useDeleteAmbition } from '@/hooks/useAmbitions';
+import { useKeyResultsByUser, useCreateKeyResult, useUpdateKeyResult, useDeleteKeyResult } from '@/hooks/useKeyResults';
 
 const AmbitionsAndKeyResultsStep: React.FC = () => {
   const [showAmbitionForm, setShowAmbitionForm] = useState(false);
@@ -19,19 +21,20 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
   const [selectedAmbitionId, setSelectedAmbitionId] = useState<string | null>(null);
   const [editingKR, setEditingKR] = useState<KeyResult | null>(null);
 
-  const {
-    user,
-    ambitions,
-    keyResults,
-    addAmbition,
-    updateAmbition,
-    deleteAmbition,
-    addKeyResult,
-    updateKeyResult,
-    deleteKeyResult,
-  } = useAppStore();
-
+  const { user } = useAppStore();
   const { completeStep } = useCanvasStore();
+
+  // React Query - Données
+  const { data: ambitions = [] } = useAmbitions(user?.id);
+  const { data: keyResults = [] } = useKeyResultsByUser(user?.id);
+
+  // React Query - Mutations
+  const createAmbition = useCreateAmbition();
+  const updateAmbitionMutation = useUpdateAmbition();
+  const deleteAmbitionMutation = useDeleteAmbition();
+  const createKeyResult = useCreateKeyResult();
+  const updateKeyResultMutation = useUpdateKeyResult();
+  const deleteKeyResultMutation = useDeleteKeyResult();
 
   // Marquer l'étape comme complétée si on a au moins une ambition
   React.useEffect(() => {
@@ -60,35 +63,45 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
     setShowAmbitionForm(true);
   };
 
-  const handleDeleteAmbition = (ambitionId: string) => {
+  const handleDeleteAmbition = async (ambitionId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette ambition ? Tous les résultats clés associés seront également supprimés.')) {
-      deleteAmbition(ambitionId);
+      try {
+        await deleteAmbitionMutation.mutateAsync(ambitionId);
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression de l\'ambition:', error);
+        alert('Erreur lors de la suppression de l\'ambition');
+      }
     }
   };
 
-  const handleAmbitionSubmit = (data: AmbitionFormData) => {
-    if (editingAmbition) {
-      updateAmbition(editingAmbition.id, {
-        ...data,
-        updatedAt: new Date(),
-      });
-    } else {
-      const newAmbition: Ambition = {
-        ...data,
-        id: generateId(),
-        userId: user?.id || 'demo-user',
-        status: 'active' as Status,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addAmbition(newAmbition);
-      // Auto-expand la nouvelle ambition
-      const newExpanded = new Set(expandedAmbitions);
-      newExpanded.add(newAmbition.id);
-      setExpandedAmbitions(newExpanded);
+  const handleAmbitionSubmit = async (data: AmbitionFormData) => {
+    if (!user) return;
+
+    try {
+      if (editingAmbition) {
+        await updateAmbitionMutation.mutateAsync({
+          id: editingAmbition.id,
+          updates: data,
+        });
+      } else {
+        const newAmbition = await createAmbition.mutateAsync({
+          ambition: {
+            ...data,
+            status: 'active' as Status,
+          },
+          userId: user.id
+        });
+        // Auto-expand la nouvelle ambition
+        const newExpanded = new Set(expandedAmbitions);
+        newExpanded.add(newAmbition.id);
+        setExpandedAmbitions(newExpanded);
+      }
+      setShowAmbitionForm(false);
+      setEditingAmbition(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'ambition:', error);
+      alert('Erreur lors de la sauvegarde de l\'ambition');
     }
-    setShowAmbitionForm(false);
-    setEditingAmbition(null);
   };
 
   const handleAddKeyResult = (ambitionId: string) => {
@@ -103,31 +116,42 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
     setShowKRForm(true);
   };
 
-  const handleDeleteKeyResult = (krId: string) => {
+  const handleDeleteKeyResult = async (krId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce résultat clé ?')) {
-      deleteKeyResult(krId);
+      try {
+        await deleteKeyResultMutation.mutateAsync(krId);
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression du résultat clé:', error);
+        alert('Erreur lors de la suppression du résultat clé');
+      }
     }
   };
 
-  const handleKeyResultSubmit = (data: KeyResultFormData) => {
-    if (editingKR) {
-      updateKeyResult(editingKR.id, {
-        ...data,
-        updatedAt: new Date(),
-      });
-    } else {
-      const newKR: KeyResult = {
-        ...data,
-        id: generateId(),
-        status: 'active' as Status,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addKeyResult(newKR);
+  const handleKeyResultSubmit = async (data: KeyResultFormData) => {
+    if (!user) return;
+
+    try {
+      if (editingKR) {
+        await updateKeyResultMutation.mutateAsync({
+          id: editingKR.id,
+          updates: data,
+        });
+      } else {
+        await createKeyResult.mutateAsync({
+          keyResult: {
+            ...data,
+            status: 'active' as Status,
+          },
+          userId: user.id
+        });
+      }
+      setShowKRForm(false);
+      setEditingKR(null);
+      setSelectedAmbitionId(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde du résultat clé:', error);
+      alert('Erreur lors de la sauvegarde du résultat clé');
     }
-    setShowKRForm(false);
-    setEditingKR(null);
-    setSelectedAmbitionId(null);
   };
 
   const getKeyResultsForAmbition = (ambitionId: string) => {

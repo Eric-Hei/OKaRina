@@ -3,6 +3,18 @@ import { QuarterlyKeyResultsService } from '@/services/db';
 import type { QuarterlyKeyResult } from '@/types';
 
 /**
+ * Hook pour récupérer tous les KR trimestriels d'un utilisateur
+ */
+export function useQuarterlyKeyResultsByUser(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['quarterlyKeyResults', 'user', userId],
+    queryFn: () => QuarterlyKeyResultsService.getByUserId(userId!),
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/**
  * Hook pour récupérer les KR trimestriels d'un objectif
  */
 export function useQuarterlyKeyResults(objectiveId: string | undefined) {
@@ -34,10 +46,10 @@ export function useCreateQuarterlyKeyResult() {
 
   return useMutation({
     mutationFn: (data: { keyResult: Partial<QuarterlyKeyResult>; userId: string }) =>
-      QuarterlyKeyResultsService.create(data.keyResult, data.userId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['quarterlyKeyResults', variables.userId] });
-      queryClient.invalidateQueries({ queryKey: ['quarterlyKeyResults', 'objective'] });
+      QuarterlyKeyResultsService.create(data.keyResult),
+    onSuccess: () => {
+      // Invalider TOUTES les queries de quarterlyKeyResults
+      queryClient.invalidateQueries({ queryKey: ['quarterlyKeyResults'] });
     },
   });
 }
@@ -59,6 +71,21 @@ export function useUpdateQuarterlyKeyResult() {
 }
 
 /**
+ * Hook pour mettre à jour la progression d'un KR trimestriel
+ */
+export function useUpdateQuarterlyKeyResultProgress() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { id: string; current: number; note?: string }) =>
+      QuarterlyKeyResultsService.updateProgress(data.id, data.current, data.note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quarterlyKeyResults'] });
+    },
+  });
+}
+
+/**
  * Hook pour supprimer un KR trimestriel
  */
 export function useDeleteQuarterlyKeyResult() {
@@ -72,4 +99,3 @@ export function useDeleteQuarterlyKeyResult() {
     },
   });
 }
-

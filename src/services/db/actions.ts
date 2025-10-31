@@ -31,6 +31,7 @@ export class ActionsService {
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
       completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+      order_index: row.order_index ?? 0,
     };
   }
 
@@ -94,7 +95,7 @@ export class ActionsService {
       .order('order_index', { ascending: true });
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('status', actionStatusToDb(status));
     }
 
     const data = await supabaseRead<ActionRow[]>(() => query, 'Actions - getAll');
@@ -160,7 +161,7 @@ export class ActionsService {
     if (updates.labels !== undefined) updateData.metadata = { labels: updates.labels };
 
     // Si le statut passe à DONE, enregistrer la date de complétion
-    if (updates.status === 'DONE') {
+    if (updates.status && (typeof updates.status === 'string' ? updates.status.toUpperCase() : String(updates.status).toUpperCase()) === 'DONE') {
       updateData.completed_at = new Date().toISOString();
     }
 
@@ -187,7 +188,7 @@ export class ActionsService {
   static async updateStatus(id: string, status: ActionStatus, userId: string): Promise<Action> {
     const updateData: ActionUpdate = { status: actionStatusToDb(status) };
 
-    if (status === 'DONE') {
+    if ((typeof status === 'string' ? status.toUpperCase() : String(status).toUpperCase()) === 'DONE') {
       updateData.completed_at = new Date().toISOString();
     }
 
@@ -250,6 +251,28 @@ export class ActionsService {
   }
 
   /**
+   * Déplacer une action (changement de statut + position)
+   * Opération atomique pour éviter les conflits lors du drag & drop
+   */
+  static async moveAction(
+    actionId: string,
+    newStatus: ActionStatus,
+    orderUpdates: { id: string; order_index: number }[],
+    userId: string
+  ): Promise<Action> {
+    // 1. Mettre à jour le statut de l'action déplacée
+    const statusUpdate = await this.updateStatus(actionId, newStatus, userId);
+
+    // 2. Mettre à jour les order_index de toutes les actions concernées
+    if (orderUpdates.length > 0) {
+      await this.updateOrder(orderUpdates, userId);
+    }
+
+    console.log('✅ Action déplacée:', actionId, newStatus);
+    return statusUpdate;
+  }
+
+  /**
    * Récupérer les actions par statut (pour le Kanban)
    */
   static async getByStatus(userId: string): Promise<Record<ActionStatus, Action[]>> {
@@ -265,10 +288,10 @@ export class ActionsService {
     const actions = data.map(row => this.rowToAction(row));
 
     return {
-      TODO: actions.filter(a => a.status === 'TODO'),
-      IN_PROGRESS: actions.filter(a => a.status === 'IN_PROGRESS'),
-      DONE: actions.filter(a => a.status === 'DONE'),
-      BLOCKED: actions.filter(a => a.status === 'BLOCKED'),
+      TODO: actions.filter(a => a.status === 'todo'),
+      IN_PROGRESS: actions.filter(a => a.status === 'in_progress'),
+      DONE: actions.filter(a => a.status === 'done'),
+      BLOCKED: actions.filter(a => a.status === 'blocked'),
     };
   }
 }

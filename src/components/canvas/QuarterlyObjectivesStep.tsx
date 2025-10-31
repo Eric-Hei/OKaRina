@@ -12,24 +12,34 @@ import type { QuarterlyObjectiveFormData, Quarter } from '@/types';
 import { Status } from '@/types';
 import { QuarterlyObjectiveForm } from '@/components/forms/QuarterlyObjectiveForm';
 import { QuarterlyKeyResultForm } from '@/components/forms/QuarterlyKeyResultForm';
+import { useAmbitions } from '@/hooks/useAmbitions';
+import { useCreateQuarterlyObjective } from '@/hooks/useQuarterlyObjectives';
+import { useCreateQuarterlyKeyResult } from '@/hooks/useQuarterlyKeyResults';
 
 const QuarterlyObjectivesStep: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [showKRForm, setShowKRForm] = useState(false);
   const [selectedObjectiveIndex, setSelectedObjectiveIndex] = useState<number | null>(null);
-  
-  const { 
-    quarterlyObjectivesData, 
+
+  const { user } = useAppStore();
+
+  const {
+    quarterlyObjectivesData,
     quarterlyKeyResultsData,
-    addQuarterlyObjective, 
-    updateQuarterlyObjective, 
+    addQuarterlyObjective,
+    updateQuarterlyObjective,
     removeQuarterlyObjective,
     addQuarterlyKeyResult,
-    completeStep 
+    completeStep
   } = useCanvasStore();
-  
-  const { ambitions, addQuarterlyObjective: addQuarterlyObjectiveToStore, addQuarterlyKeyResult: addQuarterlyKeyResultToStore } = useAppStore();
+
+  // React Query - Données
+  const { data: ambitions = [] } = useAmbitions(user?.id);
+
+  // React Query - Mutations
+  const createObjective = useCreateQuarterlyObjective();
+  const createKeyResult = useCreateQuarterlyKeyResult();
 
   const quarterLabels = {
     Q1: 'T1 (Jan-Mar)',
@@ -38,33 +48,38 @@ const QuarterlyObjectivesStep: React.FC = () => {
     Q4: 'T4 (Oct-Déc)',
   };
 
-  const onSubmitObjective = (data: QuarterlyObjectiveFormData) => {
-    const objectiveId = generateId();
-    const objectiveData = {
-      ...data,
-      id: objectiveId,
-      status: Status.DRAFT,
-      keyResults: [],
-      actions: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  const onSubmitObjective = async (data: QuarterlyObjectiveFormData) => {
+    if (!user) return;
 
-    if (isEditing && editingIndex !== null) {
-      updateQuarterlyObjective(editingIndex, data);
-      setEditingIndex(null);
-    } else {
-      // Ajouter au Canvas store avec l'ID
-      addQuarterlyObjective({ ...data, id: objectiveId });
-      // Ajouter aussi au store principal
-      addQuarterlyObjectiveToStore(objectiveData);
+    try {
+      if (isEditing && editingIndex !== null) {
+        updateQuarterlyObjective(editingIndex, data);
+        setEditingIndex(null);
+      } else {
+        // Créer l'objectif dans Supabase via React Query
+        const newObjective = await createObjective.mutateAsync({
+          objective: {
+            ...data,
+            status: Status.DRAFT,
+          },
+          userId: user.id
+        });
+
+        // Ajouter aussi au Canvas store pour le workflow
+        addQuarterlyObjective({ ...data, id: newObjective.id });
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'objectif:', error);
+      alert('Erreur lors de la sauvegarde de l\'objectif');
     }
-
-    setIsEditing(false);
   };
 
-  const onSubmitKeyResult = (data: any) => {
-    if (selectedObjectiveIndex !== null) {
+  const onSubmitKeyResult = async (data: any) => {
+    if (!user || selectedObjectiveIndex === null) return;
+
+    try {
       // Récupérer l'objectif trimestriel correspondant
       const selectedObjective = quarterlyObjectivesData[selectedObjectiveIndex];
 
@@ -74,35 +89,25 @@ const QuarterlyObjectivesStep: React.FC = () => {
         return;
       }
 
-      // Créer le KR trimestriel complet avec ID et dates
-      const quarterlyKeyResultData = {
-        ...data,
-        id: generateId(),
-        quarterlyObjectiveId: selectedObjective.id, // Utiliser l'ID de l'objectif trimestriel
-        status: Status.DRAFT,
-        deadline: new Date(data.deadline),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      console.log('✅ Création KR trimestriel:', {
-        krId: quarterlyKeyResultData.id,
-        krTitle: quarterlyKeyResultData.title,
-        quarterlyObjectiveId: quarterlyKeyResultData.quarterlyObjectiveId,
-        selectedObjective: {
-          id: selectedObjective.id,
-          title: selectedObjective.title,
+      // Créer le KR dans Supabase via React Query
+      await createKeyResult.mutateAsync({
+        keyResult: {
+          ...data,
+          quarterlyObjectiveId: selectedObjective.id,
+          deadline: new Date(data.deadline),
         },
+        userId: user.id
       });
 
-      // Ajouter au store Canvas
+      // Ajouter aussi au Canvas store pour le workflow
       addQuarterlyKeyResult(selectedObjectiveIndex, data);
 
-      // Ajouter au store principal pour la persistance et l'affichage dans la pyramide
-      addQuarterlyKeyResultToStore(quarterlyKeyResultData);
+      setShowKRForm(false);
+      setSelectedObjectiveIndex(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde du KR:', error);
+      alert('Erreur lors de la sauvegarde du KR');
     }
-    setShowKRForm(false);
-    setSelectedObjectiveIndex(null);
   };
 
   const handleEdit = (index: number) => {
@@ -121,7 +126,7 @@ const QuarterlyObjectivesStep: React.FC = () => {
 
   const handleComplete = () => {
     if (quarterlyObjectivesData.length > 0) {
-      completeStep(3);
+      completeStep(2); // Étape 2 = Objectifs Trimestriels
     }
   };
 
@@ -135,6 +140,7 @@ const QuarterlyObjectivesStep: React.FC = () => {
       <div className="max-w-4xl mx-auto p-6">
         <QuarterlyObjectiveForm
           initialData={editingIndex !== null ? quarterlyObjectivesData[editingIndex] : undefined}
+          ambitions={ambitions}
           onSubmit={onSubmitObjective}
           onCancel={() => {
             setIsEditing(false);

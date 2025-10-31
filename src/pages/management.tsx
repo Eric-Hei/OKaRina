@@ -23,6 +23,10 @@ import { QuarterlyObjectiveForm } from '@/components/forms/QuarterlyObjectiveFor
 import { QuarterlyKeyResultForm } from '@/components/forms/QuarterlyKeyResultForm';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { useAppStore } from '@/store/useAppStore';
+import { useAmbitions, useCreateAmbition, useUpdateAmbition, useDeleteAmbition } from '@/hooks/useAmbitions';
+import { useQuarterlyObjectives, useCreateQuarterlyObjective, useUpdateQuarterlyObjective, useDeleteQuarterlyObjective } from '@/hooks/useQuarterlyObjectives';
+import { useQuarterlyKeyResultsByUser, useCreateQuarterlyKeyResult, useUpdateQuarterlyKeyResult, useUpdateQuarterlyKeyResultProgress, useDeleteQuarterlyKeyResult } from '@/hooks/useQuarterlyKeyResults';
+import { useActions, useCreateAction, useUpdateAction, useDeleteAction, useUpdateActionStatus } from '@/hooks/useActions';
 import { useFilters, useHasActiveFilters, useActiveFiltersDescription } from '@/hooks/useFilters';
 import { geminiService } from '@/services/gemini';
 import { shareService } from '@/services/share';
@@ -55,26 +59,35 @@ const ManagementPage: React.FC = () => {
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [historyKR, setHistoryKR] = useState<QuarterlyKeyResult | null>(null);
 
-  const {
-    ambitions,
-    quarterlyObjectives,
-    quarterlyKeyResults,
-    actions,
-    addAmbition,
-    updateAmbition,
-    deleteAmbition,
-    addQuarterlyObjective,
-    updateQuarterlyObjective,
-    deleteQuarterlyObjective,
-    addQuarterlyKeyResult,
-    updateQuarterlyKeyResult,
-    updateQuarterlyKeyResultProgress,
-    deleteQuarterlyKeyResult,
-    addAction,
-    updateAction,
-    deleteAction,
-    moveAction,
-  } = useAppStore();
+  const { user } = useAppStore();
+
+  // React Query - Données
+  const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
+  const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
+  const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResultsByUser(user?.id);
+  const { data: actions = [], isLoading: actionsLoading } = useActions(user?.id);
+
+  // React Query - Mutations Ambitions
+  const createAmbition = useCreateAmbition();
+  const updateAmbitionMutation = useUpdateAmbition();
+  const deleteAmbitionMutation = useDeleteAmbition();
+
+  // React Query - Mutations Objectifs
+  const createObjective = useCreateQuarterlyObjective();
+  const updateObjectiveMutation = useUpdateQuarterlyObjective();
+  const deleteObjectiveMutation = useDeleteQuarterlyObjective();
+
+  // React Query - Mutations Key Results
+  const createKeyResult = useCreateQuarterlyKeyResult();
+  const updateKeyResultMutation = useUpdateQuarterlyKeyResult();
+  const updateKeyResultProgressMutation = useUpdateQuarterlyKeyResultProgress();
+  const deleteKeyResultMutation = useDeleteQuarterlyKeyResult();
+
+  // React Query - Mutations Actions
+  const createAction = useCreateAction();
+  const updateActionMutation = useUpdateAction();
+  const deleteActionMutation = useDeleteAction();
+  const updateActionStatusMutation = useUpdateActionStatus();
 
   const [filters, setFilters] = useState<FilterState>({
     ambitionIds: [],
@@ -104,16 +117,10 @@ const ManagementPage: React.FC = () => {
   const hasActiveFilters = useHasActiveFilters(filters);
   const filtersDescription = useActiveFiltersDescription(filters, ambitions, quarterlyObjectives);
 
-  // Debug logs
-  console.log('🔍 Management Page - Données:', {
-    ambitions: ambitions.length,
-    quarterlyObjectives: quarterlyObjectives.length,
-    quarterlyKeyResults: quarterlyKeyResults.length,
-    actions: actions.length,
-    filteredAmbitions: filteredAmbitions.length,
-    filteredQuarterlyObjectives: filteredQuarterlyObjectives.length,
-    filteredActions: filteredActions.length,
-  });
+  // État de chargement
+  const isLoading = ambitionsLoading || objectivesLoading || keyResultsLoading || actionsLoading;
+
+
 
   // Handlers pour les formulaires
   const handleAddAmbition = () => {
@@ -160,103 +167,129 @@ const ManagementPage: React.FC = () => {
   };
 
   // Handlers pour les soumissions de formulaires
-  const handleAmbitionSubmit = (data: AmbitionFormData) => {
-    if (editingItem) {
-      updateAmbition(editingItem.id, {
-        ...data,
-        updatedAt: new Date(),
-      });
-    } else {
-      const newAmbition: Ambition = {
-        ...data,
-        id: generateId(),
-        userId: 'demo-user', // TODO: Use actual user ID
-        status: Status.ACTIVE,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addAmbition(newAmbition);
+  const handleAmbitionSubmit = async (data: AmbitionFormData) => {
+    if (!user) return;
+
+    try {
+      if (editingItem) {
+        await updateAmbitionMutation.mutateAsync({
+          id: editingItem.id,
+          updates: data,
+          userId: user.id
+        });
+      } else {
+        await createAmbition.mutateAsync({
+          ambition: {
+            ...data,
+            status: Status.ACTIVE,
+          },
+          userId: user.id
+        });
+      }
+      setFormMode(null);
+      setEditingItem(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'ambition:', error);
+      alert('Erreur lors de la sauvegarde de l\'ambition');
     }
-    setFormMode(null);
-    setEditingItem(null);
   };
 
-  const handleQuarterlyObjectiveSubmit = (data: QuarterlyObjectiveFormData) => {
-    if (editingItem) {
-      updateQuarterlyObjective(editingItem.id, {
-        ...editingItem,
-        ...data,
-        updatedAt: new Date(),
-      });
-    } else {
-      const newObjective: QuarterlyObjective = {
-        ...data,
-        id: generateId(),
-        keyResults: [],
-        actions: [],
-        status: Status.DRAFT,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addQuarterlyObjective(newObjective);
+  const handleQuarterlyObjectiveSubmit = async (data: QuarterlyObjectiveFormData) => {
+    if (!user) return;
+
+    try {
+      if (editingItem) {
+        await updateObjectiveMutation.mutateAsync({
+          id: editingItem.id,
+          updates: data,
+          userId: user.id
+        });
+      } else {
+        await createObjective.mutateAsync({
+          objective: {
+            ...data,
+            status: Status.DRAFT,
+          },
+          userId: user.id
+        });
+      }
+      setFormMode(null);
+      setEditingItem(null);
+      setSelectedObjectiveId(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'objectif:', error);
+      alert('Erreur lors de la sauvegarde de l\'objectif');
     }
-    setFormMode(null);
-    setEditingItem(null);
-    setSelectedObjectiveId(null);
   };
 
-  const handleQuarterlyKeyResultSubmit = (data: QuarterlyKeyResultFormData) => {
-    if (editingItem) {
-      updateQuarterlyKeyResult(editingItem.id, {
-        ...editingItem,
-        ...data,
-        updatedAt: new Date(),
-      });
-    } else if (selectedObjectiveId) {
-      const newKeyResult: QuarterlyKeyResult = {
-        ...data,
-        id: generateId(),
-        quarterlyObjectiveId: selectedObjectiveId,
-        deadline: new Date(data.deadline),
-        status: Status.DRAFT,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addQuarterlyKeyResult(newKeyResult);
+  const handleQuarterlyKeyResultSubmit = async (data: QuarterlyKeyResultFormData) => {
+    if (!user) return;
+
+    try {
+      if (editingItem) {
+        await updateKeyResultMutation.mutateAsync({
+          id: editingItem.id,
+          updates: data,
+        });
+      } else if (selectedObjectiveId) {
+        await createKeyResult.mutateAsync({
+          keyResult: {
+            ...data,
+            quarterlyObjectiveId: selectedObjectiveId,
+          },
+          userId: user.id
+        });
+      }
+      setFormMode(null);
+      setEditingItem(null);
+      setSelectedObjectiveId(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde du Key Result:', error);
+      alert('Erreur lors de la sauvegarde du Key Result');
     }
-    setFormMode(null);
-    setEditingItem(null);
-    setSelectedObjectiveId(null);
   };
 
-  const handleActionSubmit = (data: ActionFormData) => {
-    if (editingItem) {
-      updateAction(editingItem.id, {
-        ...editingItem,
-        ...data,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-        labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
-        updatedAt: new Date(),
-      });
-    } else {
-      // Utiliser le KR du formulaire, ou celui présélectionné, ou le premier disponible
-      const keyResultId = data.quarterlyKeyResultId || selectedObjectiveId || quarterlyKeyResults[0]?.id || '';
+  const handleActionSubmit = async (data: ActionFormData) => {
+    if (!user) return;
 
-      const newAction: Action = {
-        ...data,
-        id: generateId(),
-        quarterlyKeyResultId: keyResultId,
-        status: ActionStatus.TODO,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-        labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      addAction(newAction);
+    try {
+      if (editingItem) {
+        await updateActionMutation.mutateAsync({
+          id: editingItem.id,
+          updates: {
+            ...data,
+            deadline: data.deadline ? new Date(data.deadline) : undefined,
+            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+          },
+          userId: user.id
+        });
+      } else {
+        // Utiliser le KR du formulaire, ou celui présélectionné
+        const keyResultId = data.quarterlyKeyResultId || selectedObjectiveId;
+
+        if (!keyResultId) {
+          alert('Veuillez sélectionner un Key Result');
+          return;
+        }
+
+        await createAction.mutateAsync({
+          action: {
+            ...data,
+            quarterlyKeyResultId: keyResultId,
+            status: ActionStatus.TODO,
+            deadline: data.deadline ? new Date(data.deadline) : undefined,
+            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+          },
+          userId: user.id
+        });
+      }
+      setFormMode(null);
+      setEditingItem(null);
+      setSelectedObjectiveId(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde de l\'action:', error);
+      alert('Erreur lors de la sauvegarde de l\'action');
     }
-    setFormMode(null);
-    setEditingItem(null);
-    setSelectedObjectiveId(null);
   };
 
   const handleCancelForm = () => {
@@ -338,11 +371,19 @@ const ManagementPage: React.FC = () => {
 
 
   // Handler pour le déplacement d'actions dans le kanban
-  const handleActionMove = (actionId: string, newStatus: ActionStatus) => {
-    updateAction(actionId, {
-      status: newStatus,
-      ...(newStatus === ActionStatus.DONE ? { completedAt: new Date() } : {}),
-    });
+  const handleActionMove = async (actionId: string, newStatus: ActionStatus) => {
+    if (!user) return;
+
+    try {
+      await updateActionStatusMutation.mutateAsync({
+        id: actionId,
+        status: newStatus,
+        userId: user.id
+      });
+    } catch (error) {
+      console.error('❌ Erreur lors du déplacement de l\'action:', error);
+      alert('Erreur lors du déplacement de l\'action');
+    }
   };
 
   // Handler pour voir le kanban d'un objectif spécifique
@@ -362,11 +403,20 @@ const ManagementPage: React.FC = () => {
     setIsProgressModalOpen(true);
   };
 
-  const handleUpdateProgress = (newCurrent: number, note?: string) => {
-    if (selectedKR) {
-      updateQuarterlyKeyResultProgress(selectedKR.id, newCurrent, note);
+  const handleUpdateProgress = async (newCurrent: number, note?: string) => {
+    if (!selectedKR) return;
+
+    try {
+      await updateKeyResultProgressMutation.mutateAsync({
+        id: selectedKR.id,
+        current: newCurrent,
+        note,
+      });
       setIsProgressModalOpen(false);
       setSelectedKR(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour de la progression:', error);
+      alert('Erreur lors de la mise à jour de la progression');
     }
   };
 
@@ -393,9 +443,10 @@ const ManagementPage: React.FC = () => {
           )}
           {formMode === 'quarterly-objective' && (
             <QuarterlyObjectiveForm
-              initialData={editingItem}
+              initialData={editingItem || (selectedObjectiveId ? { ambitionId: selectedObjectiveId } : undefined)}
               onSubmit={handleQuarterlyObjectiveSubmit}
               onCancel={handleCancelForm}
+              ambitions={ambitions}
             />
           )}
           {formMode === 'quarterly-key-result' && (
@@ -408,7 +459,7 @@ const ManagementPage: React.FC = () => {
           )}
           {formMode === 'action' && (
             <ActionForm
-              initialData={editingItem}
+              initialData={editingItem || (selectedObjectiveId ? { quarterlyKeyResultId: selectedObjectiveId } : undefined)}
               quarterlyKeyResultTitle={quarterlyKeyResults.find(kr => kr.id === selectedObjectiveId)?.title}
               quarterlyKeyResults={quarterlyKeyResults}
               allowKeyResultSelection={!selectedObjectiveId}
@@ -416,6 +467,16 @@ const ManagementPage: React.FC = () => {
               onCancel={handleCancelForm}
             />
           )}
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Layout title="Gestion des Objectifs" requireAuth>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
         </div>
       </Layout>
     );
@@ -525,20 +586,49 @@ const ManagementPage: React.FC = () => {
                 actions={filteredActions}
                 onAddAmbition={handleAddAmbition}
                 onEditAmbition={handleEditAmbition}
-                onDeleteAmbition={(id) => {
+                onDeleteAmbition={async (id) => {
+                  if (!user) return;
                   if (window.confirm('Êtes-vous sûr de vouloir supprimer cette ambition ? Tous les objectifs associés seront également supprimés.')) {
-                    deleteAmbition(id);
+                    try {
+                      await deleteAmbitionMutation.mutateAsync({ id, userId: user.id });
+                    } catch (error) {
+                      console.error('❌ Erreur lors de la suppression:', error);
+                      alert('Erreur lors de la suppression de l\'ambition');
+                    }
                   }
                 }}
                 onAddQuarterlyObjective={handleAddQuarterlyObjective}
                 onEditQuarterlyObjective={handleEditQuarterlyObjective}
-                onDeleteQuarterlyObjective={(id) => deleteQuarterlyObjective(id)}
+                onDeleteQuarterlyObjective={async (id) => {
+                  if (!user) return;
+                  try {
+                    await deleteObjectiveMutation.mutateAsync({ id, userId: user.id });
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la suppression:', error);
+                    alert('Erreur lors de la suppression de l\'objectif');
+                  }
+                }}
                 onAddQuarterlyKeyResult={handleAddQuarterlyKeyResult}
                 onEditQuarterlyKeyResult={handleEditQuarterlyKeyResult}
-                onDeleteQuarterlyKeyResult={(id) => deleteQuarterlyKeyResult(id)}
+                onDeleteQuarterlyKeyResult={async (id) => {
+                  try {
+                    await deleteKeyResultMutation.mutateAsync(id);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la suppression:', error);
+                    alert('Erreur lors de la suppression du Key Result');
+                  }
+                }}
                 onAddAction={handleAddAction}
                 onEditAction={handleEditAction}
-                onDeleteAction={(id) => deleteAction(id)}
+                onDeleteAction={async (id) => {
+                  if (!user) return;
+                  try {
+                    await deleteActionMutation.mutateAsync({ id, userId: user.id });
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la suppression:', error);
+                    alert('Erreur lors de la suppression de l\'action');
+                  }
+                }}
                 onViewKanban={handleViewKanban}
                 onGenerateActionPlan={handleGenerateActionPlan}
                 onShareQuarterlyObjective={handleShareObjective}
@@ -570,7 +660,15 @@ const ManagementPage: React.FC = () => {
                   actions={filteredActions}
                   onActionMove={handleActionMove}
                   onActionEdit={handleEditAction}
-                  onActionDelete={(id) => deleteAction(id)}
+                  onActionDelete={async (id) => {
+                    if (!user) return;
+                    try {
+                      await deleteActionMutation.mutateAsync({ id, userId: user.id });
+                    } catch (error) {
+                      console.error('❌ Erreur lors de la suppression:', error);
+                      alert('Erreur lors de la suppression de l\'action');
+                    }
+                  }}
                   onAddAction={() => handleAddAction()}
                   quarterlyKeyResults={quarterlyKeyResults}
                   quarterlyObjectives={quarterlyObjectives}

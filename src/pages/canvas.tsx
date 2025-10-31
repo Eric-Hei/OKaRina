@@ -23,10 +23,18 @@ import AISuggestionsPanel from '@/components/canvas/AISuggestionsPanel';
 import { generateId, getCurrentQuarter } from '@/utils';
 import type { Ambition, QuarterlyObjective, QuarterlyKeyResult, Action } from '@/types';
 import { Priority, Status, ActionStatus, CompanySize, CompanyStage } from '@/types';
+import { useAmbitions } from '@/hooks/useAmbitions';
+import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
+import { useQuarterlyKeyResults } from '@/hooks/useQuarterlyKeyResults';
+import { useActions } from '@/hooks/useActions';
+import { useCreateAmbition } from '@/hooks/useAmbitions';
+import { useCreateQuarterlyObjective } from '@/hooks/useQuarterlyObjectives';
+import { useCreateQuarterlyKeyResult } from '@/hooks/useQuarterlyKeyResults';
+import { useCreateAction } from '@/hooks/useActions';
 
 
 const CanvasPage: React.FC = () => {
-  const { user, setUser, hasHydrated, addAmbition, addQuarterlyObjective, addQuarterlyKeyResult, addAction } = useAppStore();
+  const { user } = useAppStore();
   const {
     currentStep,
     steps,
@@ -40,39 +48,21 @@ const CanvasPage: React.FC = () => {
     validateCurrentStep,
   } = useCanvasStore();
 
-  // Ne pas écraser un utilisateur persistant. Créer un compte démo uniquement si aucun utilisateur n'est sauvegardé.
-  useEffect(() => {
-    // Attendre que Zustand ait fini de réhydrater
-    if (!hasHydrated) return;
+  // React Query - Données OKR
+  const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
+  const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
+  const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResults(user?.id);
+  const { data: actions = [], isLoading: actionsLoading } = useActions(user?.id);
 
-    try {
-      const persisted = typeof window !== 'undefined' ? localStorage.getItem('oskar-app-store') : null;
-      const hasPersistedUser = !!persisted && (() => { try { const parsed = JSON.parse(persisted); return !!parsed?.state?.user; } catch { return false; } })();
-      if (!user && !hasPersistedUser) {
-        console.log('📝 Canvas - Création utilisateur démo (aucun utilisateur persistant)');
-        setUser({
-          id: 'demo-user',
-          name: 'Entrepreneur Démo',
-          email: 'demo@oskar.com',
-          company: 'Ma Startup',
-          role: 'CEO',
-          createdAt: new Date(),
-          lastLoginAt: new Date(),
-          companyProfile: {
-            name: 'Ma Startup',
-            industry: 'Technology',
-            size: CompanySize.SMALL,
-            stage: CompanyStage.GROWTH,
-            mainChallenges: ['Recrutement', 'Financement'],
-            currentGoals: ['Croissance', 'Innovation'],
-            marketPosition: 'Challenger',
-            targetMarket: 'B2B SaaS',
-            businessModel: 'SaaS',
-          },
-        });
-      }
-    } catch {}
-  }, [user, setUser, hasHydrated]);
+  // React Query - Mutations
+  const createAmbition = useCreateAmbition();
+  const createObjective = useCreateQuarterlyObjective();
+  const createKeyResult = useCreateQuarterlyKeyResult();
+  const createAction = useCreateAction();
+
+  const isLoading = ambitionsLoading || objectivesLoading || keyResultsLoading || actionsLoading;
+
+
 
   const currentStepData = steps.find(step => step.id === currentStep);
   const currentValidation = aiValidations[currentStep];
@@ -99,7 +89,7 @@ const CanvasPage: React.FC = () => {
     return currentStep > 1;
   };
 
-  if (!user) {
+  if (!user || isLoading) {
     return (
       <Layout title="Canvas" requireAuth>
         <div className="flex items-center justify-center min-h-screen">
@@ -205,68 +195,102 @@ const CanvasPage: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    const ambition: Ambition = {
-                      id: generateId(),
-                      userId: user!.id,
-                      title: 'SaaS: Accélérer la croissance',
-                      description: 'Modèle sectoriel SaaS (exemple)',
-                      year: new Date().getFullYear(),
-                      category: 'growth' as any,
-                      priority: Priority.HIGH,
-                      status: Status.ACTIVE,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    };
-                    addAmbition(ambition);
-                    const objective: QuarterlyObjective = {
-                      id: generateId(),
-                      title: "Augmenter l'ARR",
-                      description: "Structurer l'acquisition et la conversion",
-                      ambitionId: ambition.id,
-                      quarter: getCurrentQuarter(),
-                      year: new Date().getFullYear(),
-                      keyResults: [],
-                      actions: [],
-                      status: Status.ACTIVE,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    };
-                    addQuarterlyObjective(objective);
-                    const kr1: QuarterlyKeyResult = {
-                      id: generateId(),
-                      title: 'Passer de 100 à 200 MQL/mois',
-                      description: "Mettre en place 3 nouveaux canaux d'acquisition",
-                      quarterlyObjectiveId: objective.id,
-                      target: 200,
-                      current: 100,
-                      unit: 'MQL',
-                      deadline: new Date(new Date().getFullYear(), new Date().getMonth()+2, 28),
-                      status: Status.ACTIVE,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    };
-                    const kr2: QuarterlyKeyResult = {
-                      id: generateId(),
-                      title: 'Augmenter le taux de conversion MQL→Client de 12% à 18%',
-                      description: 'Optimiser le funnel et le pricing',
-                      quarterlyObjectiveId: objective.id,
-                      target: 18,
-                      current: 12,
-                      unit: '%',
-                      deadline: new Date(new Date().getFullYear(), new Date().getMonth()+2, 28),
-                      status: Status.ACTIVE,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    };
-                    addQuarterlyKeyResult(kr1);
-                    addQuarterlyKeyResult(kr2);
-                    const actions: Action[] = [
-                      { id: generateId(), title: 'Lancer campagne LinkedIn Ads', quarterlyKeyResultId: kr1.id, status: ActionStatus.TODO, priority: Priority.MEDIUM, labels: ['template'], createdAt: new Date(), updatedAt: new Date() },
-                      { id: generateId(), title: 'Signer un partenariat contenu', quarterlyKeyResultId: kr1.id, status: ActionStatus.TODO, priority: Priority.MEDIUM, labels: ['template'], createdAt: new Date(), updatedAt: new Date() },
-                      { id: generateId(), title: "Tester une offre d'essai 21 jours", quarterlyKeyResultId: kr2.id, status: ActionStatus.TODO, priority: Priority.HIGH, labels: ['template'], createdAt: new Date(), updatedAt: new Date() },
-                    ];
-                    actions.forEach(addAction);
+                  onClick={async () => {
+                    if (!user) return;
+
+                    try {
+                      // Créer l'ambition
+                      const ambition = await createAmbition.mutateAsync({
+                        ambition: {
+                          title: 'SaaS: Accélérer la croissance',
+                          description: 'Modèle sectoriel SaaS (exemple)',
+                          year: new Date().getFullYear(),
+                          category: 'growth' as any,
+                          priority: Priority.HIGH,
+                          status: Status.ACTIVE,
+                        },
+                        userId: user.id
+                      });
+
+                      // Créer l'objectif trimestriel
+                      const objective = await createObjective.mutateAsync({
+                        objective: {
+                          title: "Augmenter l'ARR",
+                          description: "Structurer l'acquisition et la conversion",
+                          ambitionId: ambition.id,
+                          quarter: getCurrentQuarter(),
+                          year: new Date().getFullYear(),
+                          status: Status.ACTIVE,
+                        },
+                        userId: user.id
+                      });
+
+                      // Créer les Key Results
+                      const kr1 = await createKeyResult.mutateAsync({
+                        keyResult: {
+                          title: 'Passer de 100 à 200 MQL/mois',
+                          description: "Mettre en place 3 nouveaux canaux d'acquisition",
+                          quarterlyObjectiveId: objective.id,
+                          target: 200,
+                          current: 100,
+                          unit: 'MQL',
+                          deadline: new Date(new Date().getFullYear(), new Date().getMonth()+2, 28),
+                        },
+                        userId: user.id
+                      });
+
+                      const kr2 = await createKeyResult.mutateAsync({
+                        keyResult: {
+                          title: 'Augmenter le taux de conversion MQL→Client de 12% à 18%',
+                          description: 'Optimiser le funnel et le pricing',
+                          quarterlyObjectiveId: objective.id,
+                          target: 18,
+                          current: 12,
+                          unit: '%',
+                          deadline: new Date(new Date().getFullYear(), new Date().getMonth()+2, 28),
+                        },
+                        userId: user.id
+                      });
+
+                      // Créer les actions
+                      await createAction.mutateAsync({
+                        action: {
+                          title: 'Lancer campagne LinkedIn Ads',
+                          quarterlyKeyResultId: kr1.id,
+                          status: ActionStatus.TODO,
+                          priority: Priority.MEDIUM,
+                          labels: ['template'],
+                        },
+                        userId: user.id
+                      });
+
+                      await createAction.mutateAsync({
+                        action: {
+                          title: 'Signer un partenariat contenu',
+                          quarterlyKeyResultId: kr1.id,
+                          status: ActionStatus.TODO,
+                          priority: Priority.MEDIUM,
+                          labels: ['template'],
+                        },
+                        userId: user.id
+                      });
+
+                      await createAction.mutateAsync({
+                        action: {
+                          title: "Tester une offre d'essai 21 jours",
+                          quarterlyKeyResultId: kr2.id,
+                          status: ActionStatus.TODO,
+                          priority: Priority.HIGH,
+                          labels: ['template'],
+                        },
+                        userId: user.id
+                      });
+
+                      alert('Template SaaS créé avec succès !');
+                    } catch (error) {
+                      console.error('❌ Erreur lors de la création du template:', error);
+                      alert('Erreur lors de la création du template');
+                    }
                   }}
                 >
                   Créer depuis template (SaaS)

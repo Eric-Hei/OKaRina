@@ -89,6 +89,7 @@ export interface Action {
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
+  order_index: number; // Position dans le Kanban
 }
 
 // Types pour les objectifs trimestriels

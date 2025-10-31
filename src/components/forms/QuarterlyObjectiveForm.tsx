@@ -7,8 +7,7 @@ import { Target, Calendar, Building2, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { useAppStore } from '@/store/useAppStore';
-import { Quarter, QuarterlyObjectiveFormData } from '@/types';
+import { Quarter, QuarterlyObjectiveFormData, Ambition } from '@/types';
 
 // Schéma de validation
 const quarterlyObjectiveSchema = z.object({
@@ -24,6 +23,7 @@ interface QuarterlyObjectiveFormProps {
   onSubmit: (data: QuarterlyObjectiveFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  ambitions?: Ambition[];
 }
 
 export const QuarterlyObjectiveForm: React.FC<QuarterlyObjectiveFormProps> = ({
@@ -31,8 +31,8 @@ export const QuarterlyObjectiveForm: React.FC<QuarterlyObjectiveFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  ambitions = [],
 }) => {
-  const { ambitions } = useAppStore();
   const currentYear = new Date().getFullYear();
 
   const {

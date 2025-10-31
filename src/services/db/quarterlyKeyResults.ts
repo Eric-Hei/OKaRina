@@ -42,7 +42,9 @@ export class QuarterlyKeyResultsService {
       target_value: qkr.target || 0,
       current_value: qkr.current || 0,
       unit: qkr.unit || null,
-      deadline: qkr.deadline ? qkr.deadline.toISOString() : null,
+      deadline: qkr.deadline
+        ? (typeof qkr.deadline === 'string' ? qkr.deadline : qkr.deadline.toISOString())
+        : null,
       order_index: 0,
     };
   }
@@ -77,6 +79,25 @@ export class QuarterlyKeyResultsService {
     }
 
     return this.rowToQuarterlyKeyResult(data!);
+  }
+
+  /**
+   * Récupérer tous les Key Results d'un utilisateur (via ses objectifs)
+   */
+  static async getByUserId(userId: string): Promise<QuarterlyKeyResult[]> {
+    const data = await supabaseRead<QuarterlyKeyResultRow[]>(
+      () => supabase
+        .from('quarterly_key_results')
+        .select(`
+          *,
+          quarterly_objectives!inner(user_id)
+        `)
+        .eq('quarterly_objectives.user_id', userId)
+        .order('order_index', { ascending: true }),
+      'QuarterlyKeyResults - getByUserId'
+    );
+
+    return data.map(row => this.rowToQuarterlyKeyResult(row));
   }
 
   /**
@@ -129,7 +150,11 @@ export class QuarterlyKeyResultsService {
     if (updates.target !== undefined) updateData.target_value = updates.target;
     if (updates.current !== undefined) updateData.current_value = updates.current;
     if (updates.unit !== undefined) updateData.unit = updates.unit || null;
-    if (updates.deadline !== undefined) updateData.deadline = updates.deadline.toISOString();
+    if (updates.deadline !== undefined) {
+      updateData.deadline = typeof updates.deadline === 'string'
+        ? updates.deadline
+        : updates.deadline.toISOString();
+    }
 
     const { data, error } = await supabase
       .from('quarterly_key_results')

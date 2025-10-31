@@ -87,9 +87,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: isDragging ? 1 : 1.02 }}
       className={`
-        bg-white rounded-lg border shadow-sm p-4 cursor-grab active:cursor-grabbing group
-        hover:shadow-md transition-all duration-200
-        ${isSortableDragging || isDragging ? 'opacity-50 shadow-lg' : ''}
+        bg-white rounded-lg border p-4 cursor-grab active:cursor-grabbing group
+        transition-all duration-200 transform-gpu will-change-transform
+        hover:shadow-md
+        ${isSortableDragging ? 'opacity-0' : ''}
+        ${isDragging ? 'scale-[1.03] shadow-2xl ring-2 ring-blue-300' : 'shadow-sm'}
         ${isOverdue ? 'border-red-300 bg-red-50' : ''}
         ${isUrgent ? 'border-orange-300 bg-orange-50' : ''}
       `}
