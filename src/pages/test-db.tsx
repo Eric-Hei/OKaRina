@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { DataService } from '@/services/db';
 import { checkSupabaseHealth } from '@/lib/supabaseHelpers';
 import type { Ambition } from '@/types';
+import { AmbitionCategory, Priority, Status, Quarter, ActionStatus } from '@/types';
 
 /**
  * Page de test des services de base de données
@@ -38,10 +39,10 @@ export default function TestDBPage() {
       const ambition: Partial<Ambition> = {
         title: 'Test Ambition ' + new Date().toLocaleTimeString(),
         description: 'Ceci est une ambition de test créée depuis la page de test',
-        category: 'growth',
+        category: AmbitionCategory.GROWTH,
         year: new Date().getFullYear(),
-        priority: 'high',
-        status: 'active',
+        priority: Priority.HIGH,
+        status: Status.ACTIVE,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -88,11 +89,11 @@ export default function TestDBPage() {
       const objective = {
         title: 'Test Objectif Q1 ' + new Date().toLocaleTimeString(),
         description: 'Objectif de test pour Q1',
-        quarter: 'Q1' as const,
+        quarter: Quarter.Q1,
         year: new Date().getFullYear(),
         keyResults: [],
         actions: [],
-        status: 'active' as const,
+        status: Status.ACTIVE,
         createdAt: new Date(),
         updatedAt: new Date(),
         ambitionId: '',
@@ -121,8 +122,8 @@ export default function TestDBPage() {
         title: 'Test Action ' + new Date().toLocaleTimeString(),
         description: 'Action de test pour le Kanban',
         quarterlyKeyResultId: '',
-        status: 'TODO' as const,
-        priority: 'medium' as const,
+        status: ActionStatus.TODO,
+        priority: Priority.MEDIUM,
         labels: ['test', 'demo'],
         createdAt: new Date(),
         updatedAt: new Date(),

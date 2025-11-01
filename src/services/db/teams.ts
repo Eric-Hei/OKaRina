@@ -1,54 +1,39 @@
-import { supabase } from '@/lib/supabaseClient';
+﻿import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/types/supabase';
 import type { Team } from '@/types';
-import { supabaseRead } from '@/lib/supabaseHelpers';
+import { TeamRole } from '@/types';
+import { TeamMembersService } from './teamMembers';
 
 type TeamRow = Database['public']['Tables']['teams']['Row'];
 type TeamInsert = Database['public']['Tables']['teams']['Insert'];
-type TeamUpdate = Database['public']['Tables']['teams']['Update'];
 
-/**
- * Service de gestion des équipes dans Supabase
- */
 export class TeamsService {
-  /**
-   * Convertir une row Supabase en Team de l'app
-   */
   private static rowToTeam(row: TeamRow): Team {
     return {
       id: row.id,
       name: row.name,
-      description: row.description || undefined,
+      description: row.description || '',
       ownerId: row.owner_id,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     };
   }
 
-  /**
-   * Convertir un Team de l'app en Insert Supabase
-   */
-  private static teamToInsert(team: Partial<Team>, ownerId: string): TeamInsert {
+  private static teamToInsert(team: Partial<Team>): TeamInsert {
     return {
       name: team.name || '',
       description: team.description || null,
-      owner_id: ownerId,
-      settings: {},
+      owner_id: team.ownerId || '',
     };
   }
 
-  /**
-   * Créer une nouvelle équipe
-   */
-  static async create(team: Partial<Team>, ownerId: string): Promise<Team> {
-    const insertData = this.teamToInsert(team, ownerId);
-
+  static async create(team: Partial<Team>): Promise<Team> {
     const id = crypto.randomUUID();
-    const row: any = { id, ...insertData };
+    const insertData = this.teamToInsert(team);
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('teams')
-      .insert(row)
+      .insert({ id, ...insertData })
       .select()
       .single();
 
@@ -60,110 +45,99 @@ export class TeamsService {
           .eq('id', id)
           .single();
         if (selErr) throw selErr;
-        return this.rowToTeam(existing!);
+        return this.rowToTeam(existing);
       }
-      console.error('❌ Erreur lors de la création de l\'équipe:', error);
       throw error;
     }
 
-    return this.rowToTeam(data!);
+    const createdTeam = this.rowToTeam(data);
+
+    // Ajouter le créateur comme OWNER dans team_members
+    try {
+      await TeamMembersService.create({
+        teamId: createdTeam.id,
+        userId: createdTeam.ownerId,
+        role: TeamRole.OWNER,
+      });
+    } catch (memberError) {
+      // Si l'ajout du membre échoue, supprimer l'équipe créée
+      console.error('Erreur lors de l\'ajout du membre OWNER:', memberError);
+      await this.delete(createdTeam.id);
+      throw new Error('Impossible de créer l\'équipe: échec de l\'ajout du membre OWNER');
+    }
+
+    return createdTeam;
   }
 
-  /**
-   * Récupérer toutes les équipes d'un utilisateur (en tant que propriétaire)
-   */
   static async getByOwnerId(ownerId: string): Promise<Team[]> {
-    const data = await supabaseRead<TeamRow[]>(
-      () => supabase
-        .from('teams')
-        .select('*')
-        .eq('owner_id', ownerId)
-        .order('created_at', { ascending: false }),
-      'Teams - getByOwnerId'
-    );
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false });
 
-    return data.map(row => this.rowToTeam(row));
+    if (error) throw error;
+    return (data || []).map(row => this.rowToTeam(row));
   }
 
-  /**
-   * Récupérer une équipe par son ID
-   */
-  static async getById(id: string): Promise<Team | null> {
-    const data = await supabaseRead<TeamRow | null>(
-      async () => {
-        const res = await supabase
-          .from('teams')
-          .select('*')
-          .eq('id', id)
-          .single();
-        if ((res as any).error && (res as any).error.code === 'PGRST116') {
-          return { data: null, error: null } as any;
-        }
-        return res as any;
-      },
-      'Teams - getById'
-    );
+  static async getByUserId(userId: string): Promise<Team[]> {
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', userId);
 
-    if (!data) return null;
+    if (error) throw error;
+
+    const teamIds = (data || []).map((row: any) => row.team_id);
+    if (teamIds.length === 0) return [];
+
+    const { data: teams, error: teamsError } = await supabase
+      .from('teams')
+      .select('*')
+      .in('id', teamIds)
+      .order('created_at', { ascending: false });
+
+    if (teamsError) throw teamsError;
+    return (teams || []).map((row: any) => this.rowToTeam(row));
+  }
+
+  static async getById(id: string): Promise<Team | null> {
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if ((error as any).code === 'PGRST116') return null;
+      throw error;
+    }
+
     return this.rowToTeam(data);
   }
 
-  /**
-   * Récupérer toutes les équipes dont l'utilisateur est membre
-   */
-  static async getByUserId(userId: string): Promise<Team[]> {
-    const data = await supabaseRead<TeamRow[]>(
-      () => supabase
-        .from('teams')
-        .select('*, team_members!inner(user_id)')
-        .eq('team_members.user_id', userId)
-        .order('created_at', { ascending: false }),
-      'Teams - getByUserId'
-    );
-
-    return data.map(row => this.rowToTeam(row));
-  }
-
-  /**
-   * Mettre à jour une équipe
-   */
   static async update(id: string, updates: Partial<Team>): Promise<Team> {
-    const updateData: TeamUpdate = {};
-
+    const updateData: any = {};
     if (updates.name !== undefined) updateData.name = updates.name;
-    if (updates.description !== undefined) updateData.description = updates.description || null;
+    if (updates.description !== undefined) updateData.description = updates.description;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('teams')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('❌ Erreur lors de la mise à jour de l\'équipe:', error);
-      throw error;
-    }
-
-    console.log('✅ Équipe mise à jour:', data.id);
+    if (error) throw error;
     return this.rowToTeam(data);
   }
 
-  /**
-   * Supprimer une équipe
-   */
   static async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('teams')
       .delete()
       .eq('id', id);
 
-    if (error) {
-      console.error('❌ Erreur lors de la suppression de l\'équipe:', error);
-      throw error;
-    }
-
-    console.log('✅ Équipe supprimée:', id);
+    if (error) throw error;
   }
 }
-

@@ -78,7 +78,7 @@ export function useUpdateQuarterlyKeyResultProgress() {
 
   return useMutation({
     mutationFn: (data: { id: string; current: number; note?: string }) =>
-      QuarterlyKeyResultsService.updateProgress(data.id, data.current, data.note),
+      QuarterlyKeyResultsService.updateProgress(data.id, data.current),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quarterlyKeyResults'] });
     },

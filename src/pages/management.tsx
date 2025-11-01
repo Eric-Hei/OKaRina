@@ -226,17 +226,23 @@ const ManagementPage: React.FC = () => {
     if (!user) return;
 
     try {
+      // Convertir la deadline de string à Date
+      const updates: Partial<QuarterlyKeyResult> = {
+        ...data,
+        deadline: data.deadline ? new Date(data.deadline) : undefined,
+      };
+
       if (editingItem) {
         await updateKeyResultMutation.mutateAsync({
           id: editingItem.id,
-          updates: data,
+          updates,
         });
       } else if (selectedObjectiveId) {
         await createKeyResult.mutateAsync({
           keyResult: {
-            ...data,
+            ...updates,
             quarterlyObjectiveId: selectedObjectiveId,
-          },
+          } as Omit<QuarterlyKeyResult, 'id' | 'createdAt' | 'updatedAt'>,
           userId: user.id
         });
       }
@@ -260,8 +266,7 @@ const ManagementPage: React.FC = () => {
             ...data,
             deadline: data.deadline ? new Date(data.deadline) : undefined,
             labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
-          },
-          userId: user.id
+          }
         });
       } else {
         // Utiliser le KR du formulaire, ou celui présélectionné
@@ -300,6 +305,8 @@ const ManagementPage: React.FC = () => {
 
   // G e9n e9ration d'un plan d'actions  e0 partir d'un KR
   const handleGenerateActionPlan = async (kr: QuarterlyKeyResult) => {
+    if (!user) return;
+
     try {
       const advices = await geminiService.generateKeyResultAdvice(kr);
       const ideas = advices.map(s => s.replace(/^\d+\.|\*\*|:/g, '').trim()).filter(Boolean).slice(0, 5);
@@ -311,18 +318,16 @@ const ManagementPage: React.FC = () => {
         ];
         ideas.push(...fallback);
       }
-      ideas.forEach(title => {
-        const newAction: Action = {
-          id: generateId(),
-          title: title.substring(0, 120),
-          quarterlyKeyResultId: kr.id,
-          status: ActionStatus.TODO,
-          priority: Priority.MEDIUM,
-          labels: ['plan'],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Action;
-        addAction(newAction);
+      ideas.forEach(async (title) => {
+        await createAction.mutateAsync({
+          action: {
+            title: title.substring(0, 120),
+            quarterlyKeyResultId: kr.id,
+            priority: Priority.MEDIUM,
+            labels: ['plan'],
+          },
+          userId: user.id
+        });
       });
     } catch (e) {
       const fallback = [
@@ -330,18 +335,16 @@ const ManagementPage: React.FC = () => {
         `Bloquer 60 min focus sur ${kr.title}`,
         `Identifier et lever 1 blocage`
       ];
-      fallback.forEach(title => {
-        const newAction: Action = {
-          id: generateId(),
-          title,
-          quarterlyKeyResultId: kr.id,
-          status: ActionStatus.TODO,
-          priority: Priority.MEDIUM,
-          labels: ['plan'],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as Action;
-        addAction(newAction);
+      fallback.forEach(async (title) => {
+        await createAction.mutateAsync({
+          action: {
+            title,
+            quarterlyKeyResultId: kr.id,
+            priority: Priority.MEDIUM,
+            labels: ['plan'],
+          },
+          userId: user.id
+        });
       });
     }
   };
@@ -377,8 +380,7 @@ const ManagementPage: React.FC = () => {
     try {
       await updateActionStatusMutation.mutateAsync({
         id: actionId,
-        status: newStatus,
-        userId: user.id
+        status: newStatus
       });
     } catch (error) {
       console.error('❌ Erreur lors du déplacement de l\'action:', error);
@@ -623,7 +625,7 @@ const ManagementPage: React.FC = () => {
                 onDeleteAction={async (id) => {
                   if (!user) return;
                   try {
-                    await deleteActionMutation.mutateAsync({ id, userId: user.id });
+                    await deleteActionMutation.mutateAsync(id);
                   } catch (error) {
                     console.error('❌ Erreur lors de la suppression:', error);
                     alert('Erreur lors de la suppression de l\'action');
@@ -659,11 +661,12 @@ const ManagementPage: React.FC = () => {
                 <KanbanBoard
                   actions={filteredActions}
                   onActionMove={handleActionMove}
+                  onActionReorder={async () => {}} // TODO: Implémenter le réordre
                   onActionEdit={handleEditAction}
                   onActionDelete={async (id) => {
                     if (!user) return;
                     try {
-                      await deleteActionMutation.mutateAsync({ id, userId: user.id });
+                      await deleteActionMutation.mutateAsync(id);
                     } catch (error) {
                       console.error('❌ Erreur lors de la suppression:', error);
                       alert('Erreur lors de la suppression de l\'action');

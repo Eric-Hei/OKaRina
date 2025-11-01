@@ -4,39 +4,35 @@ import { useAppStore } from '@/store/useAppStore';
 export function useNotifications() {
   const { notifications, addNotification, removeNotification, clearNotifications } = useAppStore();
 
-  const showSuccess = (title: string, message: string, duration?: number) => {
+  const showSuccess = (title: string, message: string) => {
     addNotification({
       type: 'success',
       title,
       message,
-      duration,
     });
   };
 
-  const showError = (title: string, message: string, duration?: number) => {
+  const showError = (title: string, message: string) => {
     addNotification({
       type: 'error',
       title,
       message,
-      duration,
     });
   };
 
-  const showWarning = (title: string, message: string, duration?: number) => {
+  const showWarning = (title: string, message: string) => {
     addNotification({
       type: 'warning',
       title,
       message,
-      duration,
     });
   };
 
-  const showInfo = (title: string, message: string, duration?: number) => {
+  const showInfo = (title: string, message: string) => {
     addNotification({
       type: 'info',
       title,
       message,
-      duration,
     });
   };
 

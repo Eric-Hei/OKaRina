@@ -5,11 +5,11 @@ import type { KeyResult } from '@/types';
 /**
  * Hook pour récupérer tous les Key Results annuels d'une ambition
  */
-export function useKeyResults(ambitionId: string | undefined) {
+export function useKeyResults(ambitionId: string | undefined, userId: string | undefined) {
   return useQuery({
-    queryKey: ['keyResults', ambitionId],
-    queryFn: () => KeyResultsService.getByAmbitionId(ambitionId!),
-    enabled: !!ambitionId,
+    queryKey: ['keyResults', ambitionId, userId],
+    queryFn: () => KeyResultsService.getByAmbitionId(ambitionId!, userId!),
+    enabled: !!ambitionId && !!userId,
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -92,7 +92,7 @@ export function useUpdateKeyResultProgress() {
 
   return useMutation({
     mutationFn: (data: { id: string; current: number; note?: string }) =>
-      KeyResultsService.updateProgress(data.id, data.current, data.note),
+      KeyResultsService.updateProgress(data.id, data.current),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['keyResults'] });
     },

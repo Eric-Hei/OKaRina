@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Edit2, Trash2, Calendar, Flag, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import type { Action, QuarterlyKeyResult, QuarterlyObjective, ActionStatus, Priority } from '@/types';
+import type { Action, QuarterlyKeyResult, QuarterlyObjective, ActionStatus } from '@/types';
+import { Priority } from '@/types';
 import { formatDate } from '@/utils';
 
 interface ActionsTableViewProps {
@@ -37,28 +38,30 @@ export const ActionsTableView: React.FC<ActionsTableViewProps> = ({
     return objective?.title || 'N/A';
   };
 
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
     todo: 'À faire',
     in_progress: 'En cours',
     done: 'Terminé',
   };
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     todo: 'bg-gray-100 text-gray-700',
     in_progress: 'bg-blue-100 text-blue-700',
     done: 'bg-green-100 text-green-700',
   };
 
-  const priorityColors = {
-    low: 'bg-gray-100 text-gray-600',
-    medium: 'bg-yellow-100 text-yellow-700',
-    high: 'bg-red-100 text-red-700',
+  const priorityColors: Record<Priority, string> = {
+    [Priority.LOW]: 'bg-gray-100 text-gray-600',
+    [Priority.MEDIUM]: 'bg-yellow-100 text-yellow-700',
+    [Priority.HIGH]: 'bg-red-100 text-red-700',
+    [Priority.CRITICAL]: 'bg-purple-100 text-purple-700',
   };
 
-  const priorityLabels = {
-    low: 'Basse',
-    medium: 'Moyenne',
-    high: 'Haute',
+  const priorityLabels: Record<Priority, string> = {
+    [Priority.LOW]: 'Basse',
+    [Priority.MEDIUM]: 'Moyenne',
+    [Priority.HIGH]: 'Haute',
+    [Priority.CRITICAL]: 'Critique',
   };
 
   const handleSort = (column: 'title' | 'status' | 'priority' | 'deadline') => {
@@ -81,7 +84,12 @@ export const ActionsTableView: React.FC<ActionsTableViewProps> = ({
         comparison = a.status.localeCompare(b.status);
         break;
       case 'priority':
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const priorityOrder: Record<Priority, number> = {
+          [Priority.CRITICAL]: 4,
+          [Priority.HIGH]: 3,
+          [Priority.MEDIUM]: 2,
+          [Priority.LOW]: 1,
+        };
         comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
         break;
       case 'deadline':

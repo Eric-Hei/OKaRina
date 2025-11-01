@@ -13,7 +13,7 @@ import type { CompanyProfile } from '@/types';
 
 const OnboardingPage: React.FC = () => {
   const router = useRouter();
-  const { user, updateCompanyProfile, setUser, hasHydrated } = useAppStore();
+  const { user, updateCompanyProfile, setUser } = useAppStore();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,8 +26,7 @@ const OnboardingPage: React.FC = () => {
 
   // Créer un utilisateur démo uniquement si aucun utilisateur n'est déjà persistant
   useEffect(() => {
-    // Attendre que Zustand ait fini de réhydrater
-    if (!hasHydrated) return;
+    // TODO: Vérifier si nécessaire avec Supabase
 
     try {
       const persisted = typeof window !== 'undefined' ? localStorage.getItem('oskar-app-store') : null;
@@ -46,7 +45,7 @@ const OnboardingPage: React.FC = () => {
         setUser(defaultUser);
       }
     } catch {}
-  }, [user, setUser, hasHydrated]);
+  }, [user, setUser]);
 
   const handleCompanyProfileSubmit = async (companyProfile: CompanyProfile) => {
     setIsSaving(true);

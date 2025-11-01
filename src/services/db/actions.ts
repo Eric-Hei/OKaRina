@@ -3,8 +3,6 @@ import type { Database } from '@/types/supabase';
 import type { Action, ActionStatus } from '@/types';
 import { priorityToDb, priorityFromDb, actionStatusToDb, actionStatusFromDb } from './enumConverters';
 
-import { supabaseRead } from '@/lib/supabaseHelpers';
-
 type ActionRow = Database['public']['Tables']['actions']['Row'];
 type ActionInsert = Database['public']['Tables']['actions']['Insert'];
 type ActionUpdate = Database['public']['Tables']['actions']['Update'];
@@ -98,46 +96,53 @@ export class ActionsService {
       query = query.eq('status', actionStatusToDb(status));
     }
 
-    const data = await supabaseRead<ActionRow[]>(() => query, 'Actions - getAll');
-    return data.map(row => this.rowToAction(row));
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des actions:', error);
+      throw error;
+    }
+
+    return (data || []).map(row => this.rowToAction(row));
   }
 
   /**
    * Récupérer les actions d'un Key Result trimestriel
    */
   static async getByKeyResultId(keyResultId: string, userId: string): Promise<Action[]> {
-    const data = await supabaseRead<ActionRow[]>(
-      () => supabase
-        .from('actions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('key_result_id', keyResultId)
-        .order('order_index', { ascending: true }),
-      'Actions - getByKeyResultId'
-    );
+    const { data, error } = await supabase
+      .from('actions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('key_result_id', keyResultId)
+      .order('order_index', { ascending: true });
 
-    return data.map(row => this.rowToAction(row));
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des actions par KR:', error);
+      throw error;
+    }
+
+    return (data || []).map(row => this.rowToAction(row));
   }
 
   /**
    * Récupérer une action par son ID
    */
   static async getById(id: string, userId: string): Promise<Action | null> {
-    const data = await supabaseRead<ActionRow | null>(
-      async () => {
-        const res = await supabase
-          .from('actions')
-          .select('*')
-          .eq('id', id)
-          .eq('user_id', userId)
-          .single();
-        if ((res as any).error && (res as any).error.code === 'PGRST116') {
-          return { data: null, error: null } as any;
-        }
-        return res as any;
-      },
-      'Actions - getById'
-    );
+    const { data, error } = await supabase
+      .from('actions')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      console.error('❌ Erreur lors de la récupération de l\'action:', error);
+      throw error;
+    }
 
     if (!data) return null;
     return this.rowToAction(data);
@@ -165,13 +170,15 @@ export class ActionsService {
       updateData.completed_at = new Date().toISOString();
     }
 
-    const { data, error } = await supabase
+    const result = await (supabase as any)
       .from('actions')
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
+
+    const { data, error } = result;
 
     if (error) {
       console.error('❌ Erreur lors de la mise à jour de l\'action:', error);
@@ -192,7 +199,7 @@ export class ActionsService {
       updateData.completed_at = new Date().toISOString();
     }
 
-    const { data, error } = await supabase
+    const result = await (supabase as any)
       .from('actions')
       .update(updateData)
       .eq('id', id)
@@ -200,12 +207,13 @@ export class ActionsService {
       .select()
       .single();
 
+    const { data, error } = result;
+
     if (error) {
       console.error('❌ Erreur lors du changement de statut:', error);
       throw error;
     }
 
-    console.log('✅ Statut de l\'action changé:', data.id, status);
     return this.rowToAction(data);
   }
 
@@ -223,8 +231,6 @@ export class ActionsService {
       console.error('❌ Erreur lors de la suppression de l\'action:', error);
       throw error;
     }
-
-    console.log('✅ Action supprimée:', id);
   }
 
   /**
@@ -232,7 +238,7 @@ export class ActionsService {
    */
   static async updateOrder(actions: { id: string; order_index: number }[], userId: string): Promise<void> {
     const updates = actions.map(({ id, order_index }) =>
-      supabase
+      (supabase as any)
         .from('actions')
         .update({ order_index })
         .eq('id', id)
@@ -240,14 +246,12 @@ export class ActionsService {
     );
 
     const results = await Promise.all(updates);
-    const errors = results.filter(r => r.error);
+    const errors = results.filter((r: any) => r.error);
 
     if (errors.length > 0) {
       console.error('❌ Erreurs lors de la mise à jour de l\'ordre:', errors);
       throw new Error('Erreur lors de la mise à jour de l\'ordre des actions');
     }
-
-    console.log('✅ Ordre des actions mis à jour');
   }
 
   /**
@@ -268,7 +272,6 @@ export class ActionsService {
       await this.updateOrder(orderUpdates, userId);
     }
 
-    console.log('✅ Action déplacée:', actionId, newStatus);
     return statusUpdate;
   }
 
@@ -276,23 +279,24 @@ export class ActionsService {
    * Récupérer les actions par statut (pour le Kanban)
    */
   static async getByStatus(userId: string): Promise<Record<ActionStatus, Action[]>> {
-    const data = await supabaseRead<ActionRow[]>(
-      () => supabase
-        .from('actions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('order_index', { ascending: true }),
-      'Actions - getByStatus'
-    );
+    const { data, error } = await supabase
+      .from('actions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('order_index', { ascending: true });
 
-    const actions = data.map(row => this.rowToAction(row));
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des actions par statut:', error);
+      throw error;
+    }
+
+    const actions = (data || []).map(row => this.rowToAction(row));
 
     return {
-      TODO: actions.filter(a => a.status === 'todo'),
-      IN_PROGRESS: actions.filter(a => a.status === 'in_progress'),
-      DONE: actions.filter(a => a.status === 'done'),
-      BLOCKED: actions.filter(a => a.status === 'blocked'),
-    };
+      todo: actions.filter(a => a.status === 'todo'),
+      in_progress: actions.filter(a => a.status === 'in_progress'),
+      done: actions.filter(a => a.status === 'done'),
+    } as Record<ActionStatus, Action[]>;
   }
 }
 

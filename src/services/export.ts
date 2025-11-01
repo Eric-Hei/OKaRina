@@ -3,18 +3,18 @@ import * as ExcelJS from 'exceljs';
 // import { storageService } from './storage'; // TODO: Migrer vers Supabase
 import { analyticsService } from './analytics';
 import { ReportType } from '@/types';
-import type { ReportFormat } from '@/types';
+import type { ReportFormat, Ambition, KeyResult, OKR, Action, QuarterlyObjective, QuarterlyKeyResult, Progress } from '@/types';
 
 // TODO: Ce service doit être migré pour utiliser les données depuis Supabase
 // Stub temporaire pour éviter les erreurs de build
 const storageService = {
-  getAmbitions: () => [],
-  getKeyResults: () => [],
-  getOKRs: () => [],
-  getActions: () => [],
-  getQuarterlyObjectives: () => [],
-  getQuarterlyKeyResults: () => [],
-  getProgress: () => [],
+  getAmbitions: (): Ambition[] => [],
+  getKeyResults: (): KeyResult[] => [],
+  getOKRs: (): OKR[] => [],
+  getActions: (): Action[] => [],
+  getQuarterlyObjectives: (): QuarterlyObjective[] => [],
+  getQuarterlyKeyResults: (): QuarterlyKeyResult[] => [],
+  getProgress: (): Progress[] => [],
   exportData: () => '{}',
   importData: (_data: string) => {},
 };
@@ -37,6 +37,13 @@ export class ExportService {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
+
+    // Charger les données une seule fois
+    const ambitions = storageService.getAmbitions();
+    const okrs = storageService.getOKRs();
+    const actions = storageService.getActions();
+    const quarterlyObjectives = storageService.getQuarterlyObjectives();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
 
     // Configuration
     const margin = 20;
@@ -78,7 +85,7 @@ export class ExportService {
     yPosition += 20;
 
     // Métriques principales - Section avec fond
-    const metrics = analyticsService.getDashboardMetrics();
+    const metrics = analyticsService.getDashboardMetrics(ambitions, okrs, actions, quarterlyObjectives, quarterlyKeyResults);
 
     // Titre de section
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -158,7 +165,6 @@ export class ExportService {
     yPosition += 20;
 
     // Ambitions
-    const ambitions = storageService.getAmbitions();
     if (ambitions.length > 0) {
       // Titre de section
       doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -355,8 +361,15 @@ export class ExportService {
     workbook.created = new Date();
     workbook.modified = new Date();
 
+    // Charger les données une seule fois
+    const ambitions = storageService.getAmbitions();
+    const okrs = storageService.getOKRs();
+    const actions = storageService.getActions();
+    const quarterlyObjectives = storageService.getQuarterlyObjectives();
+    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
+
     // Feuille 1: Métriques
-    const metrics = analyticsService.getDashboardMetrics();
+    const metrics = analyticsService.getDashboardMetrics(ambitions, okrs, actions, quarterlyObjectives, quarterlyKeyResults);
     const metricsData = [
       ['Métrique', 'Valeur'],
       ['Ambitions totales', metrics.totalAmbitions],
@@ -377,7 +390,6 @@ export class ExportService {
     ];
 
     // Feuille 2: Ambitions
-    const ambitions = storageService.getAmbitions();
     const ambitionsData = [
       ['Titre', 'Description', 'Catégorie', 'Priorité', 'Statut', 'Progrès (%)', 'Créé le']
     ];
@@ -445,7 +457,6 @@ export class ExportService {
     ];
 
     // Feuille 4: OKRs
-    const okrs = storageService.getOKRs();
     const okrsData = [
       ['Objectif', 'Trimestre', 'Année', 'Progrès (%)', 'Statut', 'Nb KRs']
     ];
@@ -477,7 +488,6 @@ export class ExportService {
     ];
 
     // Feuille 5: Actions
-    const actions = storageService.getActions();
     const actionsData = [
       ['Titre', 'Description', 'Échéance', 'Statut', 'Priorité', 'Labels', 'Date de Création']
     ];

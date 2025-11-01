@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useAppStore } from '@/store/useAppStore';
+import { useProgressHistory } from '@/hooks/useProgress';
 import { formatDate } from '@/utils';
-import type { QuarterlyKeyResult, Progress } from '@/types';
+import type { QuarterlyKeyResult } from '@/types';
 import { EntityType } from '@/types';
 
 interface ProgressHistoryPanelProps {
@@ -20,16 +21,13 @@ export const ProgressHistoryPanel: React.FC<ProgressHistoryPanelProps> = ({
   onClose,
   keyResult,
 }) => {
-  const { progress } = useAppStore();
+  const { user } = useAppStore();
 
-  // Filtrer les progressions pour ce KR et les trier par date (plus récent en premier)
-  const krProgresses = (progress || [])
-    .filter(
-      (p) =>
-        p.entityId === keyResult.id &&
-        p.entityType === EntityType.QUARTERLY_KEY_RESULT
-    )
-    .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+  // Récupérer l'historique de progression pour ce KR
+  const { data: krProgresses = [] } = useProgressHistory(
+    keyResult.id,
+    user?.id
+  );
 
   const getTrendIcon = (index: number) => {
     if (index === krProgresses.length - 1) return null; // Pas de tendance pour la première entrée
@@ -155,7 +153,7 @@ export const ProgressHistoryPanel: React.FC<ProgressHistoryPanelProps> = ({
                   </Card>
                 ) : (
                   <div className="space-y-3">
-                    {krProgresses.map((progress, index) => (
+                    {krProgresses.map((progress: any, index: number) => (
                       <motion.div
                         key={progress.id}
                         initial={{ opacity: 0, y: 20 }}

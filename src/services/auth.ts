@@ -307,12 +307,14 @@ export class AuthService {
       throw new Error('Supabase n\'est pas configuré.');
     }
 
-    const { data, error } = await supabase
+    const result = await (supabase as any)
       .from('profiles')
       .update({ company_profile: companyProfile })
       .eq('id', userId)
       .select()
       .single();
+
+    const { data, error } = result;
 
     if (error) {
       console.error('Erreur lors de la mise à jour du profil d\'entreprise:', error);
@@ -336,12 +338,14 @@ export class AuthService {
       throw new Error('Supabase n\'est pas configuré.');
     }
 
-    const { data, error } = await supabase
+    const result = await (supabase as any)
       .from('profiles')
       .update(updates)
       .eq('id', userId)
       .select()
       .single();
+
+    const { data, error } = result;
 
     if (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);

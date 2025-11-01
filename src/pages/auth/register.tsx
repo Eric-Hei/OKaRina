@@ -66,8 +66,8 @@ const RegisterPage: React.FC = () => {
 
       // Attendre 2 secondes puis rediriger vers onboarding
       setTimeout(() => {
-        if (result.profile) {
-          const user = AuthService.profileToUser(result.profile);
+        if ((result as any).profile) {
+          const user = AuthService.profileToUser((result as any).profile);
           setUser(user);
           router.push('/onboarding');
         }

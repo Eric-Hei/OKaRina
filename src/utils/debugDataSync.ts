@@ -14,6 +14,7 @@ const storageService = {
   getQuarterlyObjectives: () => [],
   getQuarterlyKeyResults: () => [],
   getProgress: () => [],
+  getUser: () => null,
   exportData: () => '{}',
   clear: () => {},
 };

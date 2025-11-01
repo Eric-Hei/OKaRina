@@ -108,13 +108,16 @@ export async function checkSupabaseHealth(): Promise<boolean> {
   try {
     const { supabase } = await import('@/lib/supabaseClient');
 
-    const { error } = await withTimeout(
-      () => supabase.from('profiles').select('id').limit(1),
+    const result = await withTimeout(
+      async () => {
+        const { error } = await supabase.from('profiles').select('id').limit(1);
+        return { error };
+      },
       15000,
       2
     );
 
-    return !error;
+    return !result.error;
   } catch (error) {
     console.warn('⚠️ Supabase health check échoué:', error);
     return false;

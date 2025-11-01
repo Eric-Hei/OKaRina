@@ -1,73 +1,57 @@
-import { supabase } from '@/lib/supabaseClient';
+﻿import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/types/supabase';
-import type { TeamMember, TeamRole } from '@/types';
-import { supabaseRead } from '@/lib/supabaseHelpers';
+import type { TeamMember } from '@/types';
+import { TeamRole } from '@/types';
 
 type TeamMemberRow = Database['public']['Tables']['team_members']['Row'];
 type TeamMemberInsert = Database['public']['Tables']['team_members']['Insert'];
-type TeamMemberUpdate = Database['public']['Tables']['team_members']['Update'];
 
-// Conversion entre les enums TypeScript (lowercase) et Supabase (UPPERCASE)
-const roleToDb = (role: TeamRole): Database['public']['Enums']['team_role'] => {
-  const mapping: Record<TeamRole, Database['public']['Enums']['team_role']> = {
-    owner: 'OWNER',
-    admin: 'ADMIN',
-    member: 'MEMBER',
-    viewer: 'VIEWER',
+const roleToDb = (role: TeamRole): string => {
+  const mapping: Record<TeamRole, string> = {
+    [TeamRole.OWNER]: 'OWNER',
+    [TeamRole.ADMIN]: 'ADMIN',
+    [TeamRole.MEMBER]: 'MEMBER',
+    [TeamRole.VIEWER]: 'VIEWER',
   };
   return mapping[role];
 };
 
-const roleFromDb = (role: Database['public']['Enums']['team_role']): TeamRole => {
-  const mapping: Record<Database['public']['Enums']['team_role'], TeamRole> = {
-    OWNER: 'owner',
-    ADMIN: 'admin',
-    MEMBER: 'member',
-    VIEWER: 'viewer',
+const roleFromDb = (role: string): TeamRole => {
+  const mapping: Record<string, TeamRole> = {
+    OWNER: TeamRole.OWNER,
+    ADMIN: TeamRole.ADMIN,
+    MEMBER: TeamRole.MEMBER,
+    VIEWER: TeamRole.VIEWER,
   };
-  return mapping[role];
+  return mapping[role] || TeamRole.MEMBER;
 };
 
-/**
- * Service de gestion des membres d'équipe dans Supabase
- */
 export class TeamMembersService {
-  /**
-   * Convertir une row Supabase en TeamMember de l'app
-   */
   private static rowToTeamMember(row: TeamMemberRow): TeamMember {
     return {
       id: row.id,
       teamId: row.team_id,
       userId: row.user_id,
-      role: roleFromDb(row.role),
+      role: roleFromDb(row.role as string),
       joinedAt: new Date(row.joined_at),
     };
   }
 
-  /**
-   * Convertir un TeamMember de l'app en Insert Supabase
-   */
   private static teamMemberToInsert(member: Partial<TeamMember>): TeamMemberInsert {
     return {
       team_id: member.teamId || '',
       user_id: member.userId || '',
-      role: member.role ? roleToDb(member.role) : 'MEMBER',
+      role: roleToDb(member.role || TeamRole.MEMBER) as any,
     };
   }
 
-  /**
-   * Ajouter un membre à une équipe
-   */
-  static async add(member: Partial<TeamMember>): Promise<TeamMember> {
+  static async create(member: Partial<TeamMember>): Promise<TeamMember> {
+    const id = crypto.randomUUID();
     const insertData = this.teamMemberToInsert(member);
 
-    const id = crypto.randomUUID();
-    const row: any = { id, ...insertData };
-
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('team_members')
-      .insert(row)
+      .insert({ id, ...insertData })
       .select()
       .single();
 
@@ -79,151 +63,58 @@ export class TeamMembersService {
           .eq('id', id)
           .single();
         if (selErr) throw selErr;
-        return this.rowToTeamMember(existing!);
+        return this.rowToTeamMember(existing);
       }
-      console.error('❌ Erreur lors de l\'ajout du membre:', error);
       throw error;
     }
 
-    return this.rowToTeamMember(data!);
+    return this.rowToTeamMember(data);
   }
 
-  /**
-   * Récupérer tous les membres d'une équipe
-   */
   static async getByTeamId(teamId: string): Promise<TeamMember[]> {
-    const data = await supabaseRead<TeamMemberRow[]>(
-      () => supabase
-        .from('team_members')
-        .select('*')
-        .eq('team_id', teamId)
-        .order('joined_at', { ascending: true }),
-      'TeamMembers - getByTeamId'
-    );
-
-    return data.map(row => this.rowToTeamMember(row));
-  }
-
-  /**
-   * Récupérer toutes les équipes d'un utilisateur
-   */
-  static async getByUserId(userId: string): Promise<TeamMember[]> {
-    const data = await supabaseRead<TeamMemberRow[]>(
-      () => supabase
-        .from('team_members')
-        .select('*')
-        .eq('user_id', userId)
-        .order('joined_at', { ascending: false }),
-      'TeamMembers - getByUserId'
-    );
-
-    return data.map(row => this.rowToTeamMember(row));
-  }
-
-  /**
-   * Récupérer un membre spécifique
-   */
-  static async getById(id: string): Promise<TeamMember | null> {
-    const data = await supabaseRead<TeamMemberRow | null>(
-      async () => {
-        const res = await supabase
-          .from('team_members')
-          .select('*')
-          .eq('id', id)
-          .single();
-        if ((res as any).error && (res as any).error.code === 'PGRST116') {
-          return { data: null, error: null } as any;
-        }
-        return res as any;
-      },
-      'TeamMembers - getById'
-    );
-
-    if (!data) return null;
-    return this.rowToTeamMember(data);
-  }
-
-  /**
-   * Récupérer un membre par teamId et userId
-   */
-  static async getByTeamAndUser(teamId: string, userId: string): Promise<TeamMember | null> {
-    const data = await supabaseRead<TeamMemberRow | null>(
-      async () => {
-        const res = await supabase
-          .from('team_members')
-          .select('*')
-          .eq('team_id', teamId)
-          .eq('user_id', userId)
-          .single();
-        if ((res as any).error && (res as any).error.code === 'PGRST116') {
-          return { data: null, error: null } as any;
-        }
-        return res as any;
-      },
-      'TeamMembers - getByTeamAndUser'
-    );
-
-    if (!data) return null;
-    return this.rowToTeamMember(data);
-  }
-
-  /**
-   * Mettre à jour le rôle d'un membre
-   */
-  static async updateRole(id: string, role: TeamRole): Promise<TeamMember> {
-    const updateData: TeamMemberUpdate = {
-      role: roleToDb(role),
-    };
-
     const { data, error } = await supabase
       .from('team_members')
-      .update(updateData)
+      .select('*')
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return (data || []).map(row => this.rowToTeamMember(row));
+  }
+
+  static async getByUserId(userId: string): Promise<TeamMember[]> {
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(row => this.rowToTeamMember(row));
+  }
+
+  static async updateRole(id: string, role: TeamRole): Promise<TeamMember> {
+    const { data, error } = await (supabase as any)
+      .from('team_members')
+      .update({ role: roleToDb(role) })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('❌ Erreur lors de la mise à jour du rôle:', error);
-      throw error;
-    }
-
-    console.log('✅ Rôle mis à jour:', data.id);
+    if (error) throw error;
     return this.rowToTeamMember(data);
   }
 
-  /**
-   * Retirer un membre d'une équipe
-   */
-  static async remove(id: string): Promise<void> {
+  static async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('team_members')
       .delete()
       .eq('id', id);
 
-    if (error) {
-      console.error('❌ Erreur lors du retrait du membre:', error);
-      throw error;
-    }
-
-    console.log('✅ Membre retiré:', id);
+    if (error) throw error;
   }
 
-  /**
-   * Retirer un membre par teamId et userId
-   */
-  static async removeByTeamAndUser(teamId: string, userId: string): Promise<void> {
-    const { error } = await supabase
-      .from('team_members')
-      .delete()
-      .eq('team_id', teamId)
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('❌ Erreur lors du retrait du membre:', error);
-      throw error;
-    }
-
-    console.log('✅ Membre retiré de l\'équipe');
+  static async add(member: Partial<TeamMember>): Promise<TeamMember> {
+    return this.create(member);
   }
 }
-

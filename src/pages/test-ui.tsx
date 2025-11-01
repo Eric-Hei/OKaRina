@@ -30,7 +30,7 @@ import {
 } from '@/hooks/useActions';
 import { Loader2, Plus, Trash2, Edit2, CheckCircle } from 'lucide-react';
 import type { Ambition, QuarterlyObjective, QuarterlyKeyResult, Action } from '@/types';
-import { ActionStatus, Priority, Quarter } from '@/types';
+import { ActionStatus, Priority, Quarter, AmbitionCategory, Status } from '@/types';
 
 export default function TestUIPage() {
   const { user } = useAppStore();
@@ -70,10 +70,10 @@ export default function TestUIPage() {
         ambition: {
           title: `Ambition Test ${Date.now()}`,
           description: 'Description de test',
-          category: 'growth',
-          priority: 'high',
-          status: 'active',
-          targetDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          category: AmbitionCategory.GROWTH,
+          priority: Priority.HIGH,
+          status: Status.ACTIVE,
+          year: new Date().getFullYear(),
         },
         userId: user.id
       });
@@ -94,9 +94,9 @@ export default function TestUIPage() {
           title: `Objectif Q1 ${Date.now()}`,
           description: 'Description de test',
           ambitionId: selectedAmbition,
-          quarter: 'Q1' as Quarter,
+          quarter: Quarter.Q1,
           year: new Date().getFullYear(),
-          status: 'active',
+          status: Status.ACTIVE,
         },
         userId: user.id
       });
@@ -142,7 +142,7 @@ export default function TestUIPage() {
           quarterlyKeyResultId: selectedKeyResult,
           status: ActionStatus.TODO,
           priority: Priority.MEDIUM,
-          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
         userId: user.id
       });
@@ -153,9 +153,9 @@ export default function TestUIPage() {
   };
 
   const handleDeleteAmbition = async (id: string) => {
-    if (!confirm('Supprimer cette ambition ?')) return;
+    if (!user || !confirm('Supprimer cette ambition ?')) return;
     try {
-      await deleteAmbition.mutateAsync(id);
+      await deleteAmbition.mutateAsync({ id, userId: user.id });
       alert('✅ Ambition supprimée !');
     } catch (error) {
       alert('❌ Erreur : ' + (error as Error).message);
@@ -394,9 +394,9 @@ export default function TestUIPage() {
                             Statut : {action.status} | Priorité : {action.priority}
                           </p>
                         </div>
-                        {action.status !== 'done' && (
+                        {action.status !== ActionStatus.DONE && (
                           <button
-                            onClick={() => handleUpdateActionStatus(action.id, 'done')}
+                            onClick={() => handleUpdateActionStatus(action.id, ActionStatus.DONE)}
                             className="text-green-600 hover:text-green-700 ml-2"
                           >
                             <CheckCircle className="h-4 w-4" />

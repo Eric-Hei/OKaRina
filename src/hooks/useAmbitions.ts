@@ -49,8 +49,8 @@ export function useUpdateAmbition() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { id: string; updates: Partial<Ambition> }) =>
-      AmbitionsService.update(data.id, data.updates),
+    mutationFn: (data: { id: string; updates: Partial<Ambition>; userId: string }) =>
+      AmbitionsService.update(data.id, data.updates, data.userId),
     onSuccess: (updatedAmbition) => {
       // Mettre à jour le cache de l'ambition spécifique
       queryClient.setQueryData(['ambitions', updatedAmbition.id], updatedAmbition);
@@ -67,12 +67,12 @@ export function useDeleteAmbition() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => AmbitionsService.delete(id),
-    onSuccess: (_, id) => {
+    mutationFn: (data: { id: string; userId: string }) => AmbitionsService.delete(data.id, data.userId),
+    onSuccess: (_, variables) => {
       // Invalider toutes les requêtes d'ambitions
       queryClient.invalidateQueries({ queryKey: ['ambitions'] });
       // Supprimer du cache l'ambition spécifique
-      queryClient.removeQueries({ queryKey: ['ambitions', id] });
+      queryClient.removeQueries({ queryKey: ['ambitions', variables.id] });
     },
   });
 }

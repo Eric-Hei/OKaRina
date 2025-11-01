@@ -291,7 +291,7 @@ export const useCanvasStore = create<CanvasState>()(
       // Actions IA
       validateCurrentStep: async () => {
         const { currentStep, ambitionData, keyResultsData, okrData, actionsData } = get();
-        const { user, ambitions, keyResults } = useAppStore.getState();
+        const { user } = useAppStore.getState();
         set({ isAIProcessing: true });
 
         try {
@@ -301,8 +301,9 @@ export const useCanvasStore = create<CanvasState>()(
             case 1:
               // Étape 1 : Ambitions & Résultats Clés
               // Valider la dernière ambition ajoutée
-              if (ambitions.length > 0) {
-                const lastAmbition = ambitions[ambitions.length - 1];
+              // TODO: Récupérer les ambitions depuis React Query
+              if (ambitionData) {
+                const lastAmbition = ambitionData;
                 try {
                   validation = await aiCoachService.validateAmbitionAsync(lastAmbition, user?.companyProfile);
                 } catch (error: any) {

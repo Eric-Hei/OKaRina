@@ -8,6 +8,7 @@ import {
   CommentsService,
   NotificationsService,
 } from '@/services/db';
+import { TeamRole, InvitationStatus, NotificationType } from '@/types';
 
 export default function TestCollaboration() {
   const { user } = useAppStore();
@@ -51,13 +52,10 @@ export default function TestCollaboration() {
           <button
             onClick={() =>
               handleTest('Créer une équipe', async () => {
-                return await TeamsService.create(
-                  {
-                    name: 'Équipe Test',
-                    description: 'Une équipe de test créée depuis la page de test',
-                  },
-                  user.id
-                );
+                return await TeamsService.create({
+                  name: 'Équipe Test',
+                  description: 'Une équipe de test créée depuis la page de test',
+                });
               })
             }
             disabled={loading !== null}
@@ -87,7 +85,7 @@ export default function TestCollaboration() {
                 return await TeamMembersService.add({
                   teamId: teams[0].id,
                   userId: user.id,
-                  role: 'owner',
+                  role: TeamRole.OWNER,
                 });
               })
             }
@@ -120,10 +118,10 @@ export default function TestCollaboration() {
                 return await InvitationsService.create({
                   teamId: teams[0].id,
                   email: 'test@example.com',
-                  role: 'member',
+                  role: TeamRole.MEMBER,
                   invitedBy: user.id,
                   token: crypto.randomUUID(),
-                  status: 'pending',
+                  status: InvitationStatus.PENDING,
                   expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
                 });
               })
@@ -187,7 +185,7 @@ export default function TestCollaboration() {
               handleTest('Créer une notification', async () => {
                 return await NotificationsService.create({
                   userId: user.id,
-                  type: 'team_invitation',
+                  type: NotificationType.TEAM_INVITATION,
                   title: 'Nouvelle invitation',
                   message: 'Vous avez été invité à rejoindre une équipe',
                   isRead: false,

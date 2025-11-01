@@ -112,10 +112,10 @@ export class DataService {
   // KEY RESULTS
   // ============================================================================
 
-  static async getKeyResults(ambitionId: string): Promise<KeyResult[]> {
+  static async getKeyResults(ambitionId: string, userId: string): Promise<KeyResult[]> {
     if (isSupabaseConfigured()) {
       try {
-        return await KeyResultsService.getByAmbitionId(ambitionId);
+        return await KeyResultsService.getByAmbitionId(ambitionId, userId);
       } catch (error) {
         console.warn('⚠️ Erreur Supabase, fallback localStorage:', error);
         return storageService.getKeyResults().filter(kr => kr.ambitionId === ambitionId);
@@ -124,9 +124,9 @@ export class DataService {
     return storageService.getKeyResults().filter(kr => kr.ambitionId === ambitionId);
   }
 
-  static async createKeyResult(keyResult: Partial<KeyResult>): Promise<KeyResult> {
+  static async createKeyResult(keyResult: Partial<KeyResult>, userId: string): Promise<KeyResult> {
     if (isSupabaseConfigured()) {
-      const created = await KeyResultsService.create(keyResult);
+      const created = await KeyResultsService.create(keyResult, userId);
       storageService.addKeyResult(created);
       return created;
     }
@@ -160,7 +160,7 @@ export class DataService {
   static async getQuarterlyObjectives(userId: string, quarter?: Quarter, year?: number): Promise<QuarterlyObjective[]> {
     if (isSupabaseConfigured()) {
       try {
-        return await QuarterlyObjectivesService.getAll(userId, quarter, year);
+        return await QuarterlyObjectivesService.getAll(userId, { quarter, year });
       } catch (error) {
         console.warn('⚠️ Erreur Supabase, fallback localStorage:', error);
         return storageService.getQuarterlyObjectives();
@@ -182,7 +182,7 @@ export class DataService {
 
   static async updateQuarterlyObjective(id: string, updates: Partial<QuarterlyObjective>, userId: string): Promise<QuarterlyObjective> {
     if (isSupabaseConfigured()) {
-      const updated = await QuarterlyObjectivesService.update(id, updates, userId);
+      const updated = await QuarterlyObjectivesService.update(id, updates);
       storageService.updateQuarterlyObjective(id, updates);
       return updated;
     }
@@ -193,7 +193,7 @@ export class DataService {
 
   static async deleteQuarterlyObjective(id: string, userId: string): Promise<void> {
     if (isSupabaseConfigured()) {
-      await QuarterlyObjectivesService.delete(id, userId);
+      await QuarterlyObjectivesService.delete(id);
     }
     storageService.deleteQuarterlyObjective(id);
   }
@@ -325,7 +325,7 @@ export class DataService {
   ): Promise<Progress[]> {
     if (isSupabaseConfigured()) {
       try {
-        return await ProgressService.getHistory(entityId, entityType, userId, limit);
+        return await ProgressService.getByEntityId(entityId, userId);
       } catch (error) {
         console.warn('⚠️ Erreur Supabase, fallback localStorage:', error);
         return storageService.getProgress().filter(p => p.entityId === entityId && p.entityType === entityType);

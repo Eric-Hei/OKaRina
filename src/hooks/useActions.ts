@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ActionsService } from '@/services/db';
-import type { Action, ActionStatus } from '@/types';
+import type { Action } from '@/types';
+import { ActionStatus } from '@/types';
 
 /**
  * Hook pour récupérer toutes les actions d'un utilisateur
@@ -103,7 +104,7 @@ export function useUpdateActionStatus(userId?: string) {
         queryClient.setQueryData<Action[]>(['actions', userId, undefined], (old) =>
           old?.map((action) =>
             action.id === data.id
-              ? { ...action, status: data.status, completed_at: data.status === 'DONE' ? new Date() : null }
+              ? { ...action, status: data.status, completedAt: data.status === ActionStatus.DONE ? new Date() : undefined }
               : action
           ) || []
         );
@@ -205,21 +206,16 @@ export function useMoveAction(userId?: string) {
       orderUpdates: { id: string; order_index: number }[];
     }) => ActionsService.moveAction(data.actionId, data.newStatus, data.orderUpdates, userId!),
     onMutate: async (data) => {
-      console.log('🔵 onMutate START', { actionId: data.actionId, newStatus: data.newStatus, updates: data.orderUpdates.length });
-
       // Annuler les requêtes en cours pour toutes les variantes de la query
       await queryClient.cancelQueries({ queryKey: ['actions'] });
 
       // Sauvegarder l'état précédent (la clé complète inclut userId et status)
       const previousActions = queryClient.getQueryData<Action[]>(['actions', userId, undefined]);
-      console.log('🔵 Previous actions count:', previousActions?.length);
 
       // Optimistic update combiné
       if (previousActions) {
-        const newData = queryClient.setQueryData<Action[]>(['actions', userId, undefined], (old) => {
+        queryClient.setQueryData<Action[]>(['actions', userId, undefined], (old) => {
           if (!old) return [];
-
-          console.log('🔵 Old data count:', old.length);
 
           // Créer une map des nouveaux order_index
           const orderMap = new Map(data.orderUpdates.map(u => [u.id, u.order_index]));
@@ -230,17 +226,14 @@ export function useMoveAction(userId?: string) {
 
             if (action.id === data.actionId) {
               // L'action déplacée : changer statut + order_index
-              const updatedAction = {
+              return {
                 ...action,
                 status: data.newStatus,
-                completed_at: data.newStatus === 'DONE' ? new Date() : null,
+                completedAt: data.newStatus === ActionStatus.DONE ? new Date() : undefined,
                 order_index: newOrder !== undefined ? newOrder : action.order_index,
               };
-              console.log('🔵 Updated action:', { id: action.id, oldStatus: action.status, newStatus: data.newStatus, oldOrder: action.order_index, newOrder: updatedAction.order_index });
-              return updatedAction;
             } else if (newOrder !== undefined) {
               // Les autres actions affectées : juste l'order_index
-              console.log('🔵 Updated order:', { id: action.id, oldOrder: action.order_index, newOrder });
               return { ...action, order_index: newOrder };
             }
 
@@ -248,33 +241,24 @@ export function useMoveAction(userId?: string) {
           });
 
           // Trier par order_index
-          const sorted = updated.sort((a, b) => a.order_index - b.order_index);
-          console.log('🔵 Sorted actions:', sorted.map(a => ({ id: a.id.slice(0, 8), status: a.status, order: a.order_index })));
-          return sorted;
+          return updated.sort((a, b) => a.order_index - b.order_index);
         });
-
-        console.log('🔵 New data set in cache:', newData?.length);
       }
 
-      console.log('🔵 onMutate END');
       return { previousActions };
     },
     onError: (err, data, context) => {
-      console.error('🔴 onError - Rolling back', err);
       // Rollback en cas d'erreur
       if (context?.previousActions) {
         queryClient.setQueryData(['actions', userId, undefined], context.previousActions);
       }
     },
-    onSuccess: (result, variables) => {
-      console.log('🟢 onSuccess - NOT updating cache to keep optimistic update', result);
+    onSuccess: () => {
       // Ne rien faire ici pour garder l'optimistic update
       // Le cache a déjà été mis à jour dans onMutate
     },
     onSettled: () => {
-      console.log('🟡 onSettled - NOT invalidating to avoid flash');
       // Ne PAS invalider pour éviter le refetch qui écrase l'optimistic update
-      // queryClient.invalidateQueries({ queryKey: ['actions'] });
     },
   });
 }

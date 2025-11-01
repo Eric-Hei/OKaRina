@@ -261,6 +261,7 @@ class ImportService {
               priority: this.parsePriority(mapping.actionPriority ? row[mapping.actionPriority] : ''),
               labels: mapping.actionLabels ? row[mapping.actionLabels]?.split(',').map(l => l.trim()).filter(l => l) || [] : [],
               deadline: mapping.actionDeadline && row[mapping.actionDeadline] ? new Date(row[mapping.actionDeadline]) : undefined,
+              order_index: 0,
               createdAt: new Date(),
               updatedAt: new Date(),
             };

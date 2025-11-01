@@ -17,6 +17,7 @@ import {
   FileUp,
   History,
   CheckSquare,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAppStore } from '@/store/useAppStore';
@@ -187,6 +188,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                         >
                           <Building2 className="h-4 w-4 mr-3 text-gray-400" />
                           Profil d'entreprise
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            router.push('/teams');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Users className="h-4 w-4 mr-3 text-gray-400" />
+                          Mon Équipe
                         </button>
 
                         <button

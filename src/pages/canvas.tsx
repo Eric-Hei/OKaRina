@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/Badge';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useAppStore } from '@/store/useAppStore';
 import AmbitionsAndKeyResultsStep from '@/components/canvas/AmbitionsAndKeyResultsStep';
-import { OKRStep } from '@/components/canvas/OKRStep';
 import { ActionsStep } from '@/components/canvas/ActionsStep';
 import QuarterlyObjectivesStep from '@/components/canvas/QuarterlyObjectivesStep';
 import AISuggestionsPanel from '@/components/canvas/AISuggestionsPanel';

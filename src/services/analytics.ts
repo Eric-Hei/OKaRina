@@ -56,7 +56,7 @@ export class AnalyticsService {
 
     let totalProgress = 0;
     quarterlyKeyResults.forEach(qkr => {
-      const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+      const progress = qkr.target > 0 ? (qkr.current / qkr.target) * 100 : 0;
       totalProgress += Math.min(progress, 100);
     });
 
@@ -74,7 +74,7 @@ export class AnalyticsService {
       if (objKRs.length > 0) {
         let objProgress = 0;
         objKRs.forEach(qkr => {
-          const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+          const progress = qkr.target > 0 ? (qkr.current / qkr.target) * 100 : 0;
           objProgress += Math.min(progress, 100);
         });
         totalProgress += objProgress / objKRs.length;
@@ -117,7 +117,7 @@ export class AnalyticsService {
 
     let totalProgress = 0;
     currentMonthKRs.forEach(qkr => {
-      const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+      const progress = qkr.target > 0 ? (qkr.current / qkr.target) * 100 : 0;
       totalProgress += Math.min(progress, 100);
     });
 
@@ -174,7 +174,7 @@ export class AnalyticsService {
       if (qoKRs.length > 0) {
         let qoProgress = 0;
         qoKRs.forEach(qkr => {
-          const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+          const progress = qkr.target > 0 ? (qkr.current / qkr.target) * 100 : 0;
           qoProgress += Math.min(progress, 100);
         });
         const avgProgress = qoProgress / qoKRs.length;
@@ -208,7 +208,7 @@ export class AnalyticsService {
       .filter(qkr => new Date(qkr.updatedAt) >= startDate)
       .forEach(qkr => {
         const date = new Date(qkr.updatedAt).toISOString().split('T')[0];
-        const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+        const progress = qkr.target > 0 ? (qkr.current / qkr.target) * 100 : 0;
         if (!dailyProgress[date]) {
           dailyProgress[date] = [];
         }
@@ -309,7 +309,7 @@ export class AnalyticsService {
       },
       quarterlyKeyResults: {
         total: quarterlyKeyResults.length,
-        completed: quarterlyKeyResults.filter(qkr => qkr.currentValue >= qkr.targetValue).length,
+        completed: quarterlyKeyResults.filter(qkr => qkr.current >= qkr.target).length,
         averageProgress: this.calculateAverageQKRProgress(quarterlyKeyResults),
       },
     };
@@ -365,7 +365,7 @@ export class AnalyticsService {
     if (quarterlyKeyResults.length === 0) return 0;
 
     const totalProgress = quarterlyKeyResults.reduce((sum, qkr) => {
-      const progress = qkr.targetValue > 0 ? (qkr.currentValue / qkr.targetValue) * 100 : 0;
+      const progress = qkr.target > 0 ? (qkr.current / qkr.target) * 100 : 0;
       return sum + Math.min(progress, 100);
     }, 0);
 
@@ -391,7 +391,7 @@ export class AnalyticsService {
 
   // ===== Health score & risques (MVP) =====
   public calculateQuarterlyKRHealth(kr: QuarterlyKeyResult, actions: Action[]): number {
-    const progress = kr.targetValue > 0 ? Math.min(kr.currentValue / kr.targetValue, 1) : 0; // 0..1
+    const progress = kr.target > 0 ? Math.min(kr.current / kr.target, 1) : 0; // 0..1
     const now = new Date();
     const deadline = kr.deadline ? new Date(kr.deadline) : null;
     const days = deadline ? Math.ceil((+deadline - +now) / (1000 * 60 * 60 * 24)) : 30;
@@ -416,7 +416,7 @@ export class AnalyticsService {
       const reasons: string[] = [];
       const now = new Date();
       const days = kr.deadline ? Math.ceil((+new Date(kr.deadline) - +now) / (1000*60*60*24)) : 30;
-      const progress = kr.targetValue > 0 ? Math.min(kr.currentValue / kr.targetValue, 1) : 0;
+      const progress = kr.target > 0 ? Math.min(kr.current / kr.target, 1) : 0;
       if (days <= 7 && progress < 0.5) reasons.push('Échéance proche avec progression faible');
       const krActions = actions.filter(a => a.quarterlyKeyResultId === kr.id);
       const overdue = krActions.filter(a => a.deadline && new Date(a.deadline) < now && a.status !== 'done').length;

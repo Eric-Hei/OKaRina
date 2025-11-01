@@ -1,8 +1,8 @@
 import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/types/supabase';
 import type { Ambition } from '@/types';
+import { Priority, Status } from '@/types';
 import { categoryToDb, categoryFromDb } from './enumConverters';
-import { supabaseRead } from '@/lib/supabaseHelpers';
 
 type AmbitionRow = Database['public']['Tables']['ambitions']['Row'];
 type AmbitionInsert = Database['public']['Tables']['ambitions']['Insert'];
@@ -23,8 +23,8 @@ export class AmbitionsService {
       description: row.description || '',
       year: row.year,
       category: categoryFromDb(row.category) as any,
-      priority: 'high', // TODO: Ajouter priority dans le schéma SQL
-      status: 'active', // TODO: Ajouter status dans le schéma SQL
+      priority: Priority.HIGH, // TODO: Ajouter priority dans le schéma SQL
+      status: Status.ACTIVE, // TODO: Ajouter status dans le schéma SQL
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     };
@@ -96,29 +96,34 @@ export class AmbitionsService {
       query = query.eq('year', year);
     }
 
-    const data = await supabaseRead<AmbitionRow[]>(() => query, 'Ambitions - getAll');
-    return data.map(row => this.rowToAmbition(row));
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des ambitions:', error);
+      throw error;
+    }
+
+    return (data || []).map(row => this.rowToAmbition(row));
   }
 
   /**
    * Récupérer une ambition par son ID
    */
   static async getById(id: string, userId: string): Promise<Ambition | null> {
-    const data = await supabaseRead<AmbitionRow | null>(
-      async () => {
-        const res = await supabase
-          .from('ambitions')
-          .select('*')
-          .eq('id', id)
-          .eq('user_id', userId)
-          .single();
-        if ((res as any).error && (res as any).error.code === 'PGRST116') {
-          return { data: null, error: null } as any;
-        }
-        return res as any;
-      },
-      'Ambitions - getById'
-    );
+    const { data, error } = await supabase
+      .from('ambitions')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      console.error('❌ Erreur lors de la récupération de l\'ambition:', error);
+      throw error;
+    }
 
     if (!data) return null;
     return this.rowToAmbition(data);
@@ -132,16 +137,18 @@ export class AmbitionsService {
 
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description || null;
-    if (updates.category !== undefined) updateData.category = updates.category;
+    if (updates.category !== undefined) updateData.category = categoryToDb(updates.category);
     if (updates.year !== undefined) updateData.year = updates.year;
 
-    const { data, error } = await supabase
+    const result = await (supabase as any)
       .from('ambitions')
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
+
+    const { data, error } = result;
 
     if (error) {
       console.error('❌ Erreur lors de la mise à jour de l\'ambition:', error);
@@ -175,7 +182,7 @@ export class AmbitionsService {
    */
   static async updateOrder(ambitions: { id: string; order_index: number }[], userId: string): Promise<void> {
     const updates = ambitions.map(({ id, order_index }) =>
-      supabase
+      (supabase as any)
         .from('ambitions')
         .update({ order_index })
         .eq('id', id)
@@ -183,7 +190,7 @@ export class AmbitionsService {
     );
 
     const results = await Promise.all(updates);
-    const errors = results.filter(r => r.error);
+    const errors = results.filter((r: any) => r.error);
 
     if (errors.length > 0) {
       console.error('❌ Erreurs lors de la mise à jour de l\'ordre:', errors);

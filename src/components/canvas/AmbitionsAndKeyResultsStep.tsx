@@ -64,9 +64,11 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
   };
 
   const handleDeleteAmbition = async (ambitionId: string) => {
+    if (!user) return;
+
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette ambition ? Tous les résultats clés associés seront également supprimés.')) {
       try {
-        await deleteAmbitionMutation.mutateAsync(ambitionId);
+        await deleteAmbitionMutation.mutateAsync({ id: ambitionId, userId: user.id });
       } catch (error) {
         console.error('❌ Erreur lors de la suppression de l\'ambition:', error);
         alert('Erreur lors de la suppression de l\'ambition');
@@ -82,6 +84,7 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
         await updateAmbitionMutation.mutateAsync({
           id: editingAmbition.id,
           updates: data,
+          userId: user.id,
         });
       } else {
         const newAmbition = await createAmbition.mutateAsync({
@@ -154,8 +157,8 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
     }
   };
 
-  const getKeyResultsForAmbition = (ambitionId: string) => {
-    return keyResults.filter(kr => kr.ambitionId === ambitionId);
+  const getKeyResultsForAmbition = (ambitionId: string): KeyResult[] => {
+    return keyResults.filter((kr: KeyResult) => kr.ambitionId === ambitionId);
   };
 
   const categoryLabels: Record<string, string> = {

@@ -4,13 +4,13 @@ import { KanbanBoard } from '@/components/ui/KanbanBoard';
 import { ActionsTableView } from '@/components/ui/ActionsTableView';
 import { ActionsChecklistView } from '@/components/ui/ActionsChecklistView';
 import { ActionForm } from '@/components/forms/ActionForm';
-import { FilterPanel } from '@/components/ui/FilterPanel';
+import { FilterPanel, FilterState } from '@/components/ui/FilterPanel';
 import { Button } from '@/components/ui/Button';
 import { Plus, Filter, LayoutGrid, Table, ListChecks } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useFilters } from '@/hooks/useFilters';
 import { generateId } from '@/utils';
-import type { Action, ActionFormData, ActionStatus, FilterState } from '@/types';
+import type { Action, ActionFormData, ActionStatus } from '@/types';
 import { useAmbitions } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
 import { useQuarterlyKeyResults } from '@/hooks/useQuarterlyKeyResults';
@@ -91,7 +91,6 @@ const ActionsPage: React.FC = () => {
           action: {
             ...data,
             quarterlyKeyResultId: data.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '',
-            status: data.status || 'todo',
             deadline: data.deadline ? new Date(data.deadline) : undefined,
             labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
           },
@@ -117,7 +116,6 @@ const ActionsPage: React.FC = () => {
     orderUpdates: { id: string; order_index: number }[]
   ) => {
     try {
-      console.debug('➡️ handleActionMove', { actionId, newStatus, orderUpdates: orderUpdates.length });
       // Utiliser la mutation combinée pour éviter les conflits
       moveAction.mutate({ actionId, newStatus, orderUpdates });
     } catch (error) {
@@ -126,9 +124,18 @@ const ActionsPage: React.FC = () => {
     }
   };
 
+  // Wrapper pour les vues Table et Checklist qui n'ont pas besoin des orderUpdates
+  const handleActionStatusChange = async (actionId: string, newStatus: ActionStatus) => {
+    try {
+      moveAction.mutate({ actionId, newStatus, orderUpdates: [] });
+    } catch (error) {
+      console.error('❌ Erreur lors du changement de statut:', error);
+      alert('Erreur lors du changement de statut');
+    }
+  };
+
   const handleActionReorder = async (updates: { id: string; order_index: number }[]) => {
     try {
-      console.debug('🔄 handleActionReorder', { count: updates.length });
       // Ne pas attendre la fin de la mutation pour que l'optimistic update fonctionne
       updateActionsOrder.mutate(updates);
     } catch (error) {
@@ -138,7 +145,7 @@ const ActionsPage: React.FC = () => {
   };
 
   // Compter les actions filtrées
-  const activeFiltersCount = 
+  const activeFiltersCount =
     filters.ambitionIds.length +
     filters.quarters.length +
     filters.years.length +
@@ -147,12 +154,30 @@ const ActionsPage: React.FC = () => {
     filters.statuses.length +
     filters.labels.length;
 
+  // Calculer les statistiques par statut
+  const todoCount = filteredActions.filter(a => a.status === 'todo').length;
+  const inProgressCount = filteredActions.filter(a => a.status === 'in_progress').length;
+  const doneCount = filteredActions.filter(a => a.status === 'done').length;
+
+  // Convertir Action en ActionFormData pour le formulaire
+  const actionToFormData = (action: Action | null): Partial<ActionFormData> | undefined => {
+    if (!action) return undefined;
+    return {
+      title: action.title,
+      description: action.description,
+      priority: action.priority,
+      labels: action.labels.join(', '),
+      deadline: action.deadline ? action.deadline.toISOString().split('T')[0] : undefined,
+      quarterlyKeyResultId: action.quarterlyKeyResultId,
+    };
+  };
+
   return (
     <Layout title="Actions" requireAuth>
       <div className="min-h-screen bg-gray-50 py-8">
         {formMode === 'action' && (
           <ActionForm
-            initialData={editingAction}
+            initialData={actionToFormData(editingAction)}
             quarterlyKeyResults={quarterlyKeyResults}
             allowKeyResultSelection={true}
             onSubmit={handleActionSubmit}
@@ -236,16 +261,14 @@ const ActionsPage: React.FC = () => {
               <span>
                 {filteredActions.length} action{filteredActions.length > 1 ? 's' : ''} affichée{filteredActions.length > 1 ? 's' : ''}
               </span>
-              {filterStats && (
-                <>
-                  <span className="text-gray-300">•</span>
-                  <span>{filterStats.todoCount} à faire</span>
-                  <span className="text-gray-300">•</span>
-                  <span>{filterStats.inProgressCount} en cours</span>
-                  <span className="text-gray-300">•</span>
-                  <span>{filterStats.doneCount} terminées</span>
-                </>
-              )}
+              <>
+                <span className="text-gray-300">•</span>
+                <span>{todoCount} à faire</span>
+                <span className="text-gray-300">•</span>
+                <span>{inProgressCount} en cours</span>
+                <span className="text-gray-300">•</span>
+                <span>{doneCount} terminées</span>
+              </>
             </div>
           )}
         </div>
@@ -292,7 +315,7 @@ const ActionsPage: React.FC = () => {
                     }
                   }
                 }}
-                onActionStatusChange={handleActionMove}
+                onActionStatusChange={handleActionStatusChange}
                 quarterlyKeyResults={quarterlyKeyResults}
                 quarterlyObjectives={quarterlyObjectives}
               />
@@ -312,7 +335,7 @@ const ActionsPage: React.FC = () => {
                     }
                   }
                 }}
-                onActionStatusChange={handleActionMove}
+                onActionStatusChange={handleActionStatusChange}
                 quarterlyKeyResults={quarterlyKeyResults}
                 quarterlyObjectives={quarterlyObjectives}
               />

@@ -8,7 +8,7 @@ import type { QuarterlyObjective, Quarter } from '@/types';
 export function useQuarterlyObjectives(userId: string | undefined, quarter?: Quarter, year?: number) {
   return useQuery({
     queryKey: ['quarterlyObjectives', userId, quarter, year],
-    queryFn: () => QuarterlyObjectivesService.getAll(userId!, quarter, year),
+    queryFn: () => QuarterlyObjectivesService.getAll(userId!, { quarter, year }),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
   });
@@ -32,7 +32,7 @@ export function useQuarterlyObjectivesByAmbition(ambitionId: string | undefined,
 export function useQuarterlyObjective(id: string | undefined, userId: string | undefined) {
   return useQuery({
     queryKey: ['quarterlyObjectives', id],
-    queryFn: () => QuarterlyObjectivesService.getById(id!, userId!),
+    queryFn: () => QuarterlyObjectivesService.getById(id!),
     enabled: !!id && !!userId,
     staleTime: 1000 * 60 * 5,
   });
@@ -61,7 +61,7 @@ export function useUpdateQuarterlyObjective() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { id: string; updates: Partial<QuarterlyObjective> }) =>
+    mutationFn: (data: { id: string; updates: Partial<QuarterlyObjective>; userId: string }) =>
       QuarterlyObjectivesService.update(data.id, data.updates),
     onSuccess: (updatedObjective) => {
       queryClient.setQueryData(['quarterlyObjectives', updatedObjective.id], updatedObjective);
@@ -77,10 +77,10 @@ export function useDeleteQuarterlyObjective() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => QuarterlyObjectivesService.delete(id),
-    onSuccess: (_, id) => {
+    mutationFn: (data: { id: string; userId: string }) => QuarterlyObjectivesService.delete(data.id),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['quarterlyObjectives'] });
-      queryClient.removeQueries({ queryKey: ['quarterlyObjectives', id] });
+      queryClient.removeQueries({ queryKey: ['quarterlyObjectives', variables.id] });
     },
   });
 }

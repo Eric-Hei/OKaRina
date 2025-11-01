@@ -10,6 +10,7 @@ import { formatRelativeDate } from '@/utils';
 import { AlarmClock, CheckCircle2, Flame } from 'lucide-react';
 import { showNudge, scheduleNudge, cancelScheduledNudge } from '@/services/nudges';
 import { addDays, isAfter, isToday, isPast, differenceInCalendarDays } from 'date-fns';
+import { useActions, useUpdateAction } from '@/hooks/useActions';
 
 function priorityWeight(p: Priority): number {
   return p === Priority.CRITICAL ? 4 : p === Priority.HIGH ? 3 : p === Priority.MEDIUM ? 2 : 1;
@@ -56,7 +57,9 @@ function extractPrevStatus(a: Action): ActionStatus | null {
 
 
 export default function FocusPage() {
-  const { actions, updateAction } = useAppStore();
+  const { user } = useAppStore();
+  const { data: actions = [] } = useActions(user?.id);
+  const updateActionMutation = useUpdateAction();
   const [scheduledId, setScheduledId] = useState<number | null>(null);
 
   const candidates = useMemo(() => {
@@ -83,7 +86,7 @@ export default function FocusPage() {
     const newLabels = [...(a.labels || [])];
     if (!newLabels.includes('focus')) newLabels.push('focus');
     if (!newLabels.some(l => l.startsWith('prev_status:'))) newLabels.push(prevLabel);
-    updateAction(a.id, { status: ActionStatus.IN_PROGRESS, updatedAt: new Date(), labels: newLabels });
+    updateActionMutation.mutate({ id: a.id, updates: { status: ActionStatus.IN_PROGRESS, labels: newLabels } });
     showNudge({ title: 'Focus activé', body: `Engagé sur: ${a.title}`, tag: 'focus-start' });
     const id = scheduleNudge(45 * 60 * 1000, { title: 'Toujours focus ?', body: `Où en es-tu: ${a.title} ?`, tag: 'focus-reminder' });
     if (id) setScheduledId(id);
@@ -92,10 +95,12 @@ export default function FocusPage() {
   const cancelFocus = (a: Action) => {
     const prev = extractPrevStatus(a);
     const cleaned = (a.labels || []).filter(l => l !== 'focus' && !l.startsWith('prev_status:'));
-    updateAction(a.id, {
-      status: prev ?? ActionStatus.TODO,
-      labels: cleaned,
-      updatedAt: new Date(),
+    updateActionMutation.mutate({
+      id: a.id,
+      updates: {
+        status: prev ?? ActionStatus.TODO,
+        labels: cleaned,
+      }
     });
     if (scheduledId) {
       cancelScheduledNudge(scheduledId);
@@ -105,13 +110,13 @@ export default function FocusPage() {
   };
 
   const completeAction = (a: Action) => {
-    updateAction(a.id, { status: ActionStatus.DONE, updatedAt: new Date(), completedAt: new Date(), labels: a.labels.filter(l => l !== 'focus') });
+    updateActionMutation.mutate({ id: a.id, updates: { status: ActionStatus.DONE, completedAt: new Date(), labels: a.labels.filter(l => l !== 'focus') } });
     showNudge({ title: 'Bravo 🎉', body: `Action terminée: ${a.title}`, tag: 'focus-done' });
   };
 
   const postponeToTomorrow = (a: Action) => {
     const newDeadline = a.deadline ? addDays(new Date(a.deadline), 1) : addDays(new Date(), 1);
-    updateAction(a.id, { deadline: newDeadline, updatedAt: new Date(), labels: a.labels.filter(l => l !== 'focus') });
+    updateActionMutation.mutate({ id: a.id, updates: { deadline: newDeadline, labels: a.labels.filter(l => l !== 'focus') } });
   };
 
   return (

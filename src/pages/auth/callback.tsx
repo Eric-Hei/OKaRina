@@ -27,7 +27,7 @@ const AuthCallbackPage: React.FC = () => {
           setUser(user);
 
           // Rediriger vers le dashboard ou onboarding selon le profil
-          if (result.profile.company_profile) {
+          if ((result.profile as any).company_profile) {
             router.push('/dashboard');
           } else {
             router.push('/onboarding');

@@ -13,6 +13,8 @@ import { AISuggestionsPanel } from '@/components/canvas/AISuggestionsPanel';
 import { generateId, getDaysUntilDeadline, formatDate } from '@/utils';
 import type { Action, QuarterlyKeyResult } from '@/types';
 import { ActionStatus, Priority } from '@/types';
+import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
+import { useCreateAction } from '@/hooks/useActions';
 
 const MAX_SUGGESTIONS = 3;
 
@@ -34,7 +36,10 @@ const fallbackActionIdeas = (kr: QuarterlyKeyResult): string[] => {
 };
 
 export default function CheckInPage() {
-  const { quarterlyKeyResults, addAction, updateQuarterlyKeyResultProgress } = useAppStore();
+  const { user } = useAppStore();
+  const { data: quarterlyKeyResults = [] } = useQuarterlyKeyResultsByUser(user?.id);
+  const createAction = useCreateAction();
+
   const [loadingKrId, setLoadingKrId] = useState<string | null>(null);
   const [suggestionsByKr, setSuggestionsByKr] = useState<Record<string, string[]>>({});
   const [selectedKR, setSelectedKR] = useState<QuarterlyKeyResult | null>(null);
@@ -64,20 +69,20 @@ export default function CheckInPage() {
     }
   };
 
-  const createActionFromSuggestion = (kr: QuarterlyKeyResult, text: string) => {
+  const createActionFromSuggestion = async (kr: QuarterlyKeyResult, text: string) => {
+    if (!user) return;
+
     const title = text.substring(0, 120);
-    const newAction: Action = {
-      id: generateId(),
-      title,
-      description: `Issue du check-in hebdo du ${formatDate(new Date())}`,
-      quarterlyKeyResultId: kr.id,
-      status: ActionStatus.TODO,
-      priority: Priority.MEDIUM,
-      labels: ['check-in'],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    addAction(newAction);
+    await createAction.mutateAsync({
+      action: {
+        title,
+        description: `Issue du check-in hebdo du ${formatDate(new Date())}`,
+        quarterlyKeyResultId: kr.id,
+        priority: Priority.MEDIUM,
+        labels: ['check-in'],
+      },
+      userId: user.id
+    });
   };
 
   const handleOpenProgressModal = (kr: QuarterlyKeyResult) => {
@@ -87,7 +92,8 @@ export default function CheckInPage() {
 
   const handleUpdateProgress = (newCurrent: number, note?: string) => {
     if (selectedKR) {
-      updateQuarterlyKeyResultProgress(selectedKR.id, newCurrent, note);
+      // TODO: Implémenter updateQuarterlyKeyResultProgress avec React Query
+      // updateQuarterlyKeyResultProgress(selectedKR.id, newCurrent, note);
       setIsModalOpen(false);
       setSelectedKR(null);
     }

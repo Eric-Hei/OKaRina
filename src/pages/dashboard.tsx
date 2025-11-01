@@ -21,6 +21,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useAppStore } from '@/store/useAppStore';
 import { useAmbitions } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
+import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
 import { useActions } from '@/hooks/useActions';
 import { analyticsService } from '@/services/analytics';
 import { formatDate, formatRelativeDate, getDaysUntilDeadline } from '@/utils';
@@ -34,6 +35,7 @@ const DashboardPage: React.FC = () => {
   // React Query hooks
   const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
   const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
+  const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResultsByUser(user?.id);
   const { data: actions = [], isLoading: actionsLoading } = useActions(user?.id);
 
   const [progressData, setProgressData] = useState<ChartData[]>([]);
@@ -57,9 +59,12 @@ const DashboardPage: React.FC = () => {
     const activeOKRs = quarterlyObjectives.filter(o => o.status === 'active').length;
     const completedActions = actions.filter(a => a.status === 'done').length;
 
-    // Calculer la progression globale (moyenne des objectifs)
-    const overallProgress = quarterlyObjectives.length > 0
-      ? quarterlyObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / quarterlyObjectives.length
+    // Calculer la progression globale (moyenne des KRs)
+    const overallProgress = quarterlyKeyResults.length > 0
+      ? quarterlyKeyResults.reduce((sum, kr) => {
+          const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
+          return sum + Math.min(progress, 100);
+        }, 0) / quarterlyKeyResults.length
       : 0;
 
     // Échéances à venir (7 prochains jours)

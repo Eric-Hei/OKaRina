@@ -1,66 +1,57 @@
-import { supabase } from '@/lib/supabaseClient';
-import type { Database } from '@/types/supabase';
-import type { Notification, NotificationType } from '@/types';
-import { supabaseRead } from '@/lib/supabaseHelpers';
+﻿import { supabase } from '@/lib/supabaseClient';
+import type { Notification } from '@/types';
+import { NotificationType } from '@/types';
 
-type NotificationRow = Database['public']['Tables']['notifications']['Row'];
-type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
-type NotificationUpdate = Database['public']['Tables']['notifications']['Update'];
+// Types temporaires en attendant la régénération des types Supabase
+type NotificationRow = any;
+type NotificationInsert = any;
 
-// Conversion entre les enums TypeScript (snake_case) et Supabase (SCREAMING_SNAKE_CASE)
-const typeToDb = (type: NotificationType): Database['public']['Enums']['notification_type'] => {
-  const mapping: Record<NotificationType, Database['public']['Enums']['notification_type']> = {
-    team_invitation: 'TEAM_INVITATION',
-    objective_shared: 'OBJECTIVE_SHARED',
-    comment_mention: 'COMMENT_MENTION',
-    objective_updated: 'PROGRESS_UPDATE', // Mapping approximatif
-    deadline_approaching: 'DEADLINE_APPROACHING',
-    milestone_achieved: 'ACHIEVEMENT',
-    team_member_joined: 'MEMBER_JOINED',
+// Conversion entre les enums TypeScript et Supabase (SCREAMING_SNAKE_CASE)
+const typeToDb = (type: NotificationType): string => {
+  const mapping: Record<NotificationType, string> = {
+    [NotificationType.TEAM_INVITATION]: 'TEAM_INVITATION',
+    [NotificationType.OBJECTIVE_SHARED]: 'OBJECTIVE_SHARED',
+    [NotificationType.COMMENT_MENTION]: 'COMMENT_MENTION',
+    [NotificationType.OBJECTIVE_UPDATED]: 'PROGRESS_UPDATE',
+    [NotificationType.DEADLINE_APPROACHING]: 'DEADLINE_APPROACHING',
+    [NotificationType.MILESTONE_ACHIEVED]: 'ACHIEVEMENT',
+    [NotificationType.TEAM_MEMBER_JOINED]: 'MEMBER_JOINED',
   };
-  return mapping[type];
+  return mapping[type] || 'PROGRESS_UPDATE';
 };
 
-const typeFromDb = (type: Database['public']['Enums']['notification_type']): NotificationType => {
-  const mapping: Record<Database['public']['Enums']['notification_type'], NotificationType> = {
-    TEAM_INVITATION: 'team_invitation',
-    MEMBER_JOINED: 'team_member_joined',
-    OBJECTIVE_SHARED: 'objective_shared',
-    COMMENT_MENTION: 'comment_mention',
-    DEADLINE_APPROACHING: 'deadline_approaching',
-    PROGRESS_UPDATE: 'objective_updated',
-    ACHIEVEMENT: 'milestone_achieved',
+const typeFromDb = (type: string): NotificationType => {
+  const mapping: Record<string, NotificationType> = {
+    TEAM_INVITATION: NotificationType.TEAM_INVITATION,
+    MEMBER_JOINED: NotificationType.TEAM_MEMBER_JOINED,
+    OBJECTIVE_SHARED: NotificationType.OBJECTIVE_SHARED,
+    COMMENT_MENTION: NotificationType.COMMENT_MENTION,
+    DEADLINE_APPROACHING: NotificationType.DEADLINE_APPROACHING,
+    PROGRESS_UPDATE: NotificationType.OBJECTIVE_UPDATED,
+    ACHIEVEMENT: NotificationType.MILESTONE_ACHIEVED,
   };
-  return mapping[type];
+  return mapping[type] || NotificationType.OBJECTIVE_UPDATED;
 };
 
-/**
- * Service de gestion des notifications dans Supabase
- */
 export class NotificationsService {
-  /**
-   * Convertir une row Supabase en Notification de l'app
-   */
   private static rowToNotification(row: NotificationRow): Notification {
     return {
       id: row.id,
       userId: row.user_id,
-      type: typeFromDb(row.type),
+      type: typeFromDb(row.type as string),
       title: row.title,
       message: row.message || '',
-      relatedId: row.entity_id || undefined,
-      isRead: row.read,
+      isRead: row.read || false,
       createdAt: new Date(row.created_at),
+      relatedId: row.entity_id || undefined,
     };
   }
 
-  /**
-   * Convertir une Notification de l'app en Insert Supabase
-   */
   private static notificationToInsert(notification: Partial<Notification>): NotificationInsert {
+    const type = notification.type || NotificationType.OBJECTIVE_UPDATED;
     return {
       user_id: notification.userId || '',
-      type: notification.type ? typeToDb(notification.type) : 'PROGRESS_UPDATE',
+      type: typeToDb(type) as any,
       title: notification.title || '',
       message: notification.message || null,
       entity_type: null,
@@ -70,22 +61,18 @@ export class NotificationsService {
     };
   }
 
-  /**
-   * Créer une nouvelle notification
-   */
   static async create(notification: Partial<Notification>): Promise<Notification> {
+    const id = crypto.randomUUID();
     const insertData = this.notificationToInsert(notification);
 
-    const id = crypto.randomUUID();
-    const row: any = { id, ...insertData };
-
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notifications')
-      .insert(row)
+      .insert({ id, ...insertData })
       .select()
       .single();
 
     if (error) {
+      // Gestion de l'idempotence
       if ((error as any).code === '23505') {
         const { data: existing, error: selErr } = await supabase
           .from('notifications')
@@ -93,52 +80,86 @@ export class NotificationsService {
           .eq('id', id)
           .single();
         if (selErr) throw selErr;
-        return this.rowToNotification(existing!);
+        return this.rowToNotification(existing as any);
       }
-      console.error('❌ Erreur lors de la création de la notification:', error);
       throw error;
     }
 
-    return this.rowToNotification(data!);
+    return this.rowToNotification(data);
   }
 
-  /**
-   * Récupérer toutes les notifications d'un utilisateur
-   */
-  static async getByUserId(userId: string, limit: number = 50): Promise<Notification[]> {
-    const data = await supabaseRead<NotificationRow[]>(
-      () => supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit),
-      'Notifications - getByUserId'
-    );
+  static async getByUserId(userId: string, unreadOnly: boolean = false): Promise<Notification[]> {
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId);
 
-    return data.map(row => this.rowToNotification(row));
+    if (unreadOnly) {
+      query = query.eq('read', false);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map((row: any) => this.rowToNotification(row));
   }
 
-  /**
-   * Récupérer les notifications non lues d'un utilisateur
-   */
-  static async getUnread(userId: string): Promise<Notification[]> {
-    const data = await supabaseRead<NotificationRow[]>(
-      () => supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('read', false)
-        .order('created_at', { ascending: false }),
-      'Notifications - getUnread'
-    );
+  static async getById(id: string): Promise<Notification | null> {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    return data.map(row => this.rowToNotification(row));
+    if (error) {
+      if ((error as any).code === 'PGRST116') return null;
+      throw error;
+    }
+
+    return this.rowToNotification(data as any);
   }
 
-  /**
-   * Compter les notifications non lues d'un utilisateur
-   */
+  static async markAsRead(id: string): Promise<Notification> {
+    const { data, error } = await (supabase as any)
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return this.rowToNotification(data);
+  }
+
+  static async markAllAsRead(userId: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', userId)
+      .eq('read', false);
+
+    if (error) throw error;
+  }
+
+  static async delete(id: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  static async deleteAllRead(userId: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId)
+      .eq('read', true);
+
+    if (error) throw error;
+  }
+
   static async getUnreadCount(userId: string): Promise<number> {
     const { count, error } = await supabase
       .from('notifications')
@@ -146,114 +167,7 @@ export class NotificationsService {
       .eq('user_id', userId)
       .eq('read', false);
 
-    if (error) {
-      console.error('❌ Erreur lors du comptage des notifications:', error);
-      throw error;
-    }
-
+    if (error) throw error;
     return count || 0;
   }
-
-  /**
-   * Récupérer une notification par son ID
-   */
-  static async getById(id: string): Promise<Notification | null> {
-    const data = await supabaseRead<NotificationRow | null>(
-      async () => {
-        const res = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('id', id)
-          .single();
-        if ((res as any).error && (res as any).error.code === 'PGRST116') {
-          return { data: null, error: null } as any;
-        }
-        return res as any;
-      },
-      'Notifications - getById'
-    );
-
-    if (!data) return null;
-    return this.rowToNotification(data);
-  }
-
-  /**
-   * Marquer une notification comme lue
-   */
-  static async markAsRead(id: string): Promise<Notification> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('❌ Erreur lors du marquage de la notification:', error);
-      throw error;
-    }
-
-    console.log('✅ Notification marquée comme lue:', data.id);
-    return this.rowToNotification(data);
-  }
-
-  /**
-   * Marquer toutes les notifications d'un utilisateur comme lues
-   */
-  static async markAllAsRead(userId: string): Promise<number> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('user_id', userId)
-      .eq('read', false)
-      .select();
-
-    if (error) {
-      console.error('❌ Erreur lors du marquage des notifications:', error);
-      throw error;
-    }
-
-    const count = data?.length || 0;
-    console.log(`✅ ${count} notification(s) marquée(s) comme lue(s)`);
-    return count;
-  }
-
-  /**
-   * Supprimer une notification
-   */
-  static async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('❌ Erreur lors de la suppression de la notification:', error);
-      throw error;
-    }
-
-    console.log('✅ Notification supprimée:', id);
-  }
-
-  /**
-   * Supprimer toutes les notifications lues d'un utilisateur
-   */
-  static async deleteAllRead(userId: string): Promise<number> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('user_id', userId)
-      .eq('read', true)
-      .select();
-
-    if (error) {
-      console.error('❌ Erreur lors de la suppression des notifications:', error);
-      throw error;
-    }
-
-    const count = data?.length || 0;
-    console.log(`✅ ${count} notification(s) supprimée(s)`);
-    return count;
-  }
 }
-

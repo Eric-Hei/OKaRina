@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Check, Circle, Clock, Edit2, Trash2, Calendar, Flag, Tag, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import type { Action, QuarterlyKeyResult, QuarterlyObjective, ActionStatus } from '@/types';
+import type { Action, QuarterlyKeyResult, QuarterlyObjective } from '@/types';
+import { ActionStatus, Priority } from '@/types';
 import { formatDate } from '@/utils';
 
 interface ActionsChecklistViewProps {
@@ -47,30 +48,32 @@ export const ActionsChecklistView: React.FC<ActionsChecklistViewProps> = ({
   };
 
   const handleToggleStatus = (action: Action) => {
-    if (action.status === 'done') {
-      onActionStatusChange(action.id, 'todo');
+    if (action.status === ActionStatus.DONE) {
+      onActionStatusChange(action.id, ActionStatus.TODO);
     } else {
-      onActionStatusChange(action.id, 'done');
+      onActionStatusChange(action.id, ActionStatus.DONE);
     }
   };
 
-  const priorityColors = {
-    low: 'text-gray-600',
-    medium: 'text-yellow-600',
-    high: 'text-red-600',
+  const priorityColors: Record<Priority, string> = {
+    [Priority.LOW]: 'text-gray-600',
+    [Priority.MEDIUM]: 'text-yellow-600',
+    [Priority.HIGH]: 'text-red-600',
+    [Priority.CRITICAL]: 'text-purple-600',
   };
 
-  const priorityLabels = {
-    low: 'Basse',
-    medium: 'Moyenne',
-    high: 'Haute',
+  const priorityLabels: Record<Priority, string> = {
+    [Priority.LOW]: 'Basse',
+    [Priority.MEDIUM]: 'Moyenne',
+    [Priority.HIGH]: 'Haute',
+    [Priority.CRITICAL]: 'Critique',
   };
 
   // Grouper les actions par statut
   const actionsByStatus = {
-    todo: actions.filter(a => a.status === 'todo'),
-    in_progress: actions.filter(a => a.status === 'in_progress'),
-    done: actions.filter(a => a.status === 'done'),
+    [ActionStatus.TODO]: actions.filter(a => a.status === ActionStatus.TODO),
+    [ActionStatus.IN_PROGRESS]: actions.filter(a => a.status === ActionStatus.IN_PROGRESS),
+    [ActionStatus.DONE]: actions.filter(a => a.status === ActionStatus.DONE),
   };
 
   const renderActionGroup = (title: string, actions: Action[], icon: React.ReactNode, color: string) => {
