@@ -6,7 +6,8 @@ import { useAppStore } from '@/store/useAppStore';
 import { useUserTeams, useCreateTeam, useDeleteTeam } from '@/hooks/useTeams';
 import { useTeamInvitations, useCreateInvitation, useDeleteInvitation } from '@/hooks/useInvitations';
 import { useUserNotifications, useMarkUserNotificationAsRead } from '@/hooks/useUserNotifications';
-import { Users, Plus, Mail, Trash2, UserPlus, Bell, Crown, Shield, Eye } from 'lucide-react';
+import { useTeamMembers, useUpdateTeamMemberRole, useRemoveTeamMember } from '@/hooks/useTeamMembers';
+import { Users, Plus, Mail, Trash2, UserPlus, Bell, Crown, Shield, Eye, UserMinus, Edit2 } from 'lucide-react';
 import { TeamRole, InvitationStatus, NotificationType } from '@/types';
 import { motion } from 'framer-motion';
 
@@ -19,9 +20,13 @@ export default function TeamsPage() {
   const [newTeamDescription, setNewTeamDescription] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<TeamRole>(TeamRole.MEMBER);
+  const [showEditRoleModal, setShowEditRoleModal] = useState(false);
+  const [editingMember, setEditingMember] = useState<{ id: string; currentRole: TeamRole } | null>(null);
+  const [newRole, setNewRole] = useState<TeamRole>(TeamRole.MEMBER);
 
   // Hooks
   const { data: teams, isLoading: teamsLoading } = useUserTeams(user?.id);
+  const { data: members } = useTeamMembers(selectedTeamId || undefined);
   const { data: invitations } = useTeamInvitations(selectedTeamId || undefined);
   const { data: notifications } = useUserNotifications(user?.id);
   const createTeam = useCreateTeam();
@@ -29,6 +34,8 @@ export default function TeamsPage() {
   const createInvitation = useCreateInvitation();
   const deleteInvitation = useDeleteInvitation();
   const markAsRead = useMarkUserNotificationAsRead();
+  const updateMemberRole = useUpdateTeamMemberRole();
+  const removeMember = useRemoveTeamMember();
 
   const selectedTeam = teams?.find(t => t.id === selectedTeamId);
 
@@ -87,6 +94,52 @@ export default function TeamsPage() {
       console.error('Erreur lors de l\'invitation:', error);
       alert('Erreur lors de l\'invitation');
     }
+  };
+
+  const handleEditRole = (memberId: string, currentRole: TeamRole) => {
+    setEditingMember({ id: memberId, currentRole });
+    setNewRole(currentRole);
+    setShowEditRoleModal(true);
+  };
+
+  const handleUpdateRole = async () => {
+    if (!editingMember) return;
+
+    try {
+      await updateMemberRole.mutateAsync({
+        id: editingMember.id,
+        role: newRole,
+      });
+
+      setShowEditRoleModal(false);
+      setEditingMember(null);
+    } catch (error) {
+      console.error('Erreur lors de la modification du rôle:', error);
+      alert('Erreur lors de la modification du rôle');
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    if (!selectedTeamId) return;
+
+    if (!window.confirm(`Êtes-vous sûr de vouloir retirer ${memberName} de l'équipe ?`)) return;
+
+    try {
+      await removeMember.mutateAsync({
+        id: memberId,
+        teamId: selectedTeamId,
+      });
+    } catch (error) {
+      console.error('Erreur lors du retrait du membre:', error);
+      alert('Erreur lors du retrait du membre');
+    }
+  };
+
+  // Vérifier si l'utilisateur peut gérer les membres (OWNER ou ADMIN)
+  const canManageMembers = () => {
+    if (!user || !selectedTeamId || !members) return false;
+    const currentUserMember = members.find(m => m.userId === user.id);
+    return currentUserMember?.role === TeamRole.OWNER || currentUserMember?.role === TeamRole.ADMIN;
   };
 
   const getRoleIcon = (role: TeamRole) => {
@@ -285,6 +338,77 @@ export default function TeamsPage() {
                   </CardContent>
                 </Card>
 
+                {/* Membres de l'équipe */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="h-5 w-5 mr-2" />
+                      Membres de l'équipe ({members?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {members && members.length > 0 ? (
+                      <div className="space-y-2">
+                        {members.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center space-x-3">
+                              {getRoleIcon(member.role)}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {member.userName || member.userEmail || 'Utilisateur inconnu'}
+                                  {member.userId === user?.id && (
+                                    <span className="ml-2 text-xs text-gray-500">(Vous)</span>
+                                  )}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {getRoleLabel(member.role)}
+                                  {member.userEmail && member.userName && (
+                                    <> • {member.userEmail}</>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-gray-400">
+                                Membre depuis {new Date(member.joinedAt).toLocaleDateString('fr-FR')}
+                              </span>
+                              {canManageMembers() && member.userId !== user?.id && member.role !== TeamRole.OWNER && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditRole(member.id, member.role)}
+                                    title="Modifier le rôle"
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveMember(
+                                      member.id,
+                                      member.userName || member.userEmail || 'ce membre'
+                                    )}
+                                    title="Retirer de l'équipe"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <UserMinus className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">Aucun membre dans cette équipe</p>
+                    )}
+                  </CardContent>
+                </Card>
+
                 {/* Invitations en attente */}
                 <Card>
                   <CardHeader>
@@ -460,6 +584,58 @@ export default function TeamsPage() {
                 disabled={!inviteEmail.trim() || createInvitation.isPending}
               >
                 Envoyer l'invitation
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Modal Modifier le rôle */}
+      {showEditRoleModal && editingMember && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+          >
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Modifier le rôle</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nouveau rôle
+                </label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as TeamRole)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={TeamRole.VIEWER}>Observateur (lecture seule)</option>
+                  <option value={TeamRole.MEMBER}>Membre (lecture et édition)</option>
+                  <option value={TeamRole.ADMIN}>Administrateur (gestion complète)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {newRole === TeamRole.VIEWER && 'Peut consulter les objectifs de l\'équipe'}
+                  {newRole === TeamRole.MEMBER && 'Peut créer et modifier les objectifs'}
+                  {newRole === TeamRole.ADMIN && 'Peut gérer l\'équipe et inviter des membres'}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEditRoleModal(false);
+                  setEditingMember(null);
+                }}
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleUpdateRole}
+                disabled={newRole === editingMember.currentRole || updateMemberRole.isPending}
+              >
+                Modifier
               </Button>
             </div>
           </motion.div>

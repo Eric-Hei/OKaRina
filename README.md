@@ -23,6 +23,9 @@ OsKaR transforme vos ambitions en résultats concrets grâce à une approche gui
 - [Prochaines étapes](docs/NEXT_STEPS_UI_MIGRATION.md) - Stratégie de migration UI
 - [Guide de test](docs/TESTING_GUIDE.md) - Comment tester l'application
 - [Résumé complet](docs/MIGRATION_COMPLETE_SUMMARY.md) - État actuel et progression
+- [Données de démo](docs/DEMO_DATA.md) - Guide des données de démo "The Office"
+- [Cheat Sheet Démo](docs/DEMO_CHEATSHEET.md) - Guide rapide pour les démos
+- [Référence Enums Supabase](docs/SUPABASE_ENUMS.md) - Liste des valeurs valides pour les enums
 
 ## ✨ Fonctionnalités Principales
 
@@ -129,6 +132,45 @@ yarn dev
 ```
 
 L'application sera accessible sur [http://localhost:3000](http://localhost:3000)
+
+## 🎬 Données de Démo - The Office Edition
+
+Pour faciliter les tests et les démos, OKaRina inclut des scripts pour créer des utilisateurs et données de démo basés sur l'univers de "The Office".
+
+### Quick Start
+
+```bash
+# Créer les données de démo
+npm run seed:demo
+
+# Lister les utilisateurs créés
+npm run list:demo
+
+# Réinitialiser les données
+npm run reset:demo
+```
+
+### Utilisateurs disponibles
+
+Tous les utilisateurs utilisent le mot de passe : `DunderMifflin2024!`
+
+- **michael.scott@dundermifflin.com** - Regional Manager
+- **dwight.schrute@dundermifflin.com** - Assistant Regional Manager
+- **jim.halpert@dundermifflin.com** - Sales Representative
+- **pam.beesly@dundermifflin.com** - Office Administrator
+- **stanley.hudson@dundermifflin.com** - Sales Representative
+- **angela.martin@dundermifflin.com** - Senior Accountant
+
+### Données générées
+
+- ✅ 6 utilisateurs avec profils complets
+- ✅ 1 équipe collaborative (Dunder Mifflin)
+- ✅ 9 ambitions réparties entre les utilisateurs
+- ✅ 4 objectifs trimestriels Q1 2025
+- ✅ 12 actions avec différents statuts
+
+📖 **Documentation complète :** [Guide des données de démo](docs/DEMO_DATA.md)
+🎯 **Guide rapide :** [Cheat Sheet Démo](docs/DEMO_CHEATSHEET.md)
 
 ## 🏗️ Structure du Projet
 

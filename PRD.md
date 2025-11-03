@@ -8,7 +8,7 @@
 | **Champ** | **Valeur** |
 |-----------|------------|
 | **Produit** | OsKaR - Outil de gestion d'objectifs avec IA |
-| **Version** | 1.3.0 |
+| **Version** | 1.3.7 |
 | **Date** | Janvier 2025 |
 | **Statut** | ✅ Déployé en production |
 | **URL** | [https://recette-okarina.netlify.app](https://recette-okarina.netlify.app) |
@@ -163,17 +163,20 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 ### Stack Technologique
 - **Frontend** : Next.js 15.5.3, React 19, TypeScript
 - **Styling** : Tailwind CSS, Framer Motion
-- **State** : Zustand avec persistance localStorage
+- **State** : React Query (TanStack Query) + Zustand
+- **Backend** : Supabase (PostgreSQL, Auth, RLS)
 - **Forms** : React Hook Form + Zod validation
 - **DnD** : @dnd-kit (compatible React 19)
-- **IA** : Google Generative AI (Gemini 1.5 Flash)
+- **IA** : Google Generative AI (Gemini 2.0 Flash Exp)
 - **Export** : jsPDF, SheetJS
 - **Déploiement** : Netlify (export statique)
 
 ### Architecture
 - **Pattern** : JAMstack (JavaScript, APIs, Markup)
 - **Rendu** : Static Site Generation (SSG)
-- **Persistance** : localStorage (client-side)
+- **Persistance** : Supabase (PostgreSQL) avec Row Level Security
+- **Cache** : React Query pour optimistic updates et cache client
+- **Auth** : Supabase Auth (Email/Password + Google OAuth)
 - **API** : Google Generative AI (externe)
 - **Build** : Next.js avec export statique
 
@@ -252,7 +255,7 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 - Mode Rétrospective trimestrielle IA
 - Health score OKR + alertes de risque
 
-### ✅ Version 1.2 (Janvier 2025 - Actuelle)
+### ✅ Version 1.2 (Janvier 2025)
 - Commentaires in-context + @mentions
 - Partage public en 1 clic (lecture seule)
 - Import CSV/Google Sheets
@@ -260,12 +263,23 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 - Correction chargement données localStorage
 - Footer mis à jour
 
-### 🔄 Version 1.3 (Q1 2025 - Planifiée)
+### ✅ Version 1.3 (Janvier 2025 - Actuelle)
+- **Migration Supabase complète** : PostgreSQL + Auth + RLS
+- **React Query** : Gestion du cache et optimistic updates
+- **Authentification** : Email/Password + Google OAuth
+- **Gestion d'équipes** : Page `/teams` avec invitations
+- **Services DB** : 9 services Supabase avec idempotence
+- **Hooks React Query** : 15+ hooks pour toutes les entités
+- **Migration UI** : Dashboard, Management, Canvas, Actions vers React Query
+
+### 🔄 Version 1.4 (Q1 2025 - Planifiée)
+- Amélioration UI équipes (membres, rôles, statistiques)
+- Partage d'objectifs avec équipes entières
+- Page d'acceptation d'invitations
+- Vue "Objectifs de mon équipe"
 - Intégration Slack (slash commands)
 - Partage public avancé (expiration, masquage champs)
 - Scenario planning
-- Authentification utilisateurs
-- Collaboration équipe temps réel
 
 ### 🎯 Version 2.0 (Q2 2025)
 - Intégrations calendrier
@@ -425,37 +439,62 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 
 ---
 
-### 👥 Collaboration d'Équipe (Fondations)
+### 👥 Collaboration d'Équipe
 
-**Statut** : ⏳ Backend implémenté, UI à développer
+**Statut** : ✅ Backend Supabase implémenté, 🔄 UI de base créée, ⏳ Fonctionnalités avancées à développer
 
-#### Types et Services Créés
-- ✅ **Teams** : Gestion d'équipes avec rôles (OWNER, ADMIN, MEMBER, VIEWER)
-- ✅ **Invitations** : Système d'invitation avec tokens et expiration
-- ✅ **Partage d'objectifs** : Permissions VIEW/EDIT
-- ✅ **Commentaires** : Discussions avec mentions @user
-- ✅ **Notifications** : 7 types de notifications
+#### Infrastructure Backend (Supabase)
+- ✅ **Base de données** : 13 tables avec Row Level Security (RLS)
+- ✅ **Authentification** : Email/Password + Google OAuth
+- ✅ **Services DB** : 9 services Supabase complets
+  - `teams.ts` : CRUD équipes avec auto-ajout du créateur comme OWNER
+  - `teamMembers.ts` : Gestion membres avec rôles
+  - `invitations.ts` : Invitations avec tokens et expiration
+  - `sharedObjectives.ts` : Partages d'objectifs avec permissions
+  - `notifications.ts` : Notifications utilisateur
+  - `quarterlyObjectives.ts` : Objectifs trimestriels
+  - `quarterlyKeyResults.ts` : KR trimestriels
+  - `keyResults.ts` : KR d'ambitions
+  - `progress.ts` : Historique de progression
 
-#### Services Backend (localStorage)
-- ✅ `teamService` : CRUD équipes
-- ✅ `teamMemberService` : Gestion membres
-- ✅ `invitationService` : Invitations
-- ✅ `sharedObjectiveService` : Partages
-- ✅ `commentService` : Commentaires
-- ✅ `notificationService` : Notifications
+#### Hooks React Query
+- ✅ **useTeams** : Gestion d'équipes (create, update, delete, getByUserId)
+- ✅ **useInvitations** : Invitations (create, delete, getByTeamId, getByEmail)
+- ✅ **useUserNotifications** : Notifications (getByUserId, markAsRead, getUnreadCount)
+- ✅ **useSharedObjectives** : Partages (create, update, delete, getByObjectiveId, getByUserId)
 
-#### UI à Implémenter (Prochaine Phase)
-- ⏳ Page `/team` : Gestion d'équipe
-- ⏳ Composant `CommentThread` : Fil de commentaires
-- ⏳ Composant `ShareModal` : Partage d'objectifs
-- ⏳ Composant `NotificationCenter` : Centre de notifications
-- ⏳ Intégration dans pages existantes
+#### UI Implémentée
+- ✅ **Page `/teams`** : Gestion d'équipes de base
+  - Liste des équipes de l'utilisateur
+  - Création d'équipe avec modal
+  - Invitations de membres avec sélection de rôle
+  - Affichage des invitations en attente
+  - Notifications d'équipe
+  - Suppression d'équipe (OWNER uniquement)
+- ✅ **Menu utilisateur** : Lien "Mon Équipe" dans le dropdown
+
+#### Fonctionnalités Avancées à Implémenter
+- ⏳ **Liste des membres actuels** : Afficher tous les membres avec leurs rôles
+- ⏳ **Modifier le rôle d'un membre** : Permettre aux OWNER/ADMIN de changer les rôles
+- ⏳ **Retirer un membre** : Permettre aux OWNER/ADMIN de retirer des membres
+- ⏳ **Page d'acceptation d'invitation** : `/invitations/[token]` pour accepter/refuser
+- ⏳ **Partage d'objectifs avec équipe** : Partager avec toute une équipe (pas seulement utilisateurs individuels)
+- ⏳ **Vue "Objectifs de mon équipe"** : Voir tous les objectifs partagés avec l'équipe
+- ⏳ **Statistiques d'équipe** : Nombre d'objectifs, progression globale, membres actifs
+
+#### Types et Enums
+- ✅ `TeamRole` : OWNER, ADMIN, MEMBER, VIEWER
+- ✅ `InvitationStatus` : PENDING, ACCEPTED, DECLINED, EXPIRED
+- ✅ `SharePermission` : VIEW, EDIT
+- ✅ `NotificationType` : 7 types (TEAM_INVITATION, TEAM_MEMBER_JOINED, OBJECTIVE_SHARED, etc.)
 
 **Impact** :
-- Collaboration multi-utilisateurs
-- Partage d'objectifs entre équipes
-- Discussions contextuelles
-- Notifications en temps réel
+- ✅ Collaboration multi-utilisateurs fonctionnelle
+- ✅ Gestion d'équipes avec rôles et permissions
+- ✅ Système d'invitations sécurisé
+- ⏳ Partage d'objectifs entre équipes (à finaliser)
+- ⏳ Discussions contextuelles (à implémenter)
+- ⏳ Notifications en temps réel (fondations créées)
 
 ---
 
@@ -511,32 +550,42 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 - ✅ Import CSV/Google Sheets
 - ✅ PDF amélioré avec design moderne
 
-### 🔄 Phase 3 : Intégrations & Partage Avancé (Q1 2025 - En cours)
+### ✅ Phase 3 : Backend Supabase (TERMINÉ - Janvier 2025)
+- ✅ Configuration Supabase (PostgreSQL, Auth, RLS)
+- ✅ Authentification (email + Google OAuth)
+- ✅ Migration localStorage → Supabase
+- ✅ 13 tables avec Row Level Security
+- ✅ 9 services DB avec idempotence + retry logic
+- ✅ React Query pour cache et optimistic updates
+- ✅ Migration UI complète (Dashboard, Management, Canvas, Actions)
+- ✅ Page `/teams` de base avec invitations
+
+### � Phase 4 : Amélioration Collaboration UI (Q1 2025 - En cours)
+- ✅ Page gestion d'équipe de base
+- ⏳ Liste et gestion des membres actuels
+- ⏳ Modification des rôles (OWNER/ADMIN)
+- ⏳ Retrait de membres
+- ⏳ Page d'acceptation d'invitations `/invitations/[token]`
+- ⏳ Partage d'objectifs avec équipes entières
+- ⏳ Vue "Objectifs de mon équipe"
+- ⏳ Statistiques d'équipe
+- ⏳ Centre de notifications
+
+### � Phase 5 : Intégrations & Partage Avancé (Q2 2025)
 - ⏳ Intégration Slack (slash commands + webhooks)
 - ⏳ Partage public avancé (expiration, masquage champs)
 - ⏳ Scenario planning (what-if analysis)
 - ⏳ Templates sectoriels additionnels (e-commerce, services, etc.)
+- ⏳ Commentaires et discussions en temps réel
 
-### 🔮 Phase 4 : Collaboration UI (Q2 2025)
-- 🔮 Page gestion d'équipe
-- 🔮 Commentaires et discussions en temps réel
-- 🔮 Partage d'objectifs avec permissions
-- 🔮 Centre de notifications
-- 🔮 Authentification utilisateurs
-
-### 🔮 Phase 5 : Backend Supabase (Q3 2025)
-- 🔮 Authentification (email + Google OAuth)
-- 🔮 Migration localStorage → Supabase
-- 🔮 Row Level Security (RLS)
-- 🔮 Synchronisation multi-appareils
-
-### 🔮 Phase 6 : Fonctionnalités Avancées (Q4 2025)
+### 🔮 Phase 6 : Fonctionnalités Avancées (Q3-Q4 2025)
 - 🔮 Notifications push
 - 🔮 Analytics avancés
 - 🔮 Application mobile native
 - 🔮 API REST publique
 - 🔮 IA multi-modèles
 - 🔮 Analyse prédictive
+- 🔮 Synchronisation multi-appareils temps réel
 
 ---
 
@@ -557,41 +606,66 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 - `docs/ROADMAP_PRIORITAIRE.md` - Roadmap priorisée
 - `docs/ANALYSE_GLOBALE.md` - Analyse complète de l'application
 - `docs/RESUME_FINAL.md` - Résumé des travaux
+- `docs/NEW_SERVICES_IMPLEMENTATION.md` - Documentation services Supabase
+- `docs/USAGE_NEW_SERVICES.md` - Guide d'utilisation des services
+- `docs/FIX_RLS_POLICIES.md` - Guide de correction des politiques RLS
 
-### Pages Créées (Version 1.1-1.2)
+### Pages Créées (Version 1.1-1.3)
 - `/check-in` - Check-in hebdomadaire guidé par l'IA
 - `/focus` - Focus du jour (3 actions prioritaires)
 - `/retrospective` - Rétrospective trimestrielle IA + export PDF
 - `/reports` - Rapports et analytics (amélioré)
 - `/share` - Vue publique lecture seule
 - `/import` - Import CSV/Google Sheets
+- `/teams` - Gestion d'équipes avec invitations (v1.3)
+- `/test-new-services` - Page de test des services Supabase (v1.3)
 - 4 pages légales (`/legal/*`)
+- Pages d'authentification (`/auth/*`) : login, register, callback, forgot-password, update-password
 
 ### Composants Créés
 - `CommentList` - Commentaires avec @mentions
 - `CookieBanner` - Bannière de consentement cookies
 - `Footer` - Pied de page avec liens légaux (mis à jour)
-- `Header` - Navigation avec lien Rétrospective (mis à jour)
+- `Header` - Navigation avec lien Rétrospective + Menu "Mon Équipe" (v1.3)
 
-### Services Créés
-- `nudgesService` - Notifications locales intelligentes
-- `shareService` - Partage public avec snapshot Base64
-- `importService` - Import CSV avec mapping automatique
-- `teamService` - Gestion d'équipes (fondations)
-- `commentService` - Commentaires et mentions
-- Services collaboration (invitations, notifications, etc.)
+### Services Créés (Version 1.3 - Supabase)
+- **Services DB** : 9 services Supabase complets
+  - `teams.ts` - Gestion d'équipes avec auto-ajout OWNER
+  - `teamMembers.ts` - Gestion des membres et rôles
+  - `invitations.ts` - Invitations avec tokens
+  - `sharedObjectives.ts` - Partages d'objectifs
+  - `notifications.ts` - Notifications utilisateur
+  - `quarterlyObjectives.ts` - Objectifs trimestriels
+  - `quarterlyKeyResults.ts` - KR trimestriels
+  - `keyResults.ts` - KR d'ambitions
+  - `progress.ts` - Historique de progression
+- **Hooks React Query** : 15+ hooks pour toutes les entités
+  - `useTeams.ts` - Hooks équipes
+  - `useInvitations.ts` - Hooks invitations
+  - `useUserNotifications.ts` - Hooks notifications
+  - `useSharedObjectives.ts` - Hooks partages
+  - `useAmbitions.ts`, `useQuarterlyObjectives.ts`, `useActions.ts`, etc.
+- **Services Anciens** (v1.1-1.2)
+  - `nudgesService` - Notifications locales intelligentes
+  - `shareService` - Partage public avec snapshot Base64
+  - `importService` - Import CSV avec mapping automatique
+  - `commentService` - Commentaires et mentions
 
-### Fichiers Modifiés Majeurs
-- `src/services/export.ts` - PDF redesigné avec design moderne
-- `src/pages/_app.tsx` - Chargement données localStorage corrigé
-- `src/components/layout/Footer.tsx` - Lien Pyramide → Rapports
-- `src/components/layout/Header.tsx` - Ajout lien Rétrospective
-- `package.json` - Version 1.2.0
-- `next.config.js` - Configuration PWA
-- `types/index.ts` - Types collaboration et killer features
+### Fichiers Modifiés Majeurs (Version 1.3)
+- `src/lib/supabase.ts` - Client Supabase avec configuration
+- `src/store/useAppStore.ts` - Simplifié de 492 à 98 lignes (migration React Query)
+- `src/pages/dashboard.tsx` - Migration React Query complète
+- `src/pages/management.tsx` - Migration React Query complète
+- `src/pages/canvas.tsx` - Migration React Query complète
+- `src/pages/actions.tsx` - Migration React Query avec drag & drop
+- `src/components/layout/Header.tsx` - Ajout menu "Mon Équipe"
+- `package.json` - Version 1.3.7
+- `types/index.ts` - Types collaboration et Supabase
+- `supabase/schema.sql` - Schéma complet 13 tables
+- `supabase/migrations/*` - Migrations SQL (tables manquantes, RLS policies)
 
 ---
 
-*Document mis à jour le : 10 Janvier 2025*
-*Version : 1.2.0*
-*Dernières modifications : Killer Features (Check-in, Focus, Nudges, Auto-cascade, Rétrospective, Health Score, Commentaires, Partage, Import CSV), PDF amélioré*
+*Document mis à jour le : 11 Janvier 2025*
+*Version : 1.3.7*
+*Dernières modifications : Migration Supabase complète, React Query, Authentification, Page `/teams` avec gestion d'équipes et invitations*

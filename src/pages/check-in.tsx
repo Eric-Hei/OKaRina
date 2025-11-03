@@ -37,7 +37,7 @@ const fallbackActionIdeas = (kr: QuarterlyKeyResult): string[] => {
 
 export default function CheckInPage() {
   const { user } = useAppStore();
-  const { data: quarterlyKeyResults = [] } = useQuarterlyKeyResultsByUser(user?.id);
+  const { data: quarterlyKeyResults = [], isLoading, error } = useQuarterlyKeyResultsByUser(user?.id);
   const createAction = useCreateAction();
 
   const [loadingKrId, setLoadingKrId] = useState<string | null>(null);
@@ -48,6 +48,8 @@ export default function CheckInPage() {
   const [historyKR, setHistoryKR] = useState<QuarterlyKeyResult | null>(null);
 
   const rankedKRs = useMemo(() => {
+    console.log('📊 Check-in - Nombre de KRs:', quarterlyKeyResults?.length || 0);
+    console.log('📊 Check-in - KRs:', quarterlyKeyResults);
     return [...(quarterlyKeyResults || [])]
       .sort((a, b) => computeKRScore(b) - computeKRScore(a))
       .slice(0, 5);
@@ -127,14 +129,49 @@ export default function CheckInPage() {
           </motion.div>
 
           {/* KR prioritaires */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {rankedKRs.map((kr) => {
-              const progress = kr.target > 0 ? Math.min(100, Math.round((kr.current / kr.target) * 100)) : 0;
-              const days = kr.deadline ? getDaysUntilDeadline(kr.deadline) : undefined;
-              const ideas = suggestionsByKr[kr.id];
+          {isLoading ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-gray-500">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                  <p>Chargement des Key Results...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : error ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-red-500">
+                  <p>Erreur lors du chargement des Key Results</p>
+                  <p className="text-sm mt-2">{error.message}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : rankedKRs.length === 0 ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-gray-500">
+                  <Target className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun Key Result trouvé</h3>
+                  <p className="mb-2">Créez des objectifs trimestriels et des Key Results dans la page Gestion</p>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Debug: {quarterlyKeyResults?.length || 0} KRs chargés, User ID: {user?.id || 'non connecté'}
+                  </p>
+                  <Button onClick={() => window.location.href = '/management'}>
+                    Aller à la Gestion
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {rankedKRs.map((kr) => {
+                const progress = kr.target > 0 ? Math.min(100, Math.round((kr.current / kr.target) * 100)) : 0;
+                const days = kr.deadline ? getDaysUntilDeadline(kr.deadline) : undefined;
+                const ideas = suggestionsByKr[kr.id];
 
-              return (
-                <Card key={kr.id}>
+                return (
+                  <Card key={kr.id}>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center">
                       <Target className="h-5 w-5 text-primary-600 mr-2" />
@@ -198,7 +235,8 @@ export default function CheckInPage() {
                 </Card>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

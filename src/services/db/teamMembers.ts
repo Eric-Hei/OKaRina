@@ -27,13 +27,17 @@ const roleFromDb = (role: string): TeamRole => {
 };
 
 export class TeamMembersService {
-  private static rowToTeamMember(row: TeamMemberRow): TeamMember {
+  private static rowToTeamMember(row: any): TeamMember {
     return {
       id: row.id,
       teamId: row.team_id,
       userId: row.user_id,
       role: roleFromDb(row.role as string),
       joinedAt: new Date(row.joined_at),
+      // Informations utilisateur (si JOIN avec profiles)
+      userEmail: row.profiles?.email || row.user_email,
+      userName: row.profiles?.name || row.user_name,
+      userAvatarUrl: row.profiles?.avatar_url || row.user_avatar_url,
     };
   }
 
@@ -74,9 +78,16 @@ export class TeamMembersService {
   static async getByTeamId(teamId: string): Promise<TeamMember[]> {
     const { data, error } = await supabase
       .from('team_members')
-      .select('*')
+      .select(`
+        *,
+        profiles:user_id (
+          email,
+          name,
+          avatar_url
+        )
+      `)
       .eq('team_id', teamId)
-      .order('created_at', { ascending: true });
+      .order('joined_at', { ascending: true });
 
     if (error) throw error;
     return (data || []).map(row => this.rowToTeamMember(row));

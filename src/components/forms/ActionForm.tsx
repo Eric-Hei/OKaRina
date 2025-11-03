@@ -16,7 +16,7 @@ const actionSchema = z.object({
   priority: z.nativeEnum(Priority),
   labels: z.string().optional(),
   deadline: z.string().optional(),
-  quarterlyKeyResultId: z.string().min(1, 'Vous devez sélectionner un résultat clé'),
+  quarterlyKeyResultId: z.string().optional(),
 });
 
 interface ActionFormProps {
@@ -131,7 +131,7 @@ export const ActionForm: React.FC<ActionFormProps> = ({
             {allowKeyResultSelection && quarterlyKeyResults.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Résultat Clé (KR) *
+                  Résultat Clé (KR) (optionnel)
                 </label>
                 <select
                   {...register('quarterlyKeyResultId')}

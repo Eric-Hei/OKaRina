@@ -401,6 +401,10 @@ export interface TeamMember {
   userId: string;
   role: TeamRole;
   joinedAt: Date;
+  // Informations utilisateur (optionnelles, remplies par JOIN)
+  userEmail?: string;
+  userName?: string;
+  userAvatarUrl?: string;
 }
 
 export interface Invitation {

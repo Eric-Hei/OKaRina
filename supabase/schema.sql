@@ -33,6 +33,17 @@ create policy "Users can view own profile"
   on profiles for select
   using (auth.uid() = id);
 
+create policy "Users can view team members profiles"
+  on profiles for select
+  using (
+    exists (
+      select 1 from team_members tm1
+      join team_members tm2 on tm1.team_id = tm2.team_id
+      where tm1.user_id = auth.uid()
+      and tm2.user_id = profiles.id
+    )
+  );
+
 create policy "Users can update own profile"
   on profiles for update
   using (auth.uid() = id);
@@ -439,7 +450,36 @@ alter table comments enable row level security;
 
 create policy "Users can view comments on accessible entities"
   on comments for select
-  using (true); -- Simplified, should check entity access
+  using (
+    -- Commentaires sur les ambitions de l'utilisateur
+    (entity_type = 'AMBITION' and exists (
+      select 1 from ambitions
+      where ambitions.id = comments.entity_id
+      and ambitions.user_id = auth.uid()
+    ))
+    or
+    -- Commentaires sur les objectifs de l'utilisateur
+    (entity_type = 'OBJECTIVE' and exists (
+      select 1 from quarterly_objectives
+      where quarterly_objectives.id = comments.entity_id
+      and quarterly_objectives.user_id = auth.uid()
+    ))
+    or
+    -- Commentaires sur les key results de l'utilisateur
+    (entity_type = 'KEY_RESULT' and exists (
+      select 1 from quarterly_key_results qkr
+      join quarterly_objectives qo on qo.id = qkr.objective_id
+      where qkr.id = comments.entity_id
+      and qo.user_id = auth.uid()
+    ))
+    or
+    -- Commentaires sur les actions de l'utilisateur
+    (entity_type = 'ACTION' and exists (
+      select 1 from actions
+      where actions.id = comments.entity_id
+      and actions.user_id = auth.uid()
+    ))
+  );
 
 create policy "Users can create comments"
   on comments for insert

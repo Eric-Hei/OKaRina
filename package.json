@@ -15,7 +15,11 @@
     "test:gemini:context": "node scripts/test-gemini-context.js",
     "test:e2e": "cypress open",
     "test:e2e:headless": "cypress run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "seed:demo": "node scripts/seed-demo-data.js",
+    "reset:demo": "node scripts/reset-demo-data.js",
+    "list:demo": "node scripts/list-demo-users.js",
+    "check:demo": "node scripts/check-demo-profiles.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

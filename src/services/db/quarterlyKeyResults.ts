@@ -61,10 +61,15 @@ export class QuarterlyKeyResultsService {
   }
 
   static async getByUserId(userId: string): Promise<QuarterlyKeyResult[]> {
+    // Les quarterly_key_results n'ont pas de user_id direct
+    // Il faut passer par quarterly_objectives pour filtrer par utilisateur
     const { data, error } = await supabase
       .from('quarterly_key_results')
-      .select('*')
-      .eq('user_id', userId)
+      .select(`
+        *,
+        quarterly_objectives!inner(user_id)
+      `)
+      .eq('quarterly_objectives.user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
