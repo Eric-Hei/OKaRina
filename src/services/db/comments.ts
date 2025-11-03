@@ -48,8 +48,8 @@ export class CommentsService {
    * Créer un nouveau commentaire
    */
   static async create(comment: Partial<Comment>, userId: string): Promise<Comment> {
-    const { data, error } = await supabase
-      .from('comments')
+    const { data, error } = await (supabase
+      .from('comments') as any)
       .insert({
         user_id: userId,
         entity_type: entityTypeToDb(comment.objectiveType!),
@@ -126,8 +126,8 @@ export class CommentsService {
 
     updateData.updated_at = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('comments')
+    const { data, error } = await (supabase
+      .from('comments') as any)
       .update(updateData)
       .eq('id', id)
       .select()

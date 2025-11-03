@@ -20,6 +20,9 @@ export { SharedObjectivesService } from './sharedObjectives';
 export { CommentsService } from './comments';
 export { NotificationsService } from './notifications';
 
+// Services Abonnements
+export { SubscriptionsService } from './subscriptions';
+
 // Service hybride (Supabase + localStorage fallback)
 export { DataService } from './dataService';
 

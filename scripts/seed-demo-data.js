@@ -463,8 +463,35 @@ async function seedDemoData() {
 
     log(`\n  ✓ ${createdUsers.length} utilisateurs prêts`, 'success');
 
-    // Étape 2: Créer l'équipe Dunder Mifflin
-    log('\n🏢 Étape 2/5: Création de l\'équipe Dunder Mifflin...', 'info');
+    // Étape 2: Créer les abonnements Free
+    log('\n💳 Étape 2/6: Création des abonnements Free...', 'info');
+
+    for (const user of createdUsers) {
+      try {
+        const { error: subError } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            plan_type: 'free',
+            status: 'active',
+          });
+
+        if (subError) {
+          if (subError.code === '23505') {
+            log(`  ⚠️  Abonnement existe déjà pour ${user.name}`, 'warning');
+          } else {
+            throw subError;
+          }
+        } else {
+          log(`  ✓ Abonnement Free créé pour ${user.name}`, 'success');
+        }
+      } catch (error) {
+        log(`  ✗ Erreur pour ${user.name}: ${error.message}`, 'error');
+      }
+    }
+
+    // Étape 3: Créer l'équipe Dunder Mifflin
+    log('\n🏢 Étape 3/6: Création de l\'équipe Dunder Mifflin...', 'info');
     
     const michaelUser = createdUsers.find(u => u.email === 'michael.scott@dundermifflin.com');
     
@@ -546,8 +573,8 @@ async function seedDemoData() {
       }
     }
 
-    // Étape 3: Créer les ambitions
-    log('\n🎯 Étape 3/5: Création des ambitions...', 'info');
+    // Étape 4: Créer les ambitions
+    log('\n🎯 Étape 4/6: Création des ambitions...', 'info');
 
     const ambitionsMap = new Map(); // Pour stocker les IDs des ambitions créées
 
@@ -582,8 +609,8 @@ async function seedDemoData() {
       }
     }
 
-    // Étape 4: Créer les objectifs trimestriels Q1
-    log('\n📅 Étape 4/5: Création des objectifs Q1 2025...', 'info');
+    // Étape 5: Créer les objectifs trimestriels Q1
+    log('\n📅 Étape 5/6: Création des objectifs Q1 2025...', 'info');
 
     const objectivesMap = new Map();
 
@@ -647,8 +674,8 @@ async function seedDemoData() {
       }
     }
 
-    // Étape 5: Créer les actions
-    log('\n✅ Étape 5/5: Création des actions...', 'info');
+    // Étape 6: Créer les actions
+    log('\n✅ Étape 6/6: Création des actions...', 'info');
 
     for (const user of createdUsers) {
       const userActions = ACTIONS_DATA[user.email] || [];
@@ -694,6 +721,7 @@ async function seedDemoData() {
 
     log('\n📊 Données créées:', 'info');
     log(`  • ${createdUsers.length} utilisateurs`, 'info');
+    log(`  • ${createdUsers.length} abonnements Free`, 'info');
     log(`  • 1 équipe (Dunder Mifflin) avec ${createdUsers.length} membres`, 'info');
     log(`  • ${Array.from(ambitionsMap.values()).flat().length} ambitions`, 'info');
     log(`  • ${Array.from(objectivesMap.values()).flat().length} objectifs Q1 2025`, 'info');

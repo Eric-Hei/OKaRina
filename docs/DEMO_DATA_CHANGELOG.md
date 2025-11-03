@@ -4,6 +4,39 @@ Historique des modifications apportées au système de données de démo.
 
 ---
 
+## Version 1.5 - 3 novembre 2025
+
+### ✨ Amélioration
+
+**Ajout :** Création automatique d'abonnements Free pour tous les utilisateurs
+
+**Motivation :** Avec l'ajout du système d'abonnement, chaque utilisateur doit avoir un abonnement actif pour utiliser l'application.
+
+### 💳 Abonnements créés
+
+**Plan :** Free (gratuit)
+**Status :** Active
+**Utilisateurs :** Tous les 6 employés de Dunder Mifflin
+
+### 📝 Fichiers modifiés
+
+1. **`scripts/seed-demo-data.js`**
+   - Ajout de l'Étape 2/6 : Création des abonnements Free
+   - Insertion dans la table `subscriptions` pour chaque utilisateur
+   - Gestion des abonnements existants (code 23505)
+   - Mise à jour des numéros d'étapes (1/5 → 1/6, etc.)
+   - Ajout du comptage des abonnements dans le résumé final
+
+### 🎯 Impact
+
+**Avant :** Utilisateurs sans abonnement (erreur potentielle)
+**Après :** Chaque utilisateur a un abonnement Free actif
+
+**Données créées :**
+- 6 abonnements Free (un par utilisateur)
+
+---
+
 ## Version 1.4 - 3 novembre 2025
 
 ### ✨ Amélioration majeure

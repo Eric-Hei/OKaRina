@@ -498,6 +498,54 @@ Devenir l'outil de référence pour la gestion d'objectifs des PME francophones,
 
 ---
 
+### 💳 Système d'Abonnement (Business Model)
+
+**Statut** : ✅ Implémenté (Version 1.4.1)
+
+#### Plans d'Abonnement
+- ✅ **Free (0€)** : 1 utilisateur, 3 ambitions max, export PDF basique, support communautaire, 10 suggestions IA/mois
+- ✅ **Pro (19€/mois)** : 5 utilisateurs, ambitions illimitées, exports avancés, intégrations basiques, IA illimitée
+- ✅ **Team (49€/mois)** : 20 utilisateurs, analytics avancés, support prioritaire, rôles & permissions
+- ✅ **Unlimited** : Plan spécial sans limites, assigné manuellement via Supabase
+
+#### Infrastructure Backend
+- ✅ **Table subscription_plans** : Définition des plans avec features JSON
+- ✅ **Table subscriptions** : Abonnements utilisateurs avec statut
+- ✅ **Fonctions PostgreSQL** :
+  - `can_create_ambition(user_id)` : Vérifie si l'utilisateur peut créer une ambition
+  - `can_add_team_member(user_id, team_id)` : Vérifie si l'utilisateur peut ajouter un membre
+- ✅ **Trigger on_profile_created** : Création automatique d'un abonnement Free à l'inscription
+- ✅ **Row Level Security (RLS)** : Politiques de sécurité sur les tables
+
+#### UI et UX
+- ✅ **Page `/pricing`** : Affichage des plans avec FAQ et CTA
+- ✅ **Page `/settings` - Onglet Subscription** : Gestion de l'abonnement utilisateur
+- ✅ **Composant UpgradeModal** : Modal professionnel pour inciter à l'upgrade
+- ✅ **Enforcement des limites** :
+  - Dashboard : Boutons "Nouvelle ambition" et "Créer ma première ambition"
+  - Canvas : Bouton "Ajouter une ambition"
+  - Management : Bouton "Ajouter une ambition"
+- ✅ **Vérification avant action** : Le modal s'affiche immédiatement si la limite est atteinte
+
+#### Services et Hooks
+- ✅ **Service SubscriptionsService** : CRUD complet pour abonnements et plans
+- ✅ **Hook useSubscription** : Récupération de l'abonnement utilisateur
+- ✅ **Hook useSubscriptionPlans** : Liste des plans disponibles
+- ✅ **Hook useSubscriptionUsage** : Statistiques d'utilisation (ambitions, utilisateurs)
+
+#### Préparation Stripe (Code désactivé)
+- ✅ **Routes API** : create-checkout-session, webhook (dans `api-disabled/`)
+- ✅ **Intégration Stripe** : Prête à être activée quand le compte Stripe sera configuré
+
+**Impact** :
+- ✅ Modèle économique viable
+- ✅ Monétisation progressive (freemium)
+- ✅ Incitation à l'upgrade avec UX soignée
+- ✅ Limites claires et transparentes
+- ⏳ Paiements Stripe (à activer)
+
+---
+
 ## 📊 Métriques de Succès (Mises à Jour)
 
 ### Métriques RGPD

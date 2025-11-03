@@ -18,12 +18,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { useAppStore } from '@/store/useAppStore';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useAmbitions } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
 import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
 import { useActions } from '@/hooks/useActions';
 import { analyticsService } from '@/services/analytics';
+import { SubscriptionsService } from '@/services/db/subscriptions';
 import { formatDate, formatRelativeDate, getDaysUntilDeadline } from '@/utils';
 import type { DashboardMetrics, ChartData, Action, QuarterlyObjective, QuarterlyKeyResult, Ambition } from '@/types';
 import { CompanySize, CompanyStage } from '@/types';
@@ -31,8 +34,10 @@ import { CompanySize, CompanyStage } from '@/types';
 const DashboardPage: React.FC = () => {
   const router = useRouter();
   const { user } = useAppStore();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // React Query hooks
+  const { data: subscription } = useSubscription(user?.id);
   const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
   const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
   const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResultsByUser(user?.id);
@@ -40,6 +45,21 @@ const DashboardPage: React.FC = () => {
 
   const [progressData, setProgressData] = useState<ChartData[]>([]);
   const [trendAnalysis, setTrendAnalysis] = useState<any>(null);
+
+  // Handler pour créer une nouvelle ambition avec vérification des limites
+  const handleCreateAmbition = async () => {
+    if (!user) return;
+
+    // Vérifier les limites avant de rediriger
+    const canCreate = await SubscriptionsService.canCreateAmbition(user.id);
+    if (!canCreate) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    // Rediriger vers le canvas
+    router.push('/canvas');
+  };
 
   // Calculer les métriques à partir des données React Query
   const metrics = useMemo<DashboardMetrics>(() => {
@@ -292,7 +312,7 @@ const DashboardPage: React.FC = () => {
                     </CardTitle>
                     <Button
                       size="sm"
-                      onClick={() => router.push('/canvas')}
+                      onClick={handleCreateAmbition}
                       leftIcon={<Plus className="h-4 w-4" />}
                     >
                       Nouvelle ambition
@@ -347,7 +367,7 @@ const DashboardPage: React.FC = () => {
                         Commencez par définir vos ambitions pour cette année.
                       </p>
                       <Button
-                        onClick={() => router.push('/canvas')}
+                        onClick={handleCreateAmbition}
                         leftIcon={<Plus className="h-4 w-4" />}
                       >
                         Créer ma première ambition
@@ -476,6 +496,14 @@ const DashboardPage: React.FC = () => {
             </motion.div>
           </div>
         </div>
+
+        {/* Upgrade Modal */}
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          reason="ambitions"
+          currentPlan={subscription?.planType}
+        />
       </div>
     </Layout>
   );

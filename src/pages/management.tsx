@@ -18,11 +18,13 @@ import { KanbanBoard } from '@/components/ui/KanbanBoard';
 import { FilterPanel, FilterState } from '@/components/ui/FilterPanel';
 import { ProgressUpdateModal } from '@/components/ui/ProgressUpdateModal';
 import { ProgressHistoryPanel } from '@/components/ui/ProgressHistoryPanel';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { AmbitionForm, AmbitionFormData } from '@/components/forms/AmbitionForm';
 import { QuarterlyObjectiveForm } from '@/components/forms/QuarterlyObjectiveForm';
 import { QuarterlyKeyResultForm } from '@/components/forms/QuarterlyKeyResultForm';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { useAppStore } from '@/store/useAppStore';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useAmbitions, useCreateAmbition, useUpdateAmbition, useDeleteAmbition } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives, useCreateQuarterlyObjective, useUpdateQuarterlyObjective, useDeleteQuarterlyObjective } from '@/hooks/useQuarterlyObjectives';
 import { useQuarterlyKeyResultsByUser, useCreateQuarterlyKeyResult, useUpdateQuarterlyKeyResult, useUpdateQuarterlyKeyResultProgress, useDeleteQuarterlyKeyResult } from '@/hooks/useQuarterlyKeyResults';
@@ -31,6 +33,7 @@ import { useFilters, useHasActiveFilters, useActiveFiltersDescription } from '@/
 import { geminiService } from '@/services/gemini';
 import { shareService } from '@/services/share';
 import { Share2 } from 'lucide-react';
+import { SubscriptionsService } from '@/services/db/subscriptions';
 import {
   Ambition,
   QuarterlyObjective,
@@ -58,8 +61,10 @@ const ManagementPage: React.FC = () => {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   const [historyKR, setHistoryKR] = useState<QuarterlyKeyResult | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const { user } = useAppStore();
+  const { data: subscription } = useSubscription(user?.id);
 
   // React Query - Données
   const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
@@ -123,7 +128,16 @@ const ManagementPage: React.FC = () => {
 
 
   // Handlers pour les formulaires
-  const handleAddAmbition = () => {
+  const handleAddAmbition = async () => {
+    if (!user) return;
+
+    // Vérifier les limites avant d'ouvrir le formulaire
+    const canCreate = await SubscriptionsService.canCreateAmbition(user.id);
+    if (!canCreate) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setEditingItem(null);
     setFormMode('ambition');
   };
@@ -720,6 +734,14 @@ const ManagementPage: React.FC = () => {
             keyResult={historyKR}
           />
         )}
+
+        {/* Upgrade Modal */}
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          reason="ambitions"
+          currentPlan={subscription?.planType}
+        />
       </div>
     </Layout>
   );

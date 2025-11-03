@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabaseClient';
-import { Settings, User, Bell, Lock, Trash2, Download, Upload, Eye, EyeOff, Save } from 'lucide-react';
+import { Settings, User, Bell, Lock, Trash2, Download, Upload, Eye, EyeOff, Save, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SubscriptionTab } from '@/components/settings/SubscriptionTab';
 
 const SettingsPage: React.FC = () => {
   const { user } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'privacy' | 'data'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'subscription' | 'notifications' | 'privacy' | 'data'>('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -178,6 +179,7 @@ const SettingsPage: React.FC = () => {
 
   const tabs = [
     { id: 'profile' as const, label: 'Profil', icon: User },
+    { id: 'subscription' as const, label: 'Abonnement', icon: CreditCard },
     { id: 'notifications' as const, label: 'Notifications', icon: Bell },
     { id: 'privacy' as const, label: 'Confidentialité', icon: Lock },
     { id: 'data' as const, label: 'Données', icon: Download },
@@ -276,6 +278,11 @@ const SettingsPage: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Tab Abonnement */}
+          {activeTab === 'subscription' && user && (
+            <SubscriptionTab userId={user.id} />
           )}
 
           {/* Tab Notifications */}

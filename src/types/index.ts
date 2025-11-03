@@ -9,6 +9,67 @@ export interface User {
   createdAt: Date;
   lastLoginAt: Date;
   companyProfile?: CompanyProfile;
+  subscription?: Subscription;
+}
+
+// Types pour les abonnements
+export type SubscriptionPlanType = 'free' | 'pro' | 'team' | 'unlimited';
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'trialing';
+
+export interface SubscriptionPlan {
+  id: string;
+  planType: SubscriptionPlanType;
+  displayName: string;
+  description?: string;
+  priceMonthly: number;
+  priceYearly?: number;
+  maxUsers: number; // -1 = illimité
+  maxAmbitions: number; // -1 = illimité
+  features: SubscriptionFeatures;
+  stripePriceIdMonthly?: string;
+  stripePriceIdYearly?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SubscriptionFeatures {
+  export_pdf: 'basic' | 'advanced';
+  support: 'community' | 'email' | 'priority';
+  ai_coach_suggestions: number; // -1 = illimité
+  analytics: boolean | 'basic' | 'advanced';
+  integrations: boolean | 'basic' | 'advanced';
+  priority_support: boolean;
+  quarterly_objectives_per_ambition?: number; // -1 = illimité
+  roles_permissions?: boolean;
+  custom_features?: boolean;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planType: SubscriptionPlanType;
+  status: SubscriptionStatus;
+  startedAt: Date;
+  expiresAt?: Date;
+  cancelledAt?: Date;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  stripePriceId?: string;
+  billingCycle?: 'monthly' | 'yearly';
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+  plan?: SubscriptionPlan;
+}
+
+export interface SubscriptionUsage {
+  currentUsers: number;
+  maxUsers: number;
+  currentAmbitions: number;
+  maxAmbitions: number;
+  canAddUser: boolean;
+  canCreateAmbition: boolean;
 }
 
 export interface CompanyProfile {

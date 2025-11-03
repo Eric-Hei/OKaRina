@@ -18,12 +18,16 @@ import {
   History,
   CheckSquare,
   Users,
+  Crown,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { AuthService } from '@/services/auth';
 import { isSupabaseConfigured } from '@/lib/supabaseClient';
 import { cn } from '@/utils';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -35,6 +39,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
   const { user, logout } = useAppStore();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const { data: subscription } = useSubscription(user?.id);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
@@ -148,9 +153,30 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                             <User className="h-4 w-4 text-blue-600" />
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">{user.name}</p>
                             <p className="text-xs text-gray-500">{user.email}</p>
+                            {subscription && (
+                              <div className="mt-1">
+                                <Badge
+                                  variant={
+                                    subscription.planType === 'unlimited' ? 'warning' :
+                                    subscription.planType === 'team' ? 'info' :
+                                    subscription.planType === 'pro' ? 'success' :
+                                    'secondary'
+                                  }
+                                  size="sm"
+                                  className="inline-flex items-center"
+                                >
+                                  {subscription.planType === 'unlimited' && <Crown className="h-3 w-3 mr-1" />}
+                                  {subscription.planType === 'pro' && <Zap className="h-3 w-3 mr-1" />}
+                                  {subscription.planType === 'free' ? 'Free' :
+                                   subscription.planType === 'pro' ? 'Pro' :
+                                   subscription.planType === 'team' ? 'Team' :
+                                   'Unlimited'}
+                                </Badge>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

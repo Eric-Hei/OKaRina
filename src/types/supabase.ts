@@ -18,6 +18,8 @@ export type ActionStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED' | 'CANCEL
 export type CommentEntityType = 'AMBITION' | 'KEY_RESULT' | 'OBJECTIVE' | 'ACTION';
 export type NotificationType = 'TEAM_INVITATION' | 'MEMBER_JOINED' | 'OBJECTIVE_SHARED' | 'COMMENT_MENTION' | 'DEADLINE_APPROACHING' | 'PROGRESS_UPDATE' | 'ACHIEVEMENT';
 export type SharePermission = 'VIEW' | 'EDIT';
+export type SubscriptionPlanType = 'free' | 'pro' | 'team' | 'unlimited';
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'trialing';
 
 export interface Database {
   public: {
@@ -379,6 +381,106 @@ export interface Database {
           completed_at?: string | null;
         };
       };
+      subscription_plans: {
+        Row: {
+          id: string;
+          plan_type: SubscriptionPlanType;
+          display_name: string;
+          description: string | null;
+          price_monthly: number;
+          price_yearly: number | null;
+          max_users: number;
+          max_ambitions: number;
+          features: Json;
+          stripe_price_id_monthly: string | null;
+          stripe_price_id_yearly: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          plan_type: SubscriptionPlanType;
+          display_name: string;
+          description?: string | null;
+          price_monthly?: number;
+          price_yearly?: number | null;
+          max_users?: number;
+          max_ambitions?: number;
+          features?: Json;
+          stripe_price_id_monthly?: string | null;
+          stripe_price_id_yearly?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          plan_type?: SubscriptionPlanType;
+          display_name?: string;
+          description?: string | null;
+          price_monthly?: number;
+          price_yearly?: number | null;
+          max_users?: number;
+          max_ambitions?: number;
+          features?: Json;
+          stripe_price_id_monthly?: string | null;
+          stripe_price_id_yearly?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan_type: SubscriptionPlanType;
+          status: SubscriptionStatus;
+          started_at: string;
+          expires_at: string | null;
+          cancelled_at: string | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          stripe_price_id: string | null;
+          billing_cycle: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan_type?: SubscriptionPlanType;
+          status?: SubscriptionStatus;
+          started_at?: string;
+          expires_at?: string | null;
+          cancelled_at?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          stripe_price_id?: string | null;
+          billing_cycle?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          plan_type?: SubscriptionPlanType;
+          status?: SubscriptionStatus;
+          started_at?: string;
+          expires_at?: string | null;
+          cancelled_at?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          stripe_price_id?: string | null;
+          billing_cycle?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -402,6 +504,8 @@ export interface Database {
       comment_entity_type: CommentEntityType;
       notification_type: NotificationType;
       share_permission: SharePermission;
+      subscription_plan_type: SubscriptionPlanType;
+      subscription_status: SubscriptionStatus;
     };
   };
 }

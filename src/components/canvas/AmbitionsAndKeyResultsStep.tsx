@@ -4,14 +4,17 @@ import { Plus, Edit2, Trash2, Target, TrendingUp, ChevronDown, ChevronRight } fr
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { useAppStore } from '@/store/useAppStore';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { useSubscription } from '@/hooks/useSubscription';
 import { AmbitionForm, AmbitionFormData } from '@/components/forms/AmbitionForm';
 import { KeyResultForm, KeyResultFormData } from '@/components/forms/KeyResultForm';
 import { generateId } from '@/utils';
 import type { Ambition, KeyResult, Status } from '@/types';
 import { useAmbitions, useCreateAmbition, useUpdateAmbition, useDeleteAmbition } from '@/hooks/useAmbitions';
 import { useKeyResultsByUser, useCreateKeyResult, useUpdateKeyResult, useDeleteKeyResult } from '@/hooks/useKeyResults';
+import { SubscriptionsService } from '@/services/db/subscriptions';
 
 const AmbitionsAndKeyResultsStep: React.FC = () => {
   const [showAmbitionForm, setShowAmbitionForm] = useState(false);
@@ -20,9 +23,11 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
   const [showKRForm, setShowKRForm] = useState(false);
   const [selectedAmbitionId, setSelectedAmbitionId] = useState<string | null>(null);
   const [editingKR, setEditingKR] = useState<KeyResult | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const { user } = useAppStore();
   const { completeStep } = useCanvasStore();
+  const { data: subscription } = useSubscription(user?.id);
 
   // React Query - Données
   const { data: ambitions = [] } = useAmbitions(user?.id);
@@ -53,7 +58,16 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
     setExpandedAmbitions(newExpanded);
   };
 
-  const handleAddAmbition = () => {
+  const handleAddAmbition = async () => {
+    if (!user) return;
+
+    // Vérifier les limites avant d'ouvrir le formulaire
+    const canCreate = await SubscriptionsService.canCreateAmbition(user.id);
+    if (!canCreate) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setEditingAmbition(null);
     setShowAmbitionForm(true);
   };
@@ -386,6 +400,14 @@ const AmbitionsAndKeyResultsStep: React.FC = () => {
           }}
         />
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        reason="ambitions"
+        currentPlan={subscription?.planType}
+      />
     </div>
   );
 };
