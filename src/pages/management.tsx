@@ -365,7 +365,17 @@ const ManagementPage: React.FC = () => {
 
   // Partage public (RO)
   const handleShareObjective = (objectiveId: string) => {
-    const link = shareService.buildShareLinkForObjective(objectiveId);
+    const objective = quarterlyObjectives?.find(o => o.id === objectiveId);
+    if (!objective) {
+      alert('Objectif introuvable.');
+      return;
+    }
+
+    const keyResults = quarterlyKeyResults?.filter(kr => kr.quarterlyObjectiveId === objectiveId) || [];
+    const krIds = keyResults.map(kr => kr.id);
+    const objectiveActions = actions?.filter(a => krIds.includes(a.quarterlyKeyResultId || '')) || [];
+
+    const link = shareService.buildShareLinkForObjective(objective, keyResults, objectiveActions);
     if (link) {
       navigator.clipboard.writeText(link).then(() => {
         alert('Lien de partage (objectif) copié !');
@@ -376,7 +386,15 @@ const ManagementPage: React.FC = () => {
   };
 
   const handleShareKR = (krId: string) => {
-    const link = shareService.buildShareLinkForKR(krId);
+    const kr = quarterlyKeyResults?.find(k => k.id === krId);
+    if (!kr) {
+      alert('KR introuvable.');
+      return;
+    }
+
+    const krActions = actions?.filter(a => a.quarterlyKeyResultId === krId) || [];
+
+    const link = shareService.buildShareLinkForKR(kr, krActions);
     if (link) {
       navigator.clipboard.writeText(link).then(() => {
         alert('Lien de partage (KR) copié !');

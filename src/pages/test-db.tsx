@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { DataService } from '@/services/db';
+import { AmbitionsService, QuarterlyObjectivesService, ActionsService } from '@/services/db';
 import { checkSupabaseHealth } from '@/lib/supabaseHelpers';
 import type { Ambition } from '@/types';
 import { AmbitionCategory, Priority, Status, Quarter, ActionStatus } from '@/types';
@@ -47,7 +47,7 @@ export default function TestDBPage() {
         updatedAt: new Date(),
       };
 
-      const created = await DataService.createAmbition(ambition, user.id);
+      const created = await AmbitionsService.create(ambition, user.id);
 
       setResult(`✅ Ambition créée avec succès !\n\nID: ${created.id}\nTitre: ${created.title}\n\nVérifie dans Supabase > Table Editor > ambitions`);
     } catch (error: any) {
@@ -67,7 +67,7 @@ export default function TestDBPage() {
     setResult('⏳ Récupération des ambitions...');
 
     try {
-      const ambitions = await DataService.getAmbitions(user.id);
+      const ambitions = await AmbitionsService.getAll(user.id);
       setResult(`✅ ${ambitions.length} ambition(s) trouvée(s) !\n\n${JSON.stringify(ambitions, null, 2)}`);
     } catch (error: any) {
       setResult(`❌ Erreur: ${error.message}\n\n${JSON.stringify(error, null, 2)}`);
@@ -91,15 +91,11 @@ export default function TestDBPage() {
         description: 'Objectif de test pour Q1',
         quarter: Quarter.Q1,
         year: new Date().getFullYear(),
-        keyResults: [],
-        actions: [],
         status: Status.ACTIVE,
-        createdAt: new Date(),
-        updatedAt: new Date(),
         ambitionId: '',
       };
 
-      const created = await DataService.createQuarterlyObjective(objective, user.id);
+      const created = await QuarterlyObjectivesService.create(objective, user.id);
       setResult(`✅ Objectif trimestriel créé !\n\nID: ${created.id}\nTitre: ${created.title}\n\nVérifie dans Supabase > Table Editor > quarterly_objectives`);
     } catch (error: any) {
       setResult(`❌ Erreur: ${error.message}\n\n${JSON.stringify(error, null, 2)}`);
@@ -125,11 +121,9 @@ export default function TestDBPage() {
         status: ActionStatus.TODO,
         priority: Priority.MEDIUM,
         labels: ['test', 'demo'],
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
-      const created = await DataService.createAction(action, user.id);
+      const created = await ActionsService.create(action, user.id);
       setResult(`✅ Action créée !\n\nID: ${created.id}\nTitre: ${created.title}\nStatut: ${created.status}\n\nVérifie dans Supabase > Table Editor > actions`);
     } catch (error: any) {
       setResult(`❌ Erreur: ${error.message}\n\n${JSON.stringify(error, null, 2)}`);

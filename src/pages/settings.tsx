@@ -155,23 +155,85 @@ const SettingsPage: React.FC = () => {
     setMessage(null);
 
     try {
-      // Supprimer toutes les données de l'utilisateur
-      await supabase.from('actions').delete().eq('user_id', user.id);
-      await supabase.from('quarterly_key_results').delete().eq('user_id', user.id);
-      await supabase.from('quarterly_objectives').delete().eq('user_id', user.id);
-      await supabase.from('ambitions').delete().eq('user_id', user.id);
-      await supabase.from('team_members').delete().eq('user_id', user.id);
-      await supabase.from('notifications').delete().eq('user_id', user.id);
+      // Supprimer toutes les données de l'utilisateur dans l'ordre (pour respecter les contraintes FK)
+      console.log('🗑️ Suppression des données utilisateur...');
 
-      // Supprimer le compte Supabase Auth
+      // 1. Supprimer les commentaires
+      await supabase.from('comments').delete().eq('user_id', user.id);
+      console.log('✅ Commentaires supprimés');
+
+      // 2. Supprimer les actions
+      await supabase.from('actions').delete().eq('user_id', user.id);
+      console.log('✅ Actions supprimées');
+
+      // 3. Supprimer les quarterly_key_results
+      await supabase.from('quarterly_key_results').delete().eq('user_id', user.id);
+      console.log('✅ Quarterly Key Results supprimés');
+
+      // 4. Supprimer les quarterly_objectives
+      await supabase.from('quarterly_objectives').delete().eq('user_id', user.id);
+      console.log('✅ Quarterly Objectives supprimés');
+
+      // 5. Supprimer les key_results (annuels)
+      await supabase.from('key_results').delete().eq('user_id', user.id);
+      console.log('✅ Key Results supprimés');
+
+      // 6. Supprimer les ambitions
+      await supabase.from('ambitions').delete().eq('user_id', user.id);
+      console.log('✅ Ambitions supprimées');
+
+      // 7. Supprimer les partages d'objectifs (partagés par l'utilisateur)
+      await supabase.from('shared_objectives').delete().eq('shared_by_user_id', user.id);
+      console.log('✅ Partages créés supprimés');
+
+      // 8. Supprimer les partages d'objectifs (partagés avec l'utilisateur)
+      await supabase.from('shared_objectives').delete().eq('shared_with_user_id', user.id);
+      console.log('✅ Partages reçus supprimés');
+
+      // 9. Supprimer les notifications
+      await supabase.from('notifications').delete().eq('user_id', user.id);
+      console.log('✅ Notifications supprimées');
+
+      // 10. Supprimer les invitations (envoyées)
+      await supabase.from('invitations').delete().eq('invited_by_user_id', user.id);
+      console.log('✅ Invitations envoyées supprimées');
+
+      // 11. Supprimer les invitations (reçues)
+      await supabase.from('invitations').delete().eq('email', user.email);
+      console.log('✅ Invitations reçues supprimées');
+
+      // 12. Supprimer les team_members
+      await supabase.from('team_members').delete().eq('user_id', user.id);
+      console.log('✅ Membres d\'équipe supprimés');
+
+      // 13. Supprimer les équipes dont l'utilisateur est propriétaire
+      await supabase.from('teams').delete().eq('owner_id', user.id);
+      console.log('✅ Équipes supprimées');
+
+      // 14. Supprimer l'historique de progression
+      await supabase.from('progress').delete().eq('user_id', user.id);
+      console.log('✅ Historique de progression supprimé');
+
+      // 15. Supprimer l'abonnement
+      await supabase.from('subscriptions').delete().eq('user_id', user.id);
+      console.log('✅ Abonnement supprimé');
+
+      // 16. Supprimer le profil
+      await supabase.from('profiles').delete().eq('id', user.id);
+      console.log('✅ Profil supprimé');
+
+      // 17. Supprimer le compte Supabase Auth
       const { error } = await supabase.rpc('delete_user');
 
       if (error) throw error;
+
+      console.log('✅ Compte supprimé avec succès');
 
       // Déconnexion
       await supabase.auth.signOut();
       window.location.href = '/auth/login';
     } catch (error: any) {
+      console.error('❌ Erreur lors de la suppression:', error);
       setMessage({ type: 'error', text: error.message || 'Erreur lors de la suppression' });
       setIsLoading(false);
     }

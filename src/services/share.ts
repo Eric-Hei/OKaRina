@@ -1,12 +1,4 @@
-// import { storageService } from '@/services/storage'; // TODO: Migrer vers Supabase
 import type { QuarterlyObjective, QuarterlyKeyResult, Action } from '@/types';
-
-// Stub temporaire pour éviter les erreurs de build
-const storageService = {
-  getQuarterlyObjectives: () => [] as QuarterlyObjective[],
-  getQuarterlyKeyResults: () => [] as QuarterlyKeyResult[],
-  getActions: () => [] as Action[],
-};
 
 export type ShareSnapshot =
   | {
@@ -41,15 +33,11 @@ function decodeSnapshot(data: string): ShareSnapshot | null {
   }
 }
 
-function buildObjectiveSnapshot(objectiveId: string): ShareSnapshot | null {
-  const objective = storageService.getQuarterlyObjectives().find(o => o.id === objectiveId);
-  if (!objective) return null;
-  const keyResults = storageService
-    .getQuarterlyKeyResults()
-    .filter(kr => kr.quarterlyObjectiveId === objectiveId);
-  const actions = storageService
-    .getActions()
-    .filter(a => keyResults.some(kr => kr.id === a.quarterlyKeyResultId));
+function buildObjectiveSnapshot(
+  objective: QuarterlyObjective,
+  keyResults: QuarterlyKeyResult[],
+  actions: Action[]
+): ShareSnapshot {
 
   return {
     type: 'quarterly_objective',
@@ -81,10 +69,10 @@ function buildObjectiveSnapshot(objectiveId: string): ShareSnapshot | null {
   };
 }
 
-function buildKRSnapshot(krId: string): ShareSnapshot | null {
-  const kr = storageService.getQuarterlyKeyResults().find(k => k.id === krId);
-  if (!kr) return null;
-  const actions = storageService.getActions().filter(a => a.quarterlyKeyResultId === krId);
+function buildKRSnapshot(
+  kr: QuarterlyKeyResult,
+  actions: Action[]
+): ShareSnapshot {
   return {
     type: 'quarterly_key_result',
     generatedAt: new Date().toISOString(),
@@ -110,17 +98,22 @@ function buildKRSnapshot(krId: string): ShareSnapshot | null {
 }
 
 export const shareService = {
-  buildShareLinkForObjective(objectiveId: string): string | null {
+  buildShareLinkForObjective(
+    objective: QuarterlyObjective,
+    keyResults: QuarterlyKeyResult[],
+    actions: Action[]
+  ): string | null {
     if (typeof window === 'undefined') return null;
-    const snapshot = buildObjectiveSnapshot(objectiveId);
-    if (!snapshot) return null;
+    const snapshot = buildObjectiveSnapshot(objective, keyResults, actions);
     const data = encodeSnapshot(snapshot);
     return `${window.location.origin}/share?data=${data}`;
   },
-  buildShareLinkForKR(krId: string): string | null {
+  buildShareLinkForKR(
+    kr: QuarterlyKeyResult,
+    actions: Action[]
+  ): string | null {
     if (typeof window === 'undefined') return null;
-    const snapshot = buildKRSnapshot(krId);
-    if (!snapshot) return null;
+    const snapshot = buildKRSnapshot(kr, actions);
     const data = encodeSnapshot(snapshot);
     return `${window.location.origin}/share?data=${data}`;
   },

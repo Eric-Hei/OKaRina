@@ -1,6 +1,9 @@
 import Papa from 'papaparse';
 import { generateId } from '@/utils';
-// import { storageService } from '@/services/storage'; // TODO: Migrer vers Supabase
+import { AmbitionsService } from '@/services/db/ambitions';
+import { QuarterlyObjectivesService } from '@/services/db/quarterlyObjectives';
+import { QuarterlyKeyResultsService } from '@/services/db/quarterlyKeyResults';
+import { ActionsService } from '@/services/db/actions';
 import {
   type Ambition,
   type QuarterlyObjective,
@@ -12,14 +15,6 @@ import {
   ActionStatus,
   Quarter,
 } from '@/types';
-
-// Stub temporaire pour éviter les erreurs de build
-const storageService = {
-  addAmbition: (_ambition: Ambition) => {},
-  addQuarterlyObjective: (_objective: QuarterlyObjective) => {},
-  addQuarterlyKeyResult: (_keyResult: QuarterlyKeyResult) => {},
-  addAction: (_action: Action) => {},
-};
 
 // Types pour le mapping CSV
 export interface CSVRow {
@@ -165,27 +160,24 @@ class ImportService {
     const krMap = new Map<string, string>(); // title -> id
 
     try {
-      rows.forEach((row, index) => {
+      for (let index = 0; index < rows.length; index++) {
+        const row = rows[index];
         try {
           // Create Ambition if data present
           if (mapping.ambitionTitle && row[mapping.ambitionTitle]?.trim()) {
             const title = row[mapping.ambitionTitle].trim();
             
             if (!ambitionMap.has(title)) {
-              const ambition: Ambition = {
-                id: generateId(),
-                userId,
+              const ambition: Partial<Ambition> = {
                 title,
                 description: mapping.ambitionDescription ? row[mapping.ambitionDescription]?.trim() || '' : '',
                 year: mapping.ambitionYear ? parseInt(row[mapping.ambitionYear]) || new Date().getFullYear() : new Date().getFullYear(),
                 category: this.parseCategory(mapping.ambitionCategory ? row[mapping.ambitionCategory] : ''),
                 priority: this.parsePriority(mapping.ambitionPriority ? row[mapping.ambitionPriority] : ''),
                 status: Status.ACTIVE,
-                createdAt: new Date(),
-                updatedAt: new Date(),
               };
-              storageService.addAmbition(ambition);
-              ambitionMap.set(title, ambition.id);
+              const created = await AmbitionsService.create(ambition, userId);
+              ambitionMap.set(title, created.id);
               result.ambitionsCreated++;
             }
           }
@@ -199,21 +191,16 @@ class ImportService {
               const ambitionTitle = mapping.ambitionTitle ? row[mapping.ambitionTitle]?.trim() : '';
               const ambitionId = ambitionTitle ? ambitionMap.get(ambitionTitle) || '' : '';
               
-              const objective: QuarterlyObjective = {
-                id: generateId(),
+              const objective: Partial<QuarterlyObjective> = {
                 title,
                 description: mapping.objectiveDescription ? row[mapping.objectiveDescription]?.trim() || '' : '',
                 ambitionId,
                 quarter: this.parseQuarter(mapping.objectiveQuarter ? row[mapping.objectiveQuarter] : ''),
                 year: mapping.objectiveYear ? parseInt(row[mapping.objectiveYear]) || new Date().getFullYear() : new Date().getFullYear(),
-                keyResults: [],
-                actions: [],
                 status: Status.ACTIVE,
-                createdAt: new Date(),
-                updatedAt: new Date(),
               };
-              storageService.addQuarterlyObjective(objective);
-              objectiveMap.set(title, objective.id);
+              const created = await QuarterlyObjectivesService.create(objective, userId);
+              objectiveMap.set(title, created.id);
               result.objectivesCreated++;
             }
           }
@@ -227,8 +214,7 @@ class ImportService {
               const objectiveTitle = mapping.objectiveTitle ? row[mapping.objectiveTitle]?.trim() : '';
               const quarterlyObjectiveId = objectiveTitle ? objectiveMap.get(objectiveTitle) || '' : '';
               
-              const kr: QuarterlyKeyResult = {
-                id: generateId(),
+              const kr: Partial<QuarterlyKeyResult> = {
                 title,
                 description: mapping.krDescription ? row[mapping.krDescription]?.trim() || '' : '',
                 quarterlyObjectiveId,
@@ -237,11 +223,9 @@ class ImportService {
                 unit: mapping.krUnit ? row[mapping.krUnit]?.trim() || 'unités' : 'unités',
                 deadline: mapping.krDeadline ? new Date(row[mapping.krDeadline]) : new Date(new Date().setMonth(new Date().getMonth() + 3)),
                 status: Status.ACTIVE,
-                createdAt: new Date(),
-                updatedAt: new Date(),
               };
-              storageService.addQuarterlyKeyResult(kr);
-              krMap.set(title, kr.id);
+              const created = await QuarterlyKeyResultsService.create(kr);
+              krMap.set(title, created.id);
               result.keyResultsCreated++;
             }
           }
@@ -252,8 +236,7 @@ class ImportService {
             const krTitle = mapping.krTitle ? row[mapping.krTitle]?.trim() : '';
             const quarterlyKeyResultId = krTitle ? krMap.get(krTitle) || '' : '';
             
-            const action: Action = {
-              id: generateId(),
+            const action: Partial<Action> = {
               title: row[mapping.actionTitle].trim(),
               description: mapping.actionDescription ? row[mapping.actionDescription]?.trim() : undefined,
               quarterlyKeyResultId,
@@ -262,16 +245,14 @@ class ImportService {
               labels: mapping.actionLabels ? row[mapping.actionLabels]?.split(',').map(l => l.trim()).filter(l => l) || [] : [],
               deadline: mapping.actionDeadline && row[mapping.actionDeadline] ? new Date(row[mapping.actionDeadline]) : undefined,
               order_index: 0,
-              createdAt: new Date(),
-              updatedAt: new Date(),
             };
-            storageService.addAction(action);
+            await ActionsService.create(action, userId);
             result.actionsCreated++;
           }
         } catch (error) {
           result.errors.push(`Ligne ${index + 2}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
         }
-      });
+      }
     } catch (error) {
       result.success = false;
       result.errors.push(`Erreur globale: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);

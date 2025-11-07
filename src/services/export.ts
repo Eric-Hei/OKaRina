@@ -1,23 +1,19 @@
 import jsPDF from 'jspdf';
 import * as ExcelJS from 'exceljs';
-// import { storageService } from './storage'; // TODO: Migrer vers Supabase
 import { analyticsService } from './analytics';
 import { ReportType } from '@/types';
 import type { ReportFormat, Ambition, KeyResult, OKR, Action, QuarterlyObjective, QuarterlyKeyResult, Progress } from '@/types';
 
-// TODO: Ce service doit être migré pour utiliser les données depuis Supabase
-// Stub temporaire pour éviter les erreurs de build
-const storageService = {
-  getAmbitions: (): Ambition[] => [],
-  getKeyResults: (): KeyResult[] => [],
-  getOKRs: (): OKR[] => [],
-  getActions: (): Action[] => [],
-  getQuarterlyObjectives: (): QuarterlyObjective[] => [],
-  getQuarterlyKeyResults: (): QuarterlyKeyResult[] => [],
-  getProgress: (): Progress[] => [],
-  exportData: () => '{}',
-  importData: (_data: string) => {},
-};
+// Interface pour les données d'export
+export interface ExportData {
+  ambitions: Ambition[];
+  keyResults: KeyResult[];
+  okrs: OKR[];
+  actions: Action[];
+  quarterlyObjectives: QuarterlyObjective[];
+  quarterlyKeyResults: QuarterlyKeyResult[];
+  progress?: Progress[];
+}
 
 // Service d'export et de génération de rapports
 export class ExportService {
@@ -33,17 +29,13 @@ export class ExportService {
   }
 
   // Export PDF
-  public async exportToPDF(reportType: ReportType = ReportType.MONTHLY): Promise<void> {
+  public async exportToPDF(data: ExportData, reportType: ReportType = ReportType.MONTHLY): Promise<void> {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
-    // Charger les données une seule fois
-    const ambitions = storageService.getAmbitions();
-    const okrs = storageService.getOKRs();
-    const actions = storageService.getActions();
-    const quarterlyObjectives = storageService.getQuarterlyObjectives();
-    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
+    // Utiliser les données passées en paramètre
+    const { ambitions, okrs, actions, quarterlyObjectives, quarterlyKeyResults } = data;
 
     // Configuration
     const margin = 20;
@@ -242,7 +234,7 @@ export class ExportService {
     // OKRs du trimestre actuel
     const currentQuarter = this.getCurrentQuarter();
     const currentYear = new Date().getFullYear();
-    const currentOKRs = storageService.getOKRs().filter(
+    const currentOKRs = okrs.filter(
       okr => okr.quarter === currentQuarter && okr.year === currentYear
     );
 
@@ -352,7 +344,7 @@ export class ExportService {
   }
 
   // Export Excel
-  public async exportToExcel(reportType: ReportType = ReportType.MONTHLY): Promise<void> {
+  public async exportToExcel(data: ExportData, reportType: ReportType = ReportType.MONTHLY): Promise<void> {
     const workbook = new ExcelJS.Workbook();
 
     // Configuration du workbook
@@ -361,12 +353,8 @@ export class ExportService {
     workbook.created = new Date();
     workbook.modified = new Date();
 
-    // Charger les données une seule fois
-    const ambitions = storageService.getAmbitions();
-    const okrs = storageService.getOKRs();
-    const actions = storageService.getActions();
-    const quarterlyObjectives = storageService.getQuarterlyObjectives();
-    const quarterlyKeyResults = storageService.getQuarterlyKeyResults();
+    // Utiliser les données passées en paramètre
+    const { ambitions, okrs, actions, quarterlyObjectives, quarterlyKeyResults, keyResults } = data;
 
     // Feuille 1: Métriques
     const metrics = analyticsService.getDashboardMetrics(ambitions, okrs, actions, quarterlyObjectives, quarterlyKeyResults);
@@ -423,7 +411,6 @@ export class ExportService {
     ];
 
     // Feuille 3: Résultats Clés
-    const keyResults = storageService.getKeyResults();
     const keyResultsData = [
       ['Titre', 'Valeur Actuelle', 'Valeur Cible', 'Unité', 'Progrès (%)', 'Échéance', 'SMART']
     ];
@@ -540,43 +527,23 @@ export class ExportService {
   }
 
   // Export JSON (données complètes)
-  public exportToJSON(): void {
-    const data = storageService.exportData();
-    const blob = new Blob([data], { type: 'application/json' });
+  public exportToJSON(data: ExportData): void {
+    const jsonData = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `okarina-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     URL.revokeObjectURL(url);
   }
 
-  // Import JSON
-  public async importFromJSON(file: File): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        try {
-          const jsonData = e.target?.result as string;
-          storageService.importData(jsonData);
-          resolve();
-        } catch (error) {
-          reject(new Error('Format de fichier invalide'));
-        }
-      };
-      
-      reader.onerror = () => reject(new Error('Erreur lors de la lecture du fichier'));
-      reader.readAsText(file);
-    });
-  }
-
   // Génération de rapport personnalisé
-  public generateCustomReport(options: {
+  public generateCustomReport(data: ExportData, options: {
     includeAmbitions: boolean;
     includeOKRs: boolean;
     includeActions: boolean;
@@ -587,13 +554,13 @@ export class ExportService {
   }): void {
     switch (options.format) {
       case 'pdf':
-        this.generateCustomPDF(options);
+        this.generateCustomPDF(data, options);
         break;
       case 'excel':
-        this.generateCustomExcel(options);
+        this.generateCustomExcel(data, options);
         break;
       case 'json':
-        this.generateCustomJSON(options);
+        this.generateCustomJSON(data, options);
         break;
     }
   }
@@ -617,19 +584,19 @@ export class ExportService {
     return 'Q4';
   }
 
-  private generateCustomPDF(options: any): void {
+  private generateCustomPDF(data: ExportData, options: any): void {
     // Implémentation simplifiée pour le PDF personnalisé
-    this.exportToPDF(ReportType.CUSTOM);
+    this.exportToPDF(data, ReportType.CUSTOM);
   }
 
-  private generateCustomExcel(options: any): void {
+  private generateCustomExcel(data: ExportData, options: any): void {
     // Implémentation simplifiée pour l'Excel personnalisé
-    this.exportToExcel(ReportType.CUSTOM);
+    this.exportToExcel(data, ReportType.CUSTOM);
   }
 
-  private generateCustomJSON(options: any): void {
+  private generateCustomJSON(data: ExportData, options: any): void {
     // Implémentation simplifiée pour le JSON personnalisé
-    this.exportToJSON();
+    this.exportToJSON(data);
   }
 }
 
