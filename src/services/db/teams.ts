@@ -77,7 +77,7 @@ export class TeamsService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToTeam(row));
+    return (data || []).map((row: any) => this.rowToTeam(row));
   }
 
   static async getByUserId(userId: string): Promise<Team[]> {

@@ -24,7 +24,7 @@ import type { Ambition, QuarterlyObjective, QuarterlyKeyResult, Action } from '@
 import { Priority, Status, ActionStatus, CompanySize, CompanyStage } from '@/types';
 import { useAmbitions } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
-import { useQuarterlyKeyResults } from '@/hooks/useQuarterlyKeyResults';
+import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
 import { useActions } from '@/hooks/useActions';
 import { useCreateAmbition } from '@/hooks/useAmbitions';
 import { useCreateQuarterlyObjective } from '@/hooks/useQuarterlyObjectives';
@@ -50,7 +50,7 @@ const CanvasPage: React.FC = () => {
   // React Query - Données OKR
   const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
   const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
-  const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResults(user?.id);
+  const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResultsByUser(user?.id);
   const { data: actions = [], isLoading: actionsLoading } = useActions(user?.id);
 
   // React Query - Mutations

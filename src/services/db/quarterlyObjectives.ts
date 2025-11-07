@@ -80,7 +80,7 @@ export class QuarterlyObjectivesService {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToQuarterlyObjective(row));
+    return (data || []).map((row: any) => this.rowToQuarterlyObjective(row));
   }
 
   static async getById(id: string): Promise<QuarterlyObjective | null> {
@@ -107,7 +107,7 @@ export class QuarterlyObjectivesService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToQuarterlyObjective(row));
+    return (data || []).map((row: any) => this.rowToQuarterlyObjective(row));
   }
 
   static async update(id: string, updates: Partial<QuarterlyObjective>): Promise<QuarterlyObjective> {

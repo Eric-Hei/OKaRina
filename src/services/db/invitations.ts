@@ -126,7 +126,7 @@ export class InvitationsService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToInvitation(row));
+    return (data || []).map((row: any) => this.rowToInvitation(row));
   }
 
   /**
@@ -140,7 +140,7 @@ export class InvitationsService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToInvitation(row));
+    return (data || []).map((row: any) => this.rowToInvitation(row));
   }
 
   /**

@@ -62,6 +62,14 @@ export const useAppStore = create<AppState>()(
       },
 
       logout: () => {
+        // Nettoyer le localStorage pour éviter les conflits
+        if (typeof window !== 'undefined') {
+          // Supprimer le store Zustand persisté
+          localStorage.removeItem('oskar-app-store');
+          localStorage.removeItem('app-store');
+          // Supprimer les anciennes clés OKaRina si elles existent
+          localStorage.removeItem('okarina-store');
+        }
         set({
           user: null,
           isAuthenticated: false,

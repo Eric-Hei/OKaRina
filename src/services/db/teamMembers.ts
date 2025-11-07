@@ -90,7 +90,7 @@ export class TeamMembersService {
       .order('joined_at', { ascending: true });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToTeamMember(row));
+    return (data || []).map((row: any) => this.rowToTeamMember(row));
   }
 
   static async getByUserId(userId: string): Promise<TeamMember[]> {
@@ -101,7 +101,7 @@ export class TeamMembersService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToTeamMember(row));
+    return (data || []).map((row: any) => this.rowToTeamMember(row));
   }
 
   static async updateRole(id: string, role: TeamRole): Promise<TeamMember> {

@@ -43,7 +43,7 @@ export class KeyResultsService {
 
     const { data, error } = await (supabase as any)
       .from('key_results')
-      .insert({ id, user_id: userId, ...insertData })
+      .insert({ id, ...insertData })
       .select()
       .single();
 
@@ -72,18 +72,21 @@ export class KeyResultsService {
       .order('order_index', { ascending: true });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToKeyResult(row));
+    return (data || []).map((row: any) => this.rowToKeyResult(row));
   }
 
   static async getByUserId(userId: string): Promise<KeyResult[]> {
     const { data, error } = await supabase
       .from('key_results')
-      .select('*')
-      .eq('user_id', userId)
+      .select(`
+        *,
+        ambitions!inner(user_id)
+      `)
+      .eq('ambitions.user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToKeyResult(row));
+    return (data || []).map((row: any) => this.rowToKeyResult(row));
   }
 
   static async getById(id: string): Promise<KeyResult | null> {

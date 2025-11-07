@@ -114,19 +114,96 @@ export const SubscriptionsService = {
 
       if (error) {
         console.error('Error fetching subscription plans:', error);
-        return [];
+        console.warn('⚠️ Fallback to hardcoded plans');
+        return this.getHardcodedPlans();
       }
 
       if (!data || data.length === 0) {
         console.warn('⚠️ No subscription plans found in database');
-        return [];
+        console.warn('⚠️ Fallback to hardcoded plans');
+        return this.getHardcodedPlans();
       }
 
       return data.map(rowToPlan);
     } catch (error) {
       console.error('Exception in getAvailablePlans:', error);
-      return [];
+      console.warn('⚠️ Fallback to hardcoded plans');
+      return this.getHardcodedPlans();
     }
+  },
+
+  /**
+   * Plans hardcodés en fallback si Supabase n'est pas disponible
+   */
+  getHardcodedPlans(): SubscriptionPlan[] {
+    return [
+      {
+        id: 'hardcoded-free',
+        planType: 'free',
+        displayName: 'Free',
+        description: 'Parfait pour tester la méthodologie OKR',
+        priceMonthly: 0,
+        priceYearly: 0,
+        maxUsers: 1,
+        maxAmbitions: 3,
+        features: {
+          export_pdf: 'basic',
+          support: 'community',
+          ai_coach_suggestions: 10,
+          analytics: false,
+          integrations: false,
+          priority_support: false,
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'hardcoded-pro',
+        planType: 'pro',
+        displayName: 'Pro',
+        description: 'Sweet spot pour les PME',
+        priceMonthly: 19,
+        priceYearly: 190,
+        maxUsers: 5,
+        maxAmbitions: -1,
+        features: {
+          export_pdf: 'advanced',
+          support: 'email',
+          ai_coach_suggestions: -1,
+          analytics: 'basic',
+          integrations: 'basic',
+          priority_support: false,
+          quarterly_objectives_per_ambition: 1,
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'hardcoded-team',
+        planType: 'team',
+        displayName: 'Team',
+        description: 'Pour les équipes en croissance',
+        priceMonthly: 49,
+        priceYearly: 490,
+        maxUsers: 20,
+        maxAmbitions: -1,
+        features: {
+          export_pdf: 'advanced',
+          support: 'priority',
+          ai_coach_suggestions: -1,
+          analytics: 'advanced',
+          integrations: 'advanced',
+          priority_support: true,
+          quarterly_objectives_per_ambition: -1,
+          roles_permissions: true,
+        },
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
   },
 
   /**

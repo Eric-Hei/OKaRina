@@ -76,7 +76,7 @@ export class CommentsService {
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToComment(row));
+    return (data || []).map((row: any) => this.rowToComment(row));
   }
 
   /**
@@ -90,7 +90,7 @@ export class CommentsService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToComment(row));
+    return (data || []).map((row: any) => this.rowToComment(row));
   }
 
   /**
@@ -160,7 +160,7 @@ export class CommentsService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToComment(row));
+    return (data || []).map((row: any) => this.rowToComment(row));
   }
 }
 

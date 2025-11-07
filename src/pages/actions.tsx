@@ -13,7 +13,7 @@ import { generateId } from '@/utils';
 import type { Action, ActionFormData, ActionStatus } from '@/types';
 import { useAmbitions } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
-import { useQuarterlyKeyResults } from '@/hooks/useQuarterlyKeyResults';
+import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
 import { useActions, useCreateAction, useUpdateAction, useDeleteAction, useUpdateActionStatus, useUpdateActionsOrder, useMoveAction } from '@/hooks/useActions';
 
 type ViewMode = 'kanban' | 'table' | 'checklist';
@@ -24,7 +24,7 @@ const ActionsPage: React.FC = () => {
   // React Query - Données
   const { data: ambitions = [] } = useAmbitions(user?.id);
   const { data: quarterlyObjectives = [] } = useQuarterlyObjectives(user?.id);
-  const { data: quarterlyKeyResults = [] } = useQuarterlyKeyResults(user?.id);
+  const { data: quarterlyKeyResults = [] } = useQuarterlyKeyResultsByUser(user?.id);
   const { data: actions = [] } = useActions(user?.id);
 
   // React Query - Mutations

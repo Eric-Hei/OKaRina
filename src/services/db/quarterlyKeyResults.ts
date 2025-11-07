@@ -73,7 +73,7 @@ export class QuarterlyKeyResultsService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToQuarterlyKeyResult(row));
+    return (data || []).map((row: any) => this.rowToQuarterlyKeyResult(row));
   }
 
   static async getByObjectiveId(objectiveId: string): Promise<QuarterlyKeyResult[]> {
@@ -84,7 +84,7 @@ export class QuarterlyKeyResultsService {
       .order('order_index', { ascending: true });
 
     if (error) throw error;
-    return (data || []).map(row => this.rowToQuarterlyKeyResult(row));
+    return (data || []).map((row: any) => this.rowToQuarterlyKeyResult(row));
   }
 
   static async getById(id: string): Promise<QuarterlyKeyResult | null> {

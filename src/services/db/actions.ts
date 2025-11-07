@@ -103,7 +103,7 @@ export class ActionsService {
       throw error;
     }
 
-    return (data || []).map(row => this.rowToAction(row));
+    return (data || []).map((row: any) => this.rowToAction(row));
   }
 
   /**
@@ -122,7 +122,7 @@ export class ActionsService {
       throw error;
     }
 
-    return (data || []).map(row => this.rowToAction(row));
+    return (data || []).map((row: any) => this.rowToAction(row));
   }
 
   /**
@@ -290,12 +290,12 @@ export class ActionsService {
       throw error;
     }
 
-    const actions = (data || []).map(row => this.rowToAction(row));
+    const actions = (data || []).map((row: any) => this.rowToAction(row));
 
     return {
-      todo: actions.filter(a => a.status === 'todo'),
-      in_progress: actions.filter(a => a.status === 'in_progress'),
-      done: actions.filter(a => a.status === 'done'),
+      todo: actions.filter((a: Action) => a.status === 'todo'),
+      in_progress: actions.filter((a: Action) => a.status === 'in_progress'),
+      done: actions.filter((a: Action) => a.status === 'done'),
     } as Record<ActionStatus, Action[]>;
   }
 }

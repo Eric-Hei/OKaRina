@@ -45,7 +45,9 @@ export default function PricingPage() {
     }, 1000);
   };
 
-  const isLoading = subscriptionLoading || plansLoading;
+  // On ne bloque pas l'affichage sur l'abonnement (qui peut etre indisponible en mode non connecte)
+
+  const isLoading = plansLoading;
 
   // Filtrer les plans (ne pas afficher Unlimited dans la liste publique)
   const publicPlans = plans?.filter(p => p.planType !== 'unlimited') || [];

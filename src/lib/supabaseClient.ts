@@ -1,13 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
-// Vérification des variables d'environnement
+// Variables d'environnement
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Variables Supabase non configurées. Fonctionnement en mode local uniquement.');
-  console.warn('💡 Ajoutez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local');
+function isValidHttpUrl(url?: string): boolean {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+const hasEnv = Boolean(supabaseAnonKey && isValidHttpUrl(supabaseUrl));
+
+if (!hasEnv) {
+  console.warn('⚠️ Supabase non configuré (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY manquants ou invalides).');
 }
 
 // Fetch avec timeout pour éviter les requêtes qui pendent (auth refresh / PostgREST)
@@ -42,32 +53,32 @@ function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise
 }
 
 // Client Supabase avec typage TypeScript
-export const supabase = createClient<Database>(
-  supabaseUrl || '',
-  supabaseAnonKey || '',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    },
-    db: {
-      schema: 'public',
-    },
-    global: {
-      fetch: fetchWithTimeout,
-      headers: {
-        'x-application-name': 'OsKaR',
-      },
-    },
-  }
-);
+export const supabase = hasEnv
+  ? createClient<Database>(
+      supabaseUrl as string,
+      supabaseAnonKey as string,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        },
+        db: {
+          schema: 'public',
+        },
+        global: {
+          fetch: fetchWithTimeout,
+          headers: {
+            'x-application-name': 'OsKaR',
+          },
+        },
+      }
+    )
+  : ({} as any);
 
 // Helper pour vérifier si Supabase est configuré
-export const isSupabaseConfigured = (): boolean => {
-  return !!(supabaseUrl && supabaseAnonKey && supabaseUrl !== 'your_supabase_project_url_here');
-};
+export const isSupabaseConfigured = (): boolean => hasEnv;
 
 // Helper pour obtenir l'utilisateur courant
 export const getCurrentUser = async () => {

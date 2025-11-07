@@ -103,7 +103,7 @@ export class AmbitionsService {
       throw error;
     }
 
-    return (data || []).map(row => this.rowToAmbition(row));
+    return (data || []).map((row: any) => this.rowToAmbition(row));
   }
 
   /**

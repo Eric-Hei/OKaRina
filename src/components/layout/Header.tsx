@@ -41,7 +41,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { data: subscription } = useSubscription(user?.id);
 
-  const navigation = [
+  // Navigation pour utilisateurs connectés
+  const authenticatedNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Check-in', href: '/check-in', icon: AlarmClock },
     { name: 'Focus', href: '/focus', icon: AlarmClock },
@@ -50,6 +51,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
     { name: 'Actions', href: '/actions', icon: CheckSquare },
     { name: 'Suivi', href: '/progress', icon: Calendar },
   ];
+
+  // Navigation pour utilisateurs non connectés
+  const publicNavigation = [
+    { name: 'Tarifs', href: '/pricing', icon: Crown },
+  ];
+
+  const navigation = user ? authenticatedNavigation : publicNavigation;
 
   const handleLogout = async () => {
     console.log('🔴 Déconnexion en cours...');
@@ -94,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
         <div className="flex justify-between items-center h-16">
           {/* Logo et navigation principale */}
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center">
+            <Link href={user ? "/dashboard" : "/"} className="flex items-center">
               <img
                 src="/images/Oskar-logo.png"
                 alt="OsKaR"
@@ -107,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = router.pathname === item.href;
-                
+
                 return (
                   <Link
                     key={item.name}

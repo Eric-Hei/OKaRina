@@ -10,6 +10,27 @@ import '@/styles/globals.css';
 export default function App({ Component, pageProps }: AppProps) {
   const { user, setUser, logout } = useAppStore();
 
+  // Nettoyer les sessions corrompues (migration v1.4.3)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const MIGRATION_KEY = 'oskar_migration_v1.4.3';
+    const migrationDone = localStorage.getItem(MIGRATION_KEY);
+
+    if (!migrationDone) {
+      console.log('🔄 Migration v1.4.3 : Nettoyage des sessions corrompues...');
+
+      // Nettoyer les anciennes clés de store
+      localStorage.removeItem('oskar-app-store');
+      localStorage.removeItem('app-store');
+      localStorage.removeItem('okarina-store');
+
+      // Marquer la migration comme effectuée
+      localStorage.setItem(MIGRATION_KEY, 'done');
+      console.log('✅ Migration v1.4.3 terminée');
+    }
+  }, []);
+
   // Initialiser l'authentification Supabase
   useEffect(() => {
     if (!isSupabaseConfigured()) {
