@@ -50,34 +50,81 @@ export class AuthService {
     });
 
     if (authError) {
-      console.error('Erreur lors de l\'inscription:', authError);
+      console.error('❌ Erreur lors de l\'inscription:', authError);
       throw authError;
     }
 
-    // 2. Le profil est créé automatiquement via le trigger handle_new_user()
-    // Attendre un peu pour que le trigger s'exécute
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // 3. Récupérer le profil créé
-    if (authData.user) {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Erreur lors de la récupération du profil:', profileError);
-      }
-
-      return {
-        user: authData.user,
-        profile,
-        session: authData.session,
-      };
+    if (!authData.user) {
+      throw new Error('Aucun utilisateur créé');
     }
 
-    return authData;
+    // 2. Le profil est normalement créé automatiquement via le trigger handle_new_user()
+    // Attendre un peu pour que le trigger s'exécute
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // 3. Vérifier si le profil a été créé
+    let { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    // 4. Si le profil n'existe pas (trigger a échoué), le créer manuellement
+    if (profileError || !profile) {
+      console.warn('⚠️ Le trigger n\'a pas créé le profil, création manuelle...');
+
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: name || email.split('@')[0],
+          company,
+          role,
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Erreur lors de la création manuelle du profil:', createError);
+        // Ne pas bloquer l'inscription, le profil pourra être créé plus tard
+      } else {
+        profile = newProfile;
+        console.log('✅ Profil créé manuellement');
+      }
+    }
+
+    // 5. Vérifier si l'abonnement a été créé
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', authData.user.id)
+      .single();
+
+    // 6. Si l'abonnement n'existe pas, le créer manuellement
+    if (subError || !subscription) {
+      console.warn('⚠️ Le trigger n\'a pas créé l\'abonnement, création manuelle...');
+
+      const { error: createSubError } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: authData.user.id,
+          plan_type: 'free',
+          status: 'active',
+        });
+
+      if (createSubError && createSubError.code !== '23505') {
+        console.error('❌ Erreur lors de la création manuelle de l\'abonnement:', createSubError);
+      } else {
+        console.log('✅ Abonnement créé manuellement');
+      }
+    }
+
+    return {
+      user: authData.user,
+      profile,
+      session: authData.session,
+    };
   }
 
   /**
@@ -165,6 +212,11 @@ export class AuthService {
    * Récupérer la session courante
    */
   static async getSession() {
+    // Ne pas appeler Supabase Auth côté serveur (pendant le build statique)
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
     if (!isSupabaseConfigured()) {
       return null;
     }
@@ -307,6 +359,30 @@ export class AuthService {
       throw new Error('Supabase n\'est pas configuré.');
     }
 
+    console.log('🔄 Début de la mise à jour du profil d\'entreprise...');
+    console.log('📝 User ID:', userId);
+    console.log('📝 Company Profile:', companyProfile);
+
+    // Vérifier la session avant l'UPDATE
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    console.log('🔐 Session actuelle:', sessionData?.session ? 'Valide' : 'Invalide');
+
+    if (sessionError) {
+      console.error('❌ Erreur de session:', sessionError);
+    }
+
+    if (!sessionData?.session) {
+      console.warn('⚠️ Aucune session active, tentative de rafraîchissement...');
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        console.error('❌ Erreur de rafraîchissement:', refreshError);
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+
+      console.log('✅ Session rafraîchie avec succès');
+    }
+
     const result = await (supabase as any)
       .from('profiles')
       .update({ company_profile: companyProfile })
@@ -316,11 +392,22 @@ export class AuthService {
 
     const { data, error } = result;
 
+    console.log('📊 Résultat de l\'UPDATE:', { data, error });
+
     if (error) {
-      console.error('Erreur lors de la mise à jour du profil d\'entreprise:', error);
+      console.error('❌ Erreur lors de la mise à jour du profil d\'entreprise:', error);
+      console.error('❌ Code d\'erreur:', error.code);
+      console.error('❌ Message:', error.message);
+      console.error('❌ Détails:', error.details);
       throw error;
     }
 
+    if (!data) {
+      console.warn('⚠️ Aucune donnée retournée par l\'UPDATE');
+      throw new Error('Aucune donnée retournée lors de la mise à jour du profil');
+    }
+
+    console.log('✅ Profil d\'entreprise mis à jour avec succès:', data);
     return data;
   }
 

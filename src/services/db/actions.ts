@@ -193,11 +193,15 @@ export class ActionsService {
    * Changer le statut d'une action (Kanban)
    */
   static async updateStatus(id: string, status: ActionStatus, userId: string): Promise<Action> {
+    console.log('🚀 ActionsService.updateStatus - Début:', { id, status, userId });
+
     const updateData: ActionUpdate = { status: actionStatusToDb(status) };
 
     if ((typeof status === 'string' ? status.toUpperCase() : String(status).toUpperCase()) === 'DONE') {
       updateData.completed_at = new Date().toISOString();
     }
+
+    console.log('📝 ActionsService.updateStatus - Données à mettre à jour:', updateData);
 
     const result = await (supabase as any)
       .from('actions')
@@ -210,10 +214,17 @@ export class ActionsService {
     const { data, error } = result;
 
     if (error) {
-      console.error('❌ Erreur lors du changement de statut:', error);
+      console.error('❌ ActionsService.updateStatus - Erreur Supabase:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
     }
 
+    console.log('✅ ActionsService.updateStatus - Succès:', data);
     return this.rowToAction(data);
   }
 
@@ -237,6 +248,12 @@ export class ActionsService {
    * Mettre à jour l'ordre des actions (drag & drop Kanban)
    */
   static async updateOrder(actions: { id: string; order_index: number }[], userId: string): Promise<void> {
+    console.log('🚀 ActionsService.updateOrder - Début:', {
+      actionsCount: actions.length,
+      actions,
+      userId
+    });
+
     const updates = actions.map(({ id, order_index }) =>
       (supabase as any)
         .from('actions')
@@ -249,9 +266,19 @@ export class ActionsService {
     const errors = results.filter((r: any) => r.error);
 
     if (errors.length > 0) {
-      console.error('❌ Erreurs lors de la mise à jour de l\'ordre:', errors);
+      console.error('❌ ActionsService.updateOrder - Erreurs Supabase:', {
+        errorsCount: errors.length,
+        errors: errors.map((r: any) => ({
+          error: r.error,
+          code: r.error?.code,
+          message: r.error?.message,
+          details: r.error?.details
+        }))
+      });
       throw new Error('Erreur lors de la mise à jour de l\'ordre des actions');
     }
+
+    console.log('✅ ActionsService.updateOrder - Succès');
   }
 
   /**
@@ -264,15 +291,32 @@ export class ActionsService {
     orderUpdates: { id: string; order_index: number }[],
     userId: string
   ): Promise<Action> {
-    // 1. Mettre à jour le statut de l'action déplacée
-    const statusUpdate = await this.updateStatus(actionId, newStatus, userId);
+    console.log('🚀 ActionsService.moveAction - Début:', {
+      actionId,
+      newStatus,
+      orderUpdatesCount: orderUpdates.length,
+      userId
+    });
 
-    // 2. Mettre à jour les order_index de toutes les actions concernées
-    if (orderUpdates.length > 0) {
-      await this.updateOrder(orderUpdates, userId);
+    try {
+      // 1. Mettre à jour le statut de l'action déplacée
+      console.log('📝 ActionsService.moveAction - Mise à jour du statut...');
+      const statusUpdate = await this.updateStatus(actionId, newStatus, userId);
+      console.log('✅ ActionsService.moveAction - Statut mis à jour:', statusUpdate);
+
+      // 2. Mettre à jour les order_index de toutes les actions concernées
+      if (orderUpdates.length > 0) {
+        console.log('📝 ActionsService.moveAction - Mise à jour des order_index...', orderUpdates);
+        await this.updateOrder(orderUpdates, userId);
+        console.log('✅ ActionsService.moveAction - Order_index mis à jour');
+      }
+
+      console.log('✅ ActionsService.moveAction - Terminé avec succès');
+      return statusUpdate;
+    } catch (error) {
+      console.error('❌ ActionsService.moveAction - Erreur:', error);
+      throw error;
     }
-
-    return statusUpdate;
   }
 
   /**

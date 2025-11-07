@@ -8,6 +8,12 @@ export class GeminiService {
   private model?: any;
 
   private constructor() {
+    // Ne pas initialiser Gemini côté serveur (pendant le build statique)
+    if (typeof window === 'undefined') {
+      console.log('⚠️ Gemini non initialisé côté serveur (build statique)');
+      return;
+    }
+
     // Récupération sécurisée de la clé API depuis les variables d'environnement
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {

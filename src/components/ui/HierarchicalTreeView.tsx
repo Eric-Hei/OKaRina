@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent } from '@/components/ui/Card';
 import {
   Ambition,
+  KeyResult,
   QuarterlyObjective,
   QuarterlyKeyResult,
   Action,
@@ -34,12 +35,16 @@ import {
 
 interface HierarchicalTreeViewProps {
   ambitions: Ambition[];
+  keyResults: KeyResult[];
   quarterlyObjectives: QuarterlyObjective[];
   quarterlyKeyResults: QuarterlyKeyResult[];
   actions: Action[];
   onAddAmbition: () => void;
   onEditAmbition: (ambition: Ambition) => void;
   onDeleteAmbition: (ambitionId: string) => void;
+  onAddKeyResult: (ambitionId: string) => void;
+  onEditKeyResult: (keyResult: KeyResult) => void;
+  onDeleteKeyResult: (keyResultId: string) => void;
   onAddQuarterlyObjective: (ambitionId: string) => void;
   onEditQuarterlyObjective: (objective: QuarterlyObjective) => void;
   onDeleteQuarterlyObjective: (objectiveId: string) => void;
@@ -59,12 +64,16 @@ interface HierarchicalTreeViewProps {
 
 export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
   ambitions,
+  keyResults,
   quarterlyObjectives,
   quarterlyKeyResults,
   actions,
   onAddAmbition,
   onEditAmbition,
   onDeleteAmbition,
+  onAddKeyResult,
+  onEditKeyResult,
+  onDeleteKeyResult,
   onAddQuarterlyObjective,
   onEditQuarterlyObjective,
   onDeleteQuarterlyObjective,
@@ -137,6 +146,9 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
     [ActionStatus.DONE]: 'bg-green-100 text-green-800',
   };
 
+  const getKeyResultsForAmbition = (ambitionId: string) =>
+    keyResults.filter(kr => kr.ambitionId === ambitionId);
+
   const getObjectivesForAmbition = (ambitionId: string) =>
     quarterlyObjectives.filter(obj => obj.ambitionId === ambitionId);
 
@@ -178,6 +190,7 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
       <div className="space-y-3">
         {ambitions.map((ambition) => {
           const isExpanded = expandedAmbitions.has(ambition.id);
+          const ambitionKeyResults = getKeyResultsForAmbition(ambition.id);
           const objectives = getObjectivesForAmbition(ambition.id);
 
           return (
@@ -216,6 +229,14 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => onAddKeyResult(ambition.id)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ajouter un KR
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => onAddQuarterlyObjective(ambition.id)}
                       >
                         <Plus className="h-4 w-4 mr-1" />
@@ -239,6 +260,79 @@ export const HierarchicalTreeView: React.FC<HierarchicalTreeViewProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* KR d'Ambition (annuels) */}
+                <AnimatePresence>
+                  {isExpanded && ambitionKeyResults.length > 0 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden bg-green-50"
+                    >
+                      <div className="pl-8 pr-4 py-3 space-y-2">
+                        <div className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2">
+                          Résultats Clés Annuels ({ambitionKeyResults.length})
+                        </div>
+                        {ambitionKeyResults.map((kr) => {
+                          const progress = kr.current && kr.target ? Math.round((kr.current / kr.target) * 100) : 0;
+
+                          return (
+                            <div
+                              key={kr.id}
+                              className="bg-white border border-green-200 rounded-lg p-3 hover:shadow-sm transition-shadow"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3 flex-1">
+                                  <TrendingUp className="h-4 w-4 text-green-600" />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <h5 className="font-medium text-gray-900">{kr.title}</h5>
+                                      <span className="text-xs text-green-600 font-normal">KR Annuel</span>
+                                    </div>
+                                    <p className="text-sm text-gray-600">{kr.description}</p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                      <div className="text-xs text-gray-500">
+                                        <span className="font-medium">{kr.current}</span> / {kr.target} {kr.unit}
+                                      </div>
+                                      <div className="flex-1 max-w-xs">
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                          <div
+                                            className="bg-green-500 h-2 rounded-full transition-all"
+                                            style={{ width: `${Math.min(progress, 100)}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                      <span className="text-xs font-medium text-green-600">{progress}%</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onEditKeyResult(kr)}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onDeleteKeyResult(kr.id)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Objectifs Trimestriels */}
                 <AnimatePresence>

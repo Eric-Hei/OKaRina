@@ -135,11 +135,13 @@ const ActionsPage: React.FC = () => {
   };
 
   const handleActionReorder = async (updates: { id: string; order_index: number }[]) => {
+    console.log('🚀 actions.tsx - handleActionReorder appelé:', updates);
     try {
       // Ne pas attendre la fin de la mutation pour que l'optimistic update fonctionne
       updateActionsOrder.mutate(updates);
+      console.log('✅ actions.tsx - handleActionReorder mutation lancée');
     } catch (error) {
-      console.error('❌ Erreur lors de la réorganisation des actions:', error);
+      console.error('❌ actions.tsx - Erreur lors de la réorganisation des actions:', error);
       alert('Erreur lors de la réorganisation des actions');
     }
   };

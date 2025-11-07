@@ -65,6 +65,12 @@ export const KeyResultForm: React.FC<KeyResultFormProps> = ({
       newErrors.current = 'La valeur actuelle ne peut pas être négative';
     }
 
+    if (!formData.ambitionId) {
+      console.error('❌ Erreur de validation : ambitionId manquant');
+      alert('Erreur : Aucune ambition sélectionnée. Veuillez réessayer.');
+      return false;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

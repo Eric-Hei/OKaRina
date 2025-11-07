@@ -20,12 +20,14 @@ import { ProgressUpdateModal } from '@/components/ui/ProgressUpdateModal';
 import { ProgressHistoryPanel } from '@/components/ui/ProgressHistoryPanel';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { AmbitionForm, AmbitionFormData } from '@/components/forms/AmbitionForm';
+import { KeyResultForm } from '@/components/forms/KeyResultForm';
 import { QuarterlyObjectiveForm } from '@/components/forms/QuarterlyObjectiveForm';
 import { QuarterlyKeyResultForm } from '@/components/forms/QuarterlyKeyResultForm';
 import { ActionForm } from '@/components/forms/ActionForm';
 import { useAppStore } from '@/store/useAppStore';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAmbitions, useCreateAmbition, useUpdateAmbition, useDeleteAmbition } from '@/hooks/useAmbitions';
+import { useKeyResultsByUser, useCreateKeyResult, useUpdateKeyResult, useDeleteKeyResult } from '@/hooks/useKeyResults';
 import { useQuarterlyObjectives, useCreateQuarterlyObjective, useUpdateQuarterlyObjective, useDeleteQuarterlyObjective } from '@/hooks/useQuarterlyObjectives';
 import { useQuarterlyKeyResultsByUser, useCreateQuarterlyKeyResult, useUpdateQuarterlyKeyResult, useUpdateQuarterlyKeyResultProgress, useDeleteQuarterlyKeyResult } from '@/hooks/useQuarterlyKeyResults';
 import { useActions, useCreateAction, useUpdateAction, useDeleteAction, useUpdateActionStatus } from '@/hooks/useActions';
@@ -36,6 +38,7 @@ import { Share2 } from 'lucide-react';
 import { SubscriptionsService } from '@/services/db/subscriptions';
 import {
   Ambition,
+  KeyResult,
   QuarterlyObjective,
   QuarterlyKeyResult,
   Action,
@@ -46,10 +49,11 @@ import {
   QuarterlyKeyResultFormData,
   ActionFormData
 } from '@/types';
+import { KeyResultFormData } from '@/components/forms/KeyResultForm';
 import { generateId } from '@/utils';
 
 type ViewMode = 'tree' | 'kanban';
-type FormMode = 'ambition' | 'quarterly-objective' | 'quarterly-key-result' | 'action' | null;
+type FormMode = 'ambition' | 'key-result' | 'quarterly-objective' | 'quarterly-key-result' | 'action' | null;
 
 const ManagementPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('tree');
@@ -68,8 +72,9 @@ const ManagementPage: React.FC = () => {
 
   // React Query - Données
   const { data: ambitions = [], isLoading: ambitionsLoading } = useAmbitions(user?.id);
+  const { data: keyResults = [], isLoading: keyResultsLoading } = useKeyResultsByUser(user?.id);
   const { data: quarterlyObjectives = [], isLoading: objectivesLoading } = useQuarterlyObjectives(user?.id);
-  const { data: quarterlyKeyResults = [], isLoading: keyResultsLoading } = useQuarterlyKeyResultsByUser(user?.id);
+  const { data: quarterlyKeyResults = [], isLoading: quarterlyKeyResultsLoading } = useQuarterlyKeyResultsByUser(user?.id);
   const { data: actions = [], isLoading: actionsLoading } = useActions(user?.id);
 
   // React Query - Mutations Ambitions
@@ -77,22 +82,27 @@ const ManagementPage: React.FC = () => {
   const updateAmbitionMutation = useUpdateAmbition();
   const deleteAmbitionMutation = useDeleteAmbition();
 
+  // React Query - Mutations Key Results (annuels)
+  const createKeyResult = useCreateKeyResult();
+  const updateKeyResultMutation = useUpdateKeyResult();
+  const deleteKeyResultMutation = useDeleteKeyResult();
+
   // React Query - Mutations Objectifs
   const createObjective = useCreateQuarterlyObjective();
   const updateObjectiveMutation = useUpdateQuarterlyObjective();
   const deleteObjectiveMutation = useDeleteQuarterlyObjective();
 
-  // React Query - Mutations Key Results
-  const createKeyResult = useCreateQuarterlyKeyResult();
-  const updateKeyResultMutation = useUpdateQuarterlyKeyResult();
+  // React Query - Mutations Key Results (trimestriels)
+  const createQuarterlyKeyResult = useCreateQuarterlyKeyResult();
+  const updateQuarterlyKeyResultMutation = useUpdateQuarterlyKeyResult();
   const updateKeyResultProgressMutation = useUpdateQuarterlyKeyResultProgress();
-  const deleteKeyResultMutation = useDeleteQuarterlyKeyResult();
+  const deleteQuarterlyKeyResultMutation = useDeleteQuarterlyKeyResult();
 
   // React Query - Mutations Actions
   const createAction = useCreateAction();
-  const updateActionMutation = useUpdateAction();
-  const deleteActionMutation = useDeleteAction();
-  const updateActionStatusMutation = useUpdateActionStatus();
+  const updateActionMutation = useUpdateAction(user?.id);
+  const deleteActionMutation = useDeleteAction(user?.id);
+  const updateActionStatusMutation = useUpdateActionStatus(user?.id);
 
   const [filters, setFilters] = useState<FilterState>({
     ambitionIds: [],
@@ -123,7 +133,7 @@ const ManagementPage: React.FC = () => {
   const filtersDescription = useActiveFiltersDescription(filters, ambitions, quarterlyObjectives);
 
   // État de chargement
-  const isLoading = ambitionsLoading || objectivesLoading || keyResultsLoading || actionsLoading;
+  const isLoading = ambitionsLoading || keyResultsLoading || objectivesLoading || quarterlyKeyResultsLoading || actionsLoading;
 
 
 
@@ -145,6 +155,17 @@ const ManagementPage: React.FC = () => {
   const handleEditAmbition = (ambition: Ambition) => {
     setEditingItem(ambition);
     setFormMode('ambition');
+  };
+
+  const handleAddKeyResult = (ambitionId: string) => {
+    setSelectedObjectiveId(ambitionId); // Réutilise la variable pour stocker l'ambition ID
+    setEditingItem(null);
+    setFormMode('key-result');
+  };
+
+  const handleEditKeyResult = (keyResult: KeyResult) => {
+    setEditingItem(keyResult);
+    setFormMode('key-result');
   };
 
   const handleAddQuarterlyObjective = (ambitionId?: string) => {
@@ -208,6 +229,33 @@ const ManagementPage: React.FC = () => {
     }
   };
 
+  const handleKeyResultSubmit = async (data: KeyResultFormData) => {
+    if (!user) return;
+
+    try {
+      if (editingItem) {
+        await updateKeyResultMutation.mutateAsync({
+          id: editingItem.id,
+          updates: data,
+        });
+      } else {
+        await createKeyResult.mutateAsync({
+          keyResult: {
+            ...data,
+            status: Status.ACTIVE,
+          },
+          userId: user.id
+        });
+      }
+      setFormMode(null);
+      setEditingItem(null);
+      setSelectedObjectiveId(null);
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde du résultat clé:', error);
+      alert('Erreur lors de la sauvegarde du résultat clé');
+    }
+  };
+
   const handleQuarterlyObjectiveSubmit = async (data: QuarterlyObjectiveFormData) => {
     if (!user) return;
 
@@ -247,12 +295,12 @@ const ManagementPage: React.FC = () => {
       };
 
       if (editingItem) {
-        await updateKeyResultMutation.mutateAsync({
+        await updateQuarterlyKeyResultMutation.mutateAsync({
           id: editingItem.id,
           updates,
         });
       } else if (selectedObjectiveId) {
-        await createKeyResult.mutateAsync({
+        await createQuarterlyKeyResult.mutateAsync({
           keyResult: {
             ...updates,
             quarterlyObjectiveId: selectedObjectiveId,
@@ -475,6 +523,14 @@ const ManagementPage: React.FC = () => {
               onCancel={handleCancelForm}
             />
           )}
+          {formMode === 'key-result' && (
+            <KeyResultForm
+              initialData={editingItem}
+              ambitionId={selectedObjectiveId}
+              onSubmit={handleKeyResultSubmit}
+              onCancel={handleCancelForm}
+            />
+          )}
           {formMode === 'quarterly-objective' && (
             <QuarterlyObjectiveForm
               initialData={editingItem || (selectedObjectiveId ? { ambitionId: selectedObjectiveId } : undefined)}
@@ -615,6 +671,7 @@ const ManagementPage: React.FC = () => {
               {/* Vue hiérarchique : Ambitions → Objectifs Trimestriels → KR Trimestriels */}
               <HierarchicalTreeView
                 ambitions={filteredAmbitions}
+                keyResults={keyResults}
                 quarterlyObjectives={filteredQuarterlyObjectives}
                 quarterlyKeyResults={quarterlyKeyResults}
                 actions={filteredActions}
@@ -629,6 +686,16 @@ const ManagementPage: React.FC = () => {
                       console.error('❌ Erreur lors de la suppression:', error);
                       alert('Erreur lors de la suppression de l\'ambition');
                     }
+                  }
+                }}
+                onAddKeyResult={handleAddKeyResult}
+                onEditKeyResult={handleEditKeyResult}
+                onDeleteKeyResult={async (id) => {
+                  try {
+                    await deleteKeyResultMutation.mutateAsync(id);
+                  } catch (error) {
+                    console.error('❌ Erreur lors de la suppression:', error);
+                    alert('Erreur lors de la suppression du résultat clé');
                   }
                 }}
                 onAddQuarterlyObjective={handleAddQuarterlyObjective}
@@ -646,7 +713,7 @@ const ManagementPage: React.FC = () => {
                 onEditQuarterlyKeyResult={handleEditQuarterlyKeyResult}
                 onDeleteQuarterlyKeyResult={async (id) => {
                   try {
-                    await deleteKeyResultMutation.mutateAsync(id);
+                    await deleteQuarterlyKeyResultMutation.mutateAsync(id);
                   } catch (error) {
                     console.error('❌ Erreur lors de la suppression:', error);
                     alert('Erreur lors de la suppression du Key Result');

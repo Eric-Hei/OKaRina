@@ -58,9 +58,9 @@ export default function TestUIPage() {
   const deleteKeyResult = useDeleteQuarterlyKeyResult();
 
   const createAction = useCreateAction();
-  const updateAction = useUpdateAction();
-  const deleteAction = useDeleteAction();
-  const updateActionStatus = useUpdateActionStatus();
+  const updateAction = useUpdateAction(user?.id);
+  const deleteAction = useDeleteAction(user?.id);
+  const updateActionStatus = useUpdateActionStatus(user?.id);
 
   // Handlers
   const handleCreateAmbition = async () => {

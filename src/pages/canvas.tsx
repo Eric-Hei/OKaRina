@@ -195,10 +195,20 @@ const CanvasPage: React.FC = () => {
                 <Button
                   variant="outline"
                   onClick={async () => {
-                    if (!user) return;
+                    console.log('🎯 Clic sur le bouton template détecté');
+                    console.log('👤 User:', user);
+
+                    if (!user) {
+                      console.error('❌ Aucun utilisateur connecté');
+                      alert('Vous devez être connecté pour créer un template');
+                      return;
+                    }
+
+                    console.log('🚀 Début de la création du template SaaS...');
 
                     try {
                       // Créer l'ambition
+                      console.log('📝 Création de l\'ambition...');
                       const ambition = await createAmbition.mutateAsync({
                         ambition: {
                           title: 'SaaS: Accélérer la croissance',
@@ -210,8 +220,10 @@ const CanvasPage: React.FC = () => {
                         },
                         userId: user.id
                       });
+                      console.log('✅ Ambition créée:', ambition);
 
                       // Créer l'objectif trimestriel
+                      console.log('📝 Création de l\'objectif trimestriel...');
                       const objective = await createObjective.mutateAsync({
                         objective: {
                           title: "Augmenter l'ARR",
@@ -223,8 +235,10 @@ const CanvasPage: React.FC = () => {
                         },
                         userId: user.id
                       });
+                      console.log('✅ Objectif créé:', objective);
 
                       // Créer les Key Results
+                      console.log('📝 Création des Key Results...');
                       const kr1 = await createKeyResult.mutateAsync({
                         keyResult: {
                           title: 'Passer de 100 à 200 MQL/mois',
@@ -238,6 +252,8 @@ const CanvasPage: React.FC = () => {
                         userId: user.id
                       });
 
+                      console.log('✅ KR1 créé:', kr1);
+
                       const kr2 = await createKeyResult.mutateAsync({
                         keyResult: {
                           title: 'Augmenter le taux de conversion MQL→Client de 12% à 18%',
@@ -250,8 +266,10 @@ const CanvasPage: React.FC = () => {
                         },
                         userId: user.id
                       });
+                      console.log('✅ KR2 créé:', kr2);
 
                       // Créer les actions
+                      console.log('📝 Création des actions...');
                       await createAction.mutateAsync({
                         action: {
                           title: 'Lancer campagne LinkedIn Ads',
@@ -284,11 +302,14 @@ const CanvasPage: React.FC = () => {
                         },
                         userId: user.id
                       });
+                      console.log('✅ Toutes les actions créées');
 
+                      console.log('🎉 Template SaaS créé avec succès !');
                       alert('Template SaaS créé avec succès !');
                     } catch (error) {
                       console.error('❌ Erreur lors de la création du template:', error);
-                      alert('Erreur lors de la création du template');
+                      console.error('❌ Détails de l\'erreur:', error);
+                      alert(`Erreur lors de la création du template: ${(error as any)?.message || 'Erreur inconnue'}`);
                     }
                   }}
                 >

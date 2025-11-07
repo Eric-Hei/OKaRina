@@ -149,9 +149,20 @@ export function useUpdateActionsOrder(userId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (updates: { id: string; order_index: number }[]) =>
-      ActionsService.updateOrder(updates, userId!),
+    mutationFn: async (updates: { id: string; order_index: number }[]) => {
+      console.log('🚀 useUpdateActionsOrder - Début:', { updatesCount: updates.length, userId });
+      try {
+        const result = await ActionsService.updateOrder(updates, userId!);
+        console.log('✅ useUpdateActionsOrder - Succès');
+        return result;
+      } catch (error) {
+        console.error('❌ useUpdateActionsOrder - Erreur:', error);
+        throw error;
+      }
+    },
     onMutate: async (updates) => {
+      console.log('⏳ useUpdateActionsOrder - onMutate:', updates);
+
       // Annuler les requêtes en cours
       await queryClient.cancelQueries({ queryKey: ['actions'] });
 
@@ -181,12 +192,32 @@ export function useUpdateActionsOrder(userId?: string) {
       return { previousActions };
     },
     onError: (err, updates, context) => {
+      console.error('❌ useUpdateActionsOrder - onError:', {
+        error: err,
+        updatesCount: updates.length,
+        hasContext: !!context?.previousActions
+      });
+
       // Rollback en cas d'erreur
       if (context?.previousActions) {
+        console.log('🔄 useUpdateActionsOrder - Rollback vers état précédent');
         queryClient.setQueryData(['actions', userId, undefined], context.previousActions);
       }
+
+      // Afficher un message d'erreur à l'utilisateur
+      if (typeof window !== 'undefined') {
+        alert(`Erreur lors de la réorganisation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
     },
-    onSettled: () => {
+    onSuccess: (result, updates) => {
+      console.log('✅ useUpdateActionsOrder - onSuccess:', { updatesCount: updates.length });
+    },
+    onSettled: (result, error, updates) => {
+      console.log('🏁 useUpdateActionsOrder - onSettled:', {
+        hasResult: result !== undefined,
+        hasError: !!error,
+        updatesCount: updates.length
+      });
       // Rafraîchir les données après la mutation
       queryClient.invalidateQueries({ queryKey: ['actions'] });
     },
@@ -200,12 +231,30 @@ export function useMoveAction(userId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: {
+    mutationFn: async (data: {
       actionId: string;
       newStatus: ActionStatus;
       orderUpdates: { id: string; order_index: number }[];
-    }) => ActionsService.moveAction(data.actionId, data.newStatus, data.orderUpdates, userId!),
+    }) => {
+      console.log('🚀 useMoveAction - Début:', {
+        actionId: data.actionId,
+        newStatus: data.newStatus,
+        orderUpdatesCount: data.orderUpdates.length,
+        userId
+      });
+
+      try {
+        const result = await ActionsService.moveAction(data.actionId, data.newStatus, data.orderUpdates, userId!);
+        console.log('✅ useMoveAction - Succès:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ useMoveAction - Erreur:', error);
+        throw error;
+      }
+    },
     onMutate: async (data) => {
+      console.log('⏳ useMoveAction - onMutate:', data);
+
       // Annuler les requêtes en cours pour toutes les variantes de la query
       await queryClient.cancelQueries({ queryKey: ['actions'] });
 
@@ -248,16 +297,38 @@ export function useMoveAction(userId?: string) {
       return { previousActions };
     },
     onError: (err, data, context) => {
+      console.error('❌ useMoveAction - onError:', {
+        error: err,
+        data,
+        hasContext: !!context?.previousActions
+      });
+
       // Rollback en cas d'erreur
       if (context?.previousActions) {
+        console.log('🔄 useMoveAction - Rollback vers état précédent');
         queryClient.setQueryData(['actions', userId, undefined], context.previousActions);
       }
+
+      // Afficher un message d'erreur à l'utilisateur
+      if (typeof window !== 'undefined') {
+        alert(`Erreur lors du déplacement de l'action: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result, data) => {
+      console.log('✅ useMoveAction - onSuccess:', {
+        actionId: data.actionId,
+        newStatus: data.newStatus,
+        result
+      });
       // Ne rien faire ici pour garder l'optimistic update
       // Le cache a déjà été mis à jour dans onMutate
     },
-    onSettled: () => {
+    onSettled: (result, error, data) => {
+      console.log('🏁 useMoveAction - onSettled:', {
+        hasResult: !!result,
+        hasError: !!error,
+        actionId: data.actionId
+      });
       // Ne PAS invalider pour éviter le refetch qui écrase l'optimistic update
     },
   });

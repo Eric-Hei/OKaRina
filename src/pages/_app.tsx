@@ -5,10 +5,14 @@ import { useAppStore } from '@/store/useAppStore';
 import { AuthService } from '@/services/auth';
 import { isSupabaseConfigured } from '@/lib/supabaseClient';
 import { QueryProvider } from '@/providers/QueryProvider';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { ToastContainer } from '@/components/ui/Toast';
+import { useToastStore } from '@/hooks/useToast';
 import '@/styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   const { user, setUser, logout } = useAppStore();
+  const { toasts, removeToast } = useToastStore();
 
   // Nettoyer les sessions corrompues (migration v1.4.3)
   useEffect(() => {
@@ -59,13 +63,31 @@ export default function App({ Component, pageProps }: AppProps) {
       console.log('🔐 Auth state changed:', event);
 
       if (event === 'SIGNED_IN' && session) {
-        const result = await AuthService.getCurrentUser();
-        if (result && result.profile) {
-          const user = AuthService.profileToUser(result.profile);
-          setUser(user);
+        try {
+          const result = await AuthService.getCurrentUser();
+          if (result && result.profile) {
+            const user = AuthService.profileToUser(result.profile);
+            setUser(user);
+          }
+        } catch (error) {
+          console.error('❌ Erreur lors de la récupération du profil après SIGNED_IN:', error);
+          // Ne pas bloquer l'app, juste logger l'erreur
         }
       } else if (event === 'SIGNED_OUT') {
         logout();
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('✅ Token rafraîchi automatiquement');
+      } else if (event === 'USER_UPDATED') {
+        console.log('👤 Utilisateur mis à jour');
+        try {
+          const result = await AuthService.getCurrentUser();
+          if (result && result.profile) {
+            const user = AuthService.profileToUser(result.profile);
+            setUser(user);
+          }
+        } catch (error) {
+          console.error('❌ Erreur lors de la mise à jour du profil:', error);
+        }
       }
     });
 
@@ -77,12 +99,15 @@ export default function App({ Component, pageProps }: AppProps) {
 
 
   return (
-    <QueryProvider>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <Component {...pageProps} />
-    </QueryProvider>
+    <ErrorBoundary>
+      <QueryProvider>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <Component {...pageProps} />
+        <ToastContainer toasts={toasts} onClose={removeToast} />
+      </QueryProvider>
+    </ErrorBoundary>
   );
 }

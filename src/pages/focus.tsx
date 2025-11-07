@@ -59,7 +59,7 @@ function extractPrevStatus(a: Action): ActionStatus | null {
 export default function FocusPage() {
   const { user } = useAppStore();
   const { data: actions = [] } = useActions(user?.id);
-  const updateActionMutation = useUpdateAction();
+  const updateActionMutation = useUpdateAction(user?.id);
   const [scheduledId, setScheduledId] = useState<number | null>(null);
 
   const candidates = useMemo(() => {

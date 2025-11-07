@@ -166,24 +166,22 @@ const SettingsPage: React.FC = () => {
       await supabase.from('actions').delete().eq('user_id', user.id);
       console.log('✅ Actions supprimées');
 
-      // 3. Supprimer les quarterly_key_results
-      await supabase.from('quarterly_key_results').delete().eq('user_id', user.id);
-      console.log('✅ Quarterly Key Results supprimés');
+      // 3. Supprimer les quarterly_key_results (via cascade depuis quarterly_objectives)
+      // Les quarterly_key_results seront supprimés automatiquement via ON DELETE CASCADE
 
       // 4. Supprimer les quarterly_objectives
       await supabase.from('quarterly_objectives').delete().eq('user_id', user.id);
-      console.log('✅ Quarterly Objectives supprimés');
+      console.log('✅ Quarterly Objectives supprimés (+ KRs trimestriels via cascade)');
 
-      // 5. Supprimer les key_results (annuels)
-      await supabase.from('key_results').delete().eq('user_id', user.id);
-      console.log('✅ Key Results supprimés');
+      // 5. Supprimer les key_results (annuels) (via cascade depuis ambitions)
+      // Les key_results seront supprimés automatiquement via ON DELETE CASCADE
 
       // 6. Supprimer les ambitions
       await supabase.from('ambitions').delete().eq('user_id', user.id);
-      console.log('✅ Ambitions supprimées');
+      console.log('✅ Ambitions supprimées (+ KRs annuels via cascade)');
 
       // 7. Supprimer les partages d'objectifs (partagés par l'utilisateur)
-      await supabase.from('shared_objectives').delete().eq('shared_by_user_id', user.id);
+      await supabase.from('shared_objectives').delete().eq('shared_by', user.id);
       console.log('✅ Partages créés supprimés');
 
       // 8. Supprimer les partages d'objectifs (partagés avec l'utilisateur)
@@ -195,7 +193,7 @@ const SettingsPage: React.FC = () => {
       console.log('✅ Notifications supprimées');
 
       // 10. Supprimer les invitations (envoyées)
-      await supabase.from('invitations').delete().eq('invited_by_user_id', user.id);
+      await supabase.from('invitations').delete().eq('invited_by', user.id);
       console.log('✅ Invitations envoyées supprimées');
 
       // 11. Supprimer les invitations (reçues)
