@@ -47,17 +47,17 @@ export class ActionAssigneesService {
             throw error;
         }
 
-        return (data || []).map(row => {
+        return (data || []).map((row: any) => {
             const joinedData: any = {};
 
-            if (row.assignee_type === 'internal' && (row as any).profiles) {
-                const profile = (row as any).profiles;
+            if (row.assignee_type === 'internal' && row.profiles) {
+                const profile = row.profiles;
                 joinedData.userName = profile.name;
                 joinedData.userEmail = profile.email;
             }
 
-            if (row.assignee_type === 'external' && (row as any).external_contacts) {
-                const contact = (row as any).external_contacts;
+            if (row.assignee_type === 'external' && row.external_contacts) {
+                const contact = row.external_contacts;
                 joinedData.externalContact = {
                     id: contact.id,
                     companyId: contact.company_id,
@@ -169,7 +169,7 @@ export class ActionAssigneesService {
         }
 
         console.log(`✅ ${data.length} assignations créées`);
-        return (data || []).map(row => this.rowToAssignee(row));
+        return (data || []).map((row: ActionAssigneeRow) => this.rowToAssignee(row));
     }
 
     /**
@@ -231,6 +231,6 @@ export class ActionAssigneesService {
             throw error;
         }
 
-        return (data || []).map(row => row.action_id);
+        return (data || []).map((row: { action_id: string }) => row.action_id);
     }
 }

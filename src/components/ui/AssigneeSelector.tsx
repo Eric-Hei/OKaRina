@@ -114,7 +114,7 @@ export const AssigneeSelector: React.FC<AssigneeSelectorProps> = ({
     const selectedContacts = value
         .filter(a => a.type === 'external')
         .map(a => externalContacts.find(c => c.id === a.externalContactId))
-        .filter(Boolean);
+        .filter((contact): contact is NonNullable<typeof contact> => contact !== undefined);
 
     return (
         <div className={`border border-gray-200 rounded-lg ${className}`}>

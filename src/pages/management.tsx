@@ -321,18 +321,21 @@ const ManagementPage: React.FC = () => {
     if (!user) return;
 
     try {
+      // Extraire assignees des données pour les gérer séparément
+      const { assignees, ...actionData } = data;
+
       if (editingItem) {
         await updateActionMutation.mutateAsync({
           id: editingItem.id,
           updates: {
-            ...data,
-            deadline: data.deadline ? new Date(data.deadline) : undefined,
-            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+            ...actionData,
+            deadline: actionData.deadline ? new Date(actionData.deadline) : undefined,
+            labels: actionData.labels ? actionData.labels.split(',').map(l => l.trim()).filter(l => l) : [],
           }
         });
       } else {
         // Utiliser le KR du formulaire, ou celui présélectionné
-        const keyResultId = data.quarterlyKeyResultId || selectedObjectiveId;
+        const keyResultId = actionData.quarterlyKeyResultId || selectedObjectiveId;
 
         if (!keyResultId) {
           alert('Veuillez sélectionner un Key Result');
@@ -341,11 +344,11 @@ const ManagementPage: React.FC = () => {
 
         await createAction.mutateAsync({
           action: {
-            ...data,
+            ...actionData,
             quarterlyKeyResultId: keyResultId,
             status: ActionStatus.TODO,
-            deadline: data.deadline ? new Date(data.deadline) : undefined,
-            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+            deadline: actionData.deadline ? new Date(actionData.deadline) : undefined,
+            labels: actionData.labels ? actionData.labels.split(',').map(l => l.trim()).filter(l => l) : [],
           },
           userId: user.id
         });

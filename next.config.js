@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Retirer output: 'export' pour utiliser le mode serveur avec Netlify
   trailingSlash: true,
   images: {
     unoptimized: true,

@@ -1,5 +1,5 @@
 [build]
-  publish = "out"
+  publish = ".next"
   command = "npm run build"
 
 [build.environment]
@@ -13,28 +13,10 @@
 [dev]
   command = "npm run dev"
   port = 3000
-  publish = "out"
+  publish = ".next"
 
-# Redirections pour SPA - exclure les assets statiques
-# Servir les assets statiques directement
-[[redirects]]
-  from = "/_next/static/*"
-  to = "/_next/static/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/static/*"
-  to = "/static/:splat"
-  status = 200
-  force = true
-
-# Redirection SPA pour les pages seulement
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
+# Next.js sur Netlify gère automatiquement les redirections
+# Pas besoin de redirections manuelles avec le plugin Next.js Runtime
 
 # Headers de sécurité
 [[headers]]

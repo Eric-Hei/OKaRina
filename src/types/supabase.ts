@@ -381,6 +381,70 @@ export interface Database {
           completed_at?: string | null;
         };
       };
+      external_contacts: {
+        Row: {
+          id: string;
+          company_id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+          last_used_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+          last_used_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          first_name?: string;
+          last_name?: string;
+          email?: string;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+          last_used_at?: string | null;
+        };
+      };
+      action_assignees: {
+        Row: {
+          id: string;
+          action_id: string;
+          assignee_type: 'internal' | 'external';
+          user_id: string | null;
+          external_contact_id: string | null;
+          assigned_at: string;
+          assigned_by: string;
+        };
+        Insert: {
+          id?: string;
+          action_id: string;
+          assignee_type: 'internal' | 'external';
+          user_id?: string | null;
+          external_contact_id?: string | null;
+          assigned_at?: string;
+          assigned_by: string;
+        };
+        Update: {
+          id?: string;
+          action_id?: string;
+          assignee_type?: 'internal' | 'external';
+          user_id?: string | null;
+          external_contact_id?: string | null;
+          assigned_at?: string;
+          assigned_by?: string;
+        };
+      };
       subscription_plans: {
         Row: {
           id: string;

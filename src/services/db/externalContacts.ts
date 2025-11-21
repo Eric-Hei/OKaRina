@@ -43,7 +43,7 @@ export class ExternalContactsService {
             throw error;
         }
 
-        return (data || []).map(row => this.rowToContact(row));
+        return (data || []).map((row: ExternalContactRow) => this.rowToContact(row));
     }
 
     /**
@@ -65,7 +65,7 @@ export class ExternalContactsService {
             throw error;
         }
 
-        return (data || []).map(row => this.rowToContact(row));
+        return (data || []).map((row: ExternalContactRow) => this.rowToContact(row));
     }
 
     /**
