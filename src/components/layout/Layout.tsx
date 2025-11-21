@@ -25,18 +25,16 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
-  const { isAuthenticated, user } = useAppStore();
+  const { user } = useAppStore();
 
-  // Redirection vers onboarding si profil d'entreprise manquant
+  // Note: L'authentification est gérée par ProtectedRoute
+  // Ici on gère SEULEMENT la redirection vers onboarding si pas de companyProfile
   useEffect(() => {
-    if (
-      requireAuth &&
-      user &&
-      !user.companyProfile &&
-      !skipOnboarding &&
-      router.pathname !== '/onboarding' &&
-      router.pathname !== '/'
-    ) {
+    // Ne rien faire si requireAuth n'est pas activé ou pas d'utilisateur
+    if (!requireAuth || !user) return;
+
+    // Si utilisateur connecté mais pas de profil d'entreprise → rediriger vers onboarding
+    if (!user.companyProfile && !skipOnboarding && router.pathname !== '/onboarding') {
       router.push('/onboarding');
     }
   }, [requireAuth, user, skipOnboarding, router]);

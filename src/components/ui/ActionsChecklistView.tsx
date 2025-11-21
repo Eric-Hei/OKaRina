@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, Circle, Clock, Edit2, Trash2, Calendar, Flag, Tag, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AssigneeAvatar } from '@/components/ui/AssigneeAvatar';
 import type { Action, QuarterlyKeyResult, QuarterlyObjective } from '@/types';
 import { ActionStatus, Priority } from '@/types';
 import { formatDate } from '@/utils';
@@ -96,9 +97,8 @@ export const ActionsChecklistView: React.FC<ActionsChecklistViewProps> = ({
             return (
               <div
                 key={action.id}
-                className={`border rounded-lg transition-all ${
-                  isDone ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'
-                }`}
+                className={`border rounded-lg transition-all ${isDone ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'
+                  }`}
               >
                 <div className="flex items-start p-4">
                   {/* Checkbox */}
@@ -133,9 +133,8 @@ export const ActionsChecklistView: React.FC<ActionsChecklistViewProps> = ({
                             <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           )}
                           <span
-                            className={`text-sm font-medium ${
-                              isDone ? 'line-through text-gray-500' : 'text-gray-900'
-                            } group-hover:text-primary-600`}
+                            className={`text-sm font-medium ${isDone ? 'line-through text-gray-500' : 'text-gray-900'
+                              } group-hover:text-primary-600`}
                           >
                             {action.title}
                           </span>
@@ -168,6 +167,11 @@ export const ActionsChecklistView: React.FC<ActionsChecklistViewProps> = ({
                                 {label}
                               </Badge>
                             ))
+                          )}
+
+                          {/* Assignés */}
+                          {action.assignees && action.assignees.length > 0 && (
+                            <AssigneeAvatar assignees={action.assignees} maxDisplay={2} size="sm" />
                           )}
                         </div>
 

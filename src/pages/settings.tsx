@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/store/useAppStore';
 import { supabase } from '@/lib/supabaseClient';
-import { Settings, User, Bell, Lock, Trash2, Download, Upload, Eye, EyeOff, Save, CreditCard } from 'lucide-react';
+import { Settings, User, Bell, Lock, Trash2, Download, Upload, Eye, EyeOff, Save, CreditCard, Beaker } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SubscriptionTab } from '@/components/settings/SubscriptionTab';
 
 const SettingsPage: React.FC = () => {
-  const { user } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'subscription' | 'notifications' | 'privacy' | 'data'>('profile');
+  const { user, experimentalFeatures, toggleExperimentalFeature } = useAppStore();
+  const [activeTab, setActiveTab] = useState<'profile' | 'subscription' | 'notifications' | 'privacy' | 'data' | 'experimental'>('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -53,7 +53,7 @@ const SettingsPage: React.FC = () => {
 
   const handleUpdatePassword = async () => {
     if (!user) return;
-    
+
     if (newPassword !== confirmPassword) {
       setMessage({ type: 'error', text: 'Les mots de passe ne correspondent pas' });
       return;
@@ -240,6 +240,7 @@ const SettingsPage: React.FC = () => {
   const tabs = [
     { id: 'profile' as const, label: 'Profil', icon: User },
     { id: 'subscription' as const, label: 'Abonnement', icon: CreditCard },
+    { id: 'experimental' as const, label: 'Expérimental', icon: Beaker },
     { id: 'notifications' as const, label: 'Notifications', icon: Bell },
     { id: 'privacy' as const, label: 'Confidentialité', icon: Lock },
     { id: 'data' as const, label: 'Données', icon: Download },
@@ -274,9 +275,8 @@ const SettingsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-            }`}
+            className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+              }`}
           >
             {message.text}
           </motion.div>
@@ -291,11 +291,10 @@ const SettingsPage: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   <Icon className="h-5 w-5 mr-2" />
                   {tab.label}
@@ -345,6 +344,57 @@ const SettingsPage: React.FC = () => {
             <SubscriptionTab userId={user.id} />
           )}
 
+          {/* Tab Expérimental */}
+          {activeTab === 'experimental' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Beaker className="h-5 w-5 text-purple-600" />
+                  Fonctionnalités expérimentales
+                </CardTitle>
+                <p className="text-sm text-gray-500 mt-2">
+                  Activez ou désactivez les fonctionnalités en cours de développement
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">Check-in</p>
+                    <p className="text-sm text-gray-500">Page de suivi quotidien et hebdomadaire</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleExperimentalFeature('checkIn')}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${experimentalFeatures.checkIn ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${experimentalFeatures.checkIn ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">Focus</p>
+                    <p className="text-sm text-gray-500">Mode concentration avec pomodoro</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleExperimentalFeature('focus')}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${experimentalFeatures.focus ? 'bg-purple-600' : 'bg-gray-200'
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${experimentalFeatures.focus ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Tab Notifications */}
           {activeTab === 'notifications' && (
             <Card>
@@ -359,14 +409,12 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setEmailNotifications(!emailNotifications)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      emailNotifications ? 'bg-blue-600' : 'bg-gray-200'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${emailNotifications ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -377,14 +425,12 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setWeeklyDigest(!weeklyDigest)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      weeklyDigest ? 'bg-blue-600' : 'bg-gray-200'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${weeklyDigest ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        weeklyDigest ? 'translate-x-6' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${weeklyDigest ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>

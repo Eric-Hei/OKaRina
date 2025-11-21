@@ -3,7 +3,6 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useAppStore } from '@/store/useAppStore';
 import { AuthService } from '@/services/auth';
-import { isSupabaseConfigured } from '@/lib/supabaseClient';
 import { QueryProvider } from '@/providers/QueryProvider';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -37,11 +36,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   // Initialiser l'authentification Supabase
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      console.log('⚠️ Supabase non configuré - mode localStorage uniquement');
-      return;
-    }
-
     // Vérifier la session au démarrage
     const initAuth = async () => {
       try {

@@ -9,7 +9,6 @@ import { z } from 'zod';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { AuthService } from '@/services/auth';
-import { isSupabaseConfigured } from '@/lib/supabaseClient';
 
 // Schéma de validation
 const updatePasswordSchema = z.object({
@@ -42,12 +41,6 @@ const UpdatePasswordPage: React.FC = () => {
     setSuccess(false);
 
     try {
-      if (!isSupabaseConfigured()) {
-        setError('La connexion à la base de données n\'est pas configurée. Veuillez contacter l\'administrateur.');
-        setIsLoading(false);
-        return;
-      }
-
       await AuthService.updatePassword({ password: data.password });
       setSuccess(true);
 

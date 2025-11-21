@@ -2,18 +2,19 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { 
-  Calendar, 
-  Tag, 
-  AlertTriangle, 
-  Edit2, 
-  Trash2, 
+import {
+  Calendar,
+  Tag,
+  AlertTriangle,
+  Edit2,
+  Trash2,
   Target,
   Clock,
   User
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { AssigneeAvatar } from '@/components/ui/AssigneeAvatar';
 import { Action, Priority, Quarter } from '@/types';
 import { formatDate, getDaysUntilDeadline } from '@/utils';
 
@@ -167,10 +168,17 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         </div>
       )}
 
+      {/* Assignés */}
+      {action.assignees && action.assignees.length > 0 && (
+        <div className="mb-3">
+          <AssigneeAvatar assignees={action.assignees} maxDisplay={3} size="sm" />
+        </div>
+      )}
+
       {/* Footer avec priorité et échéance */}
       <div className="flex items-center justify-between">
         {/* Priorité */}
-        <Badge 
+        <Badge
           className={`${priorityColors[action.priority]} text-xs border`}
           size="sm"
         >
@@ -212,7 +220,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             Créé le {formatDate(action.createdAt)}
           </span>
         </div>
-        
+
         {action.completedAt && (
           <div className="flex items-center text-xs text-green-600">
             <span>

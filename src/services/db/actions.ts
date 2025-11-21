@@ -14,8 +14,33 @@ export class ActionsService {
   /**
    * Convertir une row Supabase en Action de l'app
    */
-  private static rowToAction(row: ActionRow): Action {
+  private static rowToAction(row: any): Action {
     const metadata = row.metadata as any || {};
+
+    // Mapper les assignés
+    const assignees = row.action_assignees?.map((aa: any) => ({
+      id: aa.id,
+      actionId: aa.action_id,
+      assigneeType: aa.assignee_type,
+      userId: aa.user_id,
+      externalContactId: aa.external_contact_id,
+      assignedAt: new Date(aa.assigned_at),
+      assignedBy: aa.assigned_by,
+      // Données jointes
+      userName: aa.profiles?.name,
+      userEmail: aa.profiles?.email,
+      externalContact: aa.external_contacts ? {
+        id: aa.external_contacts.id,
+        companyId: aa.external_contacts.company_id,
+        firstName: aa.external_contacts.first_name,
+        lastName: aa.external_contacts.last_name,
+        email: aa.external_contacts.email,
+        createdBy: aa.external_contacts.created_by,
+        createdAt: new Date(aa.external_contacts.created_at),
+        updatedAt: new Date(aa.external_contacts.updated_at),
+        lastUsedAt: aa.external_contacts.last_used_at ? new Date(aa.external_contacts.last_used_at) : undefined,
+      } : undefined,
+    })) || [];
 
     return {
       id: row.id,
@@ -30,6 +55,7 @@ export class ActionsService {
       updatedAt: new Date(row.updated_at),
       completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
       order_index: row.order_index ?? 0,
+      assignees,
     };
   }
 
@@ -88,7 +114,33 @@ export class ActionsService {
   static async getAll(userId: string, status?: ActionStatus): Promise<Action[]> {
     let query = supabase
       .from('actions')
-      .select('*')
+      .select(`
+        *,
+        action_assignees (
+          id,
+          action_id,
+          assignee_type,
+          user_id,
+          external_contact_id,
+          assigned_at,
+          assigned_by,
+          profiles:user_id (
+            name,
+            email
+          ),
+          external_contacts:external_contact_id (
+            id,
+            company_id,
+            first_name,
+            last_name,
+            email,
+            created_by,
+            created_at,
+            updated_at,
+            last_used_at
+          )
+        )
+      `)
       .eq('user_id', userId)
       .order('order_index', { ascending: true });
 

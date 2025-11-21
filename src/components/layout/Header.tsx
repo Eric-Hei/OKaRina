@@ -36,21 +36,31 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
   const router = useRouter();
-  const { user, logout } = useAppStore();
+  const { user, logout, experimentalFeatures } = useAppStore();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { data: subscription } = useSubscription(user?.id);
 
-  // Navigation pour utilisateurs connectés
-  const authenticatedNavigation = [
+  // Navigation complète avec features expérimentales
+  const allNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-    { name: 'Check-in', href: '/check-in', icon: AlarmClock },
-    { name: 'Focus', href: '/focus', icon: AlarmClock },
+    { name: 'Check-in', href: '/check-in', icon: AlarmClock, experimental: true, featureKey: 'checkIn' },
+    { name: 'Focus', href: '/focus', icon: AlarmClock, experimental: true, featureKey: 'focus' },
     { name: 'Canvas', href: '/canvas', icon: FileText },
     { name: 'Gestion', href: '/management', icon: FolderKanban },
     { name: 'Actions', href: '/actions', icon: CheckSquare },
     { name: 'Suivi', href: '/progress', icon: Calendar },
   ];
+
+  // Filtrer selon activation des features expérimentales
+  const authenticatedNavigation = allNavigation.filter(item => {
+    // Si c'est une feature expérimentale, vérifier qu'elle est activée
+    if (item.experimental && item.featureKey) {
+      return experimentalFeatures[item.featureKey as keyof typeof experimentalFeatures];
+    }
+    // Sinon, toujours afficher
+    return true;
+  });
 
   // Navigation pour utilisateurs non connectés
   const publicNavigation = [
@@ -147,9 +157,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                   >
                     <User className="h-5 w-5 text-gray-400" />
                     <span className="text-sm text-gray-700">{user.name}</span>
-                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${
-                      isUserMenuOpen ? 'rotate-180' : ''
-                    }`} />
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''
+                      }`} />
                   </button>
 
                   {/* Menu déroulant */}
@@ -169,9 +178,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                                 <Badge
                                   variant={
                                     subscription.planType === 'unlimited' ? 'warning' :
-                                    subscription.planType === 'team' ? 'info' :
-                                    subscription.planType === 'pro' ? 'success' :
-                                    'secondary'
+                                      subscription.planType === 'team' ? 'info' :
+                                        subscription.planType === 'pro' ? 'success' :
+                                          'secondary'
                                   }
                                   size="sm"
                                   className="inline-flex items-center"
@@ -179,9 +188,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                                   {subscription.planType === 'unlimited' && <Crown className="h-3 w-3 mr-1" />}
                                   {subscription.planType === 'pro' && <Zap className="h-3 w-3 mr-1" />}
                                   {subscription.planType === 'free' ? 'Free' :
-                                   subscription.planType === 'pro' ? 'Pro' :
-                                   subscription.planType === 'team' ? 'Team' :
-                                   'Unlimited'}
+                                    subscription.planType === 'pro' ? 'Pro' :
+                                      subscription.planType === 'team' ? 'Team' :
+                                        'Unlimited'}
                                 </Badge>
                               </div>
                             )}
@@ -319,7 +328,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = router.pathname === item.href;
-              
+
               return (
                 <Link
                   key={item.name}
@@ -336,7 +345,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMobileMenuOpen }) => {
                 </Link>
               );
             })}
-            
+
             <div className="border-t border-gray-200 pt-4 pb-3">
               <div className="flex items-center px-3">
                 <User className="h-6 w-6 text-gray-400" />

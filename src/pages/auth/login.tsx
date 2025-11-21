@@ -10,7 +10,6 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { AuthService } from '@/services/auth';
 import { useAppStore } from '@/store/useAppStore';
-import { isSupabaseConfigured } from '@/lib/supabaseClient';
 
 // Schéma de validation
 const loginSchema = z.object({
@@ -46,15 +45,9 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      if (!isSupabaseConfigured()) {
-        setError('La connexion à la base de données n\'est pas configurée. Veuillez contacter l\'administrateur.');
-        setIsLoading(false);
-        return;
-      }
-
       const result: any = await AuthService.signIn(data);
 
-      // Gestion des erreurs renvoyées sans throw
+      // Gestion des erreurs renvoयées sans throw
       if (result?.error) {
         const msg = result.error?.message || '';
         if (msg.includes('Invalid login credentials')) {

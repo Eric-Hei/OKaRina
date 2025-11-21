@@ -57,8 +57,8 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
-    // Rediriger vers le canvas
-    router.push('/canvas');
+    // Rediriger vers la page de gestion
+    router.push('/management');
   };
 
   // Calculer les métriques à partir des données React Query
@@ -82,9 +82,9 @@ const DashboardPage: React.FC = () => {
     // Calculer la progression globale (moyenne des KRs)
     const overallProgress = quarterlyKeyResults.length > 0
       ? quarterlyKeyResults.reduce((sum, kr) => {
-          const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
-          return sum + Math.min(progress, 100);
-        }, 0) / quarterlyKeyResults.length
+        const progress = kr.target > 0 ? (kr.current / kr.target) * 100 : 0;
+        return sum + Math.min(progress, 100);
+      }, 0) / quarterlyKeyResults.length
       : 0;
 
     // Échéances à venir (7 prochains jours)
@@ -278,14 +278,12 @@ const DashboardPage: React.FC = () => {
 
                     {trendAnalysis && (
                       <div className="flex items-center space-x-2 pt-2">
-                        <div className={`p-1 rounded-full ${
-                          trendAnalysis.trend === 'up' ? 'bg-green-100' :
-                          trendAnalysis.trend === 'down' ? 'bg-red-100' : 'bg-gray-100'
-                        }`}>
-                          <TrendingUp className={`h-4 w-4 ${
-                            trendAnalysis.trend === 'up' ? 'text-green-600' :
-                            trendAnalysis.trend === 'down' ? 'text-red-600 rotate-180' : 'text-gray-600'
-                          }`} />
+                        <div className={`p-1 rounded-full ${trendAnalysis.trend === 'up' ? 'bg-green-100' :
+                            trendAnalysis.trend === 'down' ? 'bg-red-100' : 'bg-gray-100'
+                          }`}>
+                          <TrendingUp className={`h-4 w-4 ${trendAnalysis.trend === 'up' ? 'text-green-600' :
+                              trendAnalysis.trend === 'down' ? 'text-red-600 rotate-180' : 'text-gray-600'
+                            }`} />
                         </div>
                         <span className="text-sm text-gray-600">
                           {trendAnalysis.message}
@@ -399,14 +397,12 @@ const DashboardPage: React.FC = () => {
                     <div className="space-y-3">
                       {upcomingDeadlines.slice(0, 5).map((item) => (
                         <div key={item.id} className="flex items-center space-x-3">
-                          <div className={`p-1 rounded-full ${
-                            item.daysLeft <= 1 ? 'bg-red-100' :
-                            item.daysLeft <= 3 ? 'bg-orange-100' : 'bg-yellow-100'
-                          }`}>
-                            <Clock className={`h-3 w-3 ${
-                              item.daysLeft <= 1 ? 'text-red-600' :
-                              item.daysLeft <= 3 ? 'text-orange-600' : 'text-yellow-600'
-                            }`} />
+                          <div className={`p-1 rounded-full ${item.daysLeft <= 1 ? 'bg-red-100' :
+                              item.daysLeft <= 3 ? 'bg-orange-100' : 'bg-yellow-100'
+                            }`}>
+                            <Clock className={`h-3 w-3 ${item.daysLeft <= 1 ? 'text-red-600' :
+                                item.daysLeft <= 3 ? 'text-orange-600' : 'text-yellow-600'
+                              }`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">
@@ -488,7 +484,7 @@ const DashboardPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-primary-800">
-                    💡 Concentrez-vous sur vos 3 actions les plus importantes aujourd'hui. 
+                    💡 Concentrez-vous sur vos 3 actions les plus importantes aujourd'hui.
                     La productivité vient de la prioritisation, pas de la multiplication des tâches.
                   </p>
                 </CardContent>

@@ -151,6 +151,35 @@ export interface Action {
   updatedAt: Date;
   completedAt?: Date;
   order_index: number; // Position dans le Kanban
+  assignees?: ActionAssignee[]; // NOUVEAU: Liste des assignés
+}
+
+// NOUVEAU: Types pour l'affectation d'actions
+export interface ActionAssignee {
+  id: string;
+  actionId: string;
+  assigneeType: 'internal' | 'external';
+  userId?: string; // Si type = internal
+  externalContactId?: string; // Si type = external
+  assignedAt: Date;
+  assignedBy: string;
+  // Données jointes optionnelles (remplies par JOIN)
+  userName?: string;
+  userEmail?: string;
+  externalContact?: ExternalContact;
+}
+
+// NOUVEAU: Types pour les contacts externes (partagés au niveau entreprise)
+export interface ExternalContact {
+  id: string;
+  companyId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastUsedAt?: Date;
 }
 
 // Types pour les objectifs trimestriels
@@ -393,6 +422,21 @@ export interface ActionFormData {
   labels: string; // Chaîne séparée par des virgules
   deadline?: string;
   quarterlyKeyResultId?: string; // Lié au KR trimestriel
+  assignees?: ActionAssigneeFormData[]; // NOUVEAU
+}
+
+// NOUVEAU: Types pour affectation dans les formulaires
+export interface ActionAssigneeFormData {
+  type: 'internal' | 'external';
+  userId?: string;
+  externalContactId?: string;
+}
+
+// NOUVEAU: Types pour les formulaires de contacts externes
+export interface ExternalContactFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 // Types pour les formulaires des objectifs trimestriels

@@ -1,12 +1,12 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { 
-  Target, 
-  Brain, 
-  BarChart3, 
-  Users, 
-  CheckCircle, 
+import {
+  Target,
+  Brain,
+  BarChart3,
+  Users,
+  CheckCircle,
   ArrowRight,
   Star,
   Zap,
@@ -94,7 +94,7 @@ const HomePage: React.FC = () => {
               en résultats concrets
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
-              L'outil de gestion d'objectifs avec IA coach intégrée, 
+              L'outil de gestion d'objectifs avec IA coach intégrée,
               spécialement conçu pour les entrepreneurs et dirigeants de PME.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -106,14 +106,6 @@ const HomePage: React.FC = () => {
                 className="text-primary-700 hover:text-primary-800"
               >
                 Commencer gratuitement
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push('/demo')}
-                className="border-white text-white hover:bg-white hover:text-primary-700"
-              >
-                Voir la démo
               </Button>
             </div>
           </motion.div>
@@ -295,7 +287,7 @@ const HomePage: React.FC = () => {
               Prêt à transformer vos ambitions en résultats ?
             </h2>
             <p className="text-xl text-blue-100 mb-8">
-              Commencez dès maintenant avec notre canvas guidé et découvrez 
+              Commencez dès maintenant avec notre canvas guidé et découvrez
               la puissance de l'accompagnement IA personnalisé.
             </p>
             <Button

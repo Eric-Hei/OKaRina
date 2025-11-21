@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { AuthService } from '@/services/auth';
-import { isSupabaseConfigured } from '@/lib/supabaseClient';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,7 +13,7 @@ interface ProtectedRouteProps {
 
 /**
  * Composant de protection de routes
- * Vérifie l'authentification avant d'afficher le contenu
+ * Vérifie l'authentification Supabase avant d'afficher le contenu
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -24,47 +23,45 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const router = useRouter();
   const { user, setUser } = useAppStore();
   const [isChecking, setIsChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Si Supabase n'est pas configuré, utiliser le mode localStorage
-      if (!isSupabaseConfigured()) {
-        // En mode localStorage, vérifier si un utilisateur existe dans le store
-        if (requireAuth && !user) {
-          router.push(redirectTo);
-        }
-        setIsChecking(false);
-        return;
-      }
-
-      // Vérifier la session Supabase
       try {
-        // Si on a déjà un utilisateur en store (via _app onAuthStateChange), l'autoriser immédiatement
+        // Si on a déjà un utilisateur en store, l'autoriser immédiatement
         if (user) {
+          setIsAuthenticated(true);
           setIsChecking(false);
           return;
         }
 
+        // Vérifier la session Supabase
         const result = await AuthService.getCurrentUser();
 
         if (result && result.profile) {
           // Utilisateur authentifié
           const authenticatedUser = AuthService.profileToUser(result.profile);
           setUser(authenticatedUser);
+          setIsAuthenticated(true);
           setIsChecking(false);
         } else {
-          // Pas d'utilisateur authentifié
-          if (requireAuth && !user) {
+          // Pas de session valide
+          setIsAuthenticated(false);
+          setIsChecking(false);
+
+          // Rediriger SEULEMENT si auth requise
+          if (requireAuth) {
             router.push(redirectTo);
           }
-          setIsChecking(false);
         }
       } catch (error) {
         console.error('Erreur lors de la vérification auth:', error);
-        if (requireAuth && !user) {
+        setIsAuthenticated(false);
+        setIsChecking(false);
+
+        if (requireAuth) {
           router.push(redirectTo);
         }
-        setIsChecking(false);
       }
     };
 
@@ -89,7 +86,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Si l'authentification est requise et qu'il n'y a pas d'utilisateur, ne rien afficher
   // (la redirection est en cours)
-  if (requireAuth && !user) {
+  if (requireAuth && !isAuthenticated) {
     return null;
   }
 

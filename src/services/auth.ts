@@ -30,10 +30,6 @@ export class AuthService {
    * Inscription d'un nouvel utilisateur
    */
   static async signUp(data: SignUpData) {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré. Veuillez ajouter les variables d\'environnement.');
-    }
-
     const { email, password, name, company, role } = data;
 
     // 1. Créer l'utilisateur dans auth.users
@@ -131,10 +127,6 @@ export class AuthService {
    * Connexion d'un utilisateur existant
    */
   static async signIn(data: SignInData) {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré. Veuillez ajouter les variables d\'environnement.');
-    }
-
     const { email, password } = data;
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -173,11 +165,6 @@ export class AuthService {
    * Déconnexion
    */
   static async signOut() {
-    if (!isSupabaseConfigured()) {
-      console.log('⚠️ Supabase non configuré, déconnexion ignorée');
-      return;
-    }
-
     try {
       console.log('🔴 AuthService.signOut() - Début');
 
@@ -217,10 +204,6 @@ export class AuthService {
       return null;
     }
 
-    if (!isSupabaseConfigured()) {
-      return null;
-    }
-
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) {
       console.error('Erreur lors de la récupération de la session:', error);
@@ -233,10 +216,6 @@ export class AuthService {
    * Récupérer l'utilisateur courant
    */
   static async getCurrentUser() {
-    if (!isSupabaseConfigured()) {
-      return null;
-    }
-
     try {
       // Vérifier d'abord s'il y a une session
       const { data: { session } } = await supabase.auth.getSession();
@@ -283,10 +262,6 @@ export class AuthService {
    * Demander un reset de mot de passe
    */
   static async resetPassword(data: ResetPasswordData) {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré.');
-    }
-
     const { email } = data;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -303,10 +278,6 @@ export class AuthService {
    * Mettre à jour le mot de passe
    */
   static async updatePassword(data: UpdatePasswordData) {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré.');
-    }
-
     const { password } = data;
 
     const { error } = await supabase.auth.updateUser({
@@ -323,10 +294,6 @@ export class AuthService {
    * Connexion avec Google OAuth
    */
   static async signInWithGoogle() {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré.');
-    }
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -344,10 +311,6 @@ export class AuthService {
    * Écouter les changements d'état d'authentification
    */
   static onAuthStateChange(callback: (event: string, session: any) => void) {
-    if (!isSupabaseConfigured()) {
-      return { data: { subscription: { unsubscribe: () => {} } } };
-    }
-
     return supabase.auth.onAuthStateChange(callback);
   }
 
@@ -355,10 +318,6 @@ export class AuthService {
    * Mettre à jour le profil d'entreprise
    */
   static async updateCompanyProfile(userId: string, companyProfile: any) {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré.');
-    }
-
     console.log('🔄 Début de la mise à jour du profil d\'entreprise...');
     console.log('📝 User ID:', userId);
     console.log('📝 Company Profile:', companyProfile);
@@ -421,10 +380,6 @@ export class AuthService {
     avatar_url?: string;
     settings?: any;
   }) {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase n\'est pas configuré.');
-    }
-
     const result = await (supabase as any)
       .from('profiles')
       .update(updates)

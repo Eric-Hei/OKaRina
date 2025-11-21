@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Zap, Calendar, Tag, AlertTriangle, Save, X } from 'lucide-react';
+import { Zap, Calendar, Tag, AlertTriangle, Save, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ActionFormData, Priority, QuarterlyKeyResult } from '@/types';
+import { AssigneeSelector } from '@/components/ui/AssigneeSelector';
+import { ActionFormData, Priority, QuarterlyKeyResult, ActionAssigneeFormData } from '@/types';
 
 // Schéma de validation
 const actionSchema = z.object({
@@ -17,6 +18,7 @@ const actionSchema = z.object({
   labels: z.string().optional(),
   deadline: z.string().optional(),
   quarterlyKeyResultId: z.string().optional(),
+  assignees: z.array(z.any()).optional(),
 });
 
 interface ActionFormProps {
@@ -41,9 +43,12 @@ export const ActionForm: React.FC<ActionFormProps> = ({
   // Convertir labels array en string si nécessaire
   const labelsString = initialData?.labels
     ? (Array.isArray(initialData.labels)
-        ? initialData.labels.join(', ')
-        : initialData.labels)
+      ? initialData.labels.join(', ')
+      : initialData.labels)
     : '';
+
+  // État pour les assignés
+  const [assignees, setAssignees] = useState<ActionAssigneeFormData[]>(initialData?.assignees || []);
 
   const {
     register,
@@ -60,9 +65,15 @@ export const ActionForm: React.FC<ActionFormProps> = ({
       labels: labelsString,
       deadline: initialData?.deadline || '',
       quarterlyKeyResultId: initialData?.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '',
+      assignees: initialData?.assignees || [],
     },
     mode: 'onChange',
   });
+
+  // Handler de soumission avec assignés
+  const handleFormSubmit = (data: ActionFormData) => {
+    onSubmit({ ...data, assignees });
+  };
 
   const priorityColors = {
     [Priority.LOW]: 'bg-gray-100 text-gray-800',
@@ -110,7 +121,7 @@ export const ActionForm: React.FC<ActionFormProps> = ({
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
             {/* Titre */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -257,6 +268,19 @@ export const ActionForm: React.FC<ActionFormProps> = ({
               {errors.deadline && (
                 <p className="mt-1 text-sm text-red-600">{errors.deadline.message}</p>
               )}
+            </div>
+
+            {/* Assignés */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Users className="inline h-4 w-4 mr-1" />
+                Affecter à (optionnel)
+              </label>
+              <AssigneeSelector
+                value={assignees}
+                onChange={setAssignees}
+                className="mt-2"
+              />
             </div>
 
             {/* Aperçu */}

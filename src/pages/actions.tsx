@@ -15,6 +15,8 @@ import { useAmbitions } from '@/hooks/useAmbitions';
 import { useQuarterlyObjectives } from '@/hooks/useQuarterlyObjectives';
 import { useQuarterlyKeyResultsByUser } from '@/hooks/useQuarterlyKeyResults';
 import { useActions, useCreateAction, useUpdateAction, useDeleteAction, useUpdateActionStatus, useUpdateActionsOrder, useMoveAction } from '@/hooks/useActions';
+import { useActionAssignees } from '@/hooks/useActionAssignees';
+import { useAssignMultiple, useReplaceAllAssignees } from '@/hooks/useActionAssignees';
 
 type ViewMode = 'kanban' | 'table' | 'checklist';
 
@@ -73,30 +75,62 @@ const ActionsPage: React.FC = () => {
     setFormMode('action');
   };
 
+  // Hooks pour assignation
+  const assignMultiple = useAssignMultiple();
+  const replaceAssignees = useReplaceAllAssignees();
+
   const handleActionSubmit = async (data: ActionFormData) => {
     if (!user) return;
 
     try {
+      let actionId: string;
+
+      // Séparer assignees du rest
+      const { assignees, ...actionData } = data;
+
       if (editingAction) {
+        // Mise à jour de l'action existante
         await updateActionMutation.mutateAsync({
           id: editingAction.id,
           updates: {
-            ...data,
-            deadline: data.deadline ? new Date(data.deadline) : undefined,
-            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+            ...actionData,
+            deadline: actionData.deadline ? new Date(actionData.deadline) : undefined,
+            labels: actionData.labels ? actionData.labels.split(',').map(l => l.trim()).filter(l => l) : [],
           },
         });
+        actionId = editingAction.id;
+
+        // Remplacer les assignés
+        if (assignees && assignees.length > 0) {
+          await replaceAssignees.mutateAsync({
+            actionId,
+            newAssignees: assignees,
+            assignedBy: user.id,
+          });
+        }
       } else {
-        await createAction.mutateAsync({
+        // Création d'une nouvelle action
+        const newAction = await createAction.mutateAsync({
           action: {
-            ...data,
-            quarterlyKeyResultId: data.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '',
-            deadline: data.deadline ? new Date(data.deadline) : undefined,
-            labels: data.labels ? data.labels.split(',').map(l => l.trim()).filter(l => l) : [],
+            ...actionData,
+            quarterlyKeyResultId: actionData.quarterlyKeyResultId || quarterlyKeyResults[0]?.id || '',
+            deadline: actionData.deadline ? new Date(actionData.deadline) : undefined,
+            labels: actionData.labels ? actionData.labels.split(',').map(l => l.trim()).filter(l => l) : [],
           },
           userId: user.id
         });
+        actionId = newAction.id;
+
+        // Affecter les personnes sélectionnées
+        if (assignees && assignees.length > 0) {
+          await assignMultiple.mutateAsync({
+            actionId,
+            assignees: assignees,
+            assignedBy: user.id,
+          });
+        }
       }
+
       setFormMode(null);
       setEditingAction(null);
     } catch (error) {
@@ -171,6 +205,11 @@ const ActionsPage: React.FC = () => {
       labels: action.labels.join(', '),
       deadline: action.deadline ? action.deadline.toISOString().split('T')[0] : undefined,
       quarterlyKeyResultId: action.quarterlyKeyResultId,
+      assignees: action.assignees?.map(a => ({
+        type: a.assigneeType,
+        userId: a.userId,
+        externalContactId: a.externalContactId,
+      })) || [],
     };
   };
 
@@ -202,33 +241,30 @@ const ActionsPage: React.FC = () => {
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('kanban')}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'kanban'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'kanban'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   <LayoutGrid className="h-4 w-4 mr-2" />
                   Kanban
                 </button>
                 <button
                   onClick={() => setViewMode('table')}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'table'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'table'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   <Table className="h-4 w-4 mr-2" />
                   Tableau
                 </button>
                 <button
                   onClick={() => setViewMode('checklist')}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'checklist'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'checklist'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   <ListChecks className="h-4 w-4 mr-2" />
                   Checklist

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { generateId } from '@/utils';
 import type {
   User,
@@ -12,6 +12,12 @@ interface AppState {
   user: User | null;
   isAuthenticated: boolean;
 
+  // Fonctionnalités expérimentales
+  experimentalFeatures: {
+    checkIn: boolean;
+    focus: boolean;
+  };
+
   // État UI uniquement
   isLoading: boolean;
   error: string | null;
@@ -21,6 +27,9 @@ interface AppState {
   setUser: (user: User) => void;
   updateCompanyProfile: (companyProfile: CompanyProfile) => void;
   logout: () => void;
+
+  // Actions fonctionnalités expérimentales
+  toggleExperimentalFeature: (feature: 'checkIn' | 'focus') => void;
 
   // Actions UI
   setLoading: (loading: boolean) => void;
@@ -39,68 +48,89 @@ interface Notification {
 
 // Store principal (simplifié)
 export const useAppStore = create<AppState>()(
-  devtools(
-    (set, get) => ({
-      // État initial
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-      notifications: [],
+  persist(
+    devtools(
+      (set, get) => ({
+        // État initial
+        user: null,
+        isAuthenticated: false,
+        experimentalFeatures: {
+          checkIn: false,
+          focus: false,
+        },
+        isLoading: false,
+        error: null,
+        notifications: [],
 
-      // Actions utilisateur
-      setUser: (user) => {
-        set({ user, isAuthenticated: true });
-      },
+        // Actions utilisateur
+        setUser: (user) => {
+          set({ user, isAuthenticated: true });
+        },
 
-      updateCompanyProfile: (companyProfile) => {
-        const currentUser = get().user;
-        if (currentUser) {
-          const updatedUser = { ...currentUser, companyProfile };
-          set({ user: updatedUser });
-        }
-      },
+        updateCompanyProfile: (companyProfile) => {
+          const currentUser = get().user;
+          if (currentUser) {
+            const updatedUser = { ...currentUser, companyProfile };
+            set({ user: updatedUser });
+          }
+        },
 
-      logout: () => {
-        // Nettoyer le localStorage pour éviter les conflits
-        if (typeof window !== 'undefined') {
-          // Supprimer le store Zustand persisté
-          localStorage.removeItem('oskar-app-store');
-          localStorage.removeItem('app-store');
-          // Supprimer les anciennes clés OKaRina si elles existent
-          localStorage.removeItem('okarina-store');
-        }
-        set({
-          user: null,
-          isAuthenticated: false,
-        });
-      },
+        logout: () => {
+          // Nettoyer le localStorage pour éviter les conflits
+          if (typeof window !== 'undefined') {
+            // Supprimer le store Zustand persisté
+            localStorage.removeItem('oskar-app-store');
+            localStorage.removeItem('app-store');
+            // Supprimer les anciennes clés OKaRina si elles existent
+            localStorage.removeItem('okarina-store');
+          }
+          set({
+            user: null,
+            isAuthenticated: false,
+          });
+        },
 
-      // Actions UI
-      setLoading: (isLoading) => {
-        set({ isLoading });
-      },
+        toggleExperimentalFeature: (feature) => {
+          set((state) => ({
+            experimentalFeatures: {
+              ...state.experimentalFeatures,
+              [feature]: !state.experimentalFeatures[feature],
+            },
+          }));
+        },
 
-      setError: (error) => {
-        set({ error });
-      },
+        // Actions UI
+        setLoading: (isLoading) => {
+          set({ isLoading });
+        },
 
-      addNotification: (notification) => {
-        const newNotification: Notification = {
-          ...notification,
-          id: generateId(),
-        };
-        set({ notifications: [...get().notifications, newNotification] });
-      },
+        setError: (error) => {
+          set({ error });
+        },
 
-      removeNotification: (id) => {
-        set({ notifications: get().notifications.filter(n => n.id !== id) });
-      },
+        addNotification: (notification) => {
+          const newNotification: Notification = {
+            ...notification,
+            id: generateId(),
+          };
+          set({ notifications: [...get().notifications, newNotification] });
+        },
 
-      clearNotifications: () => {
-        set({ notifications: [] });
-      },
-    }),
-    { name: 'app-store' }
+        removeNotification: (id) => {
+          set({ notifications: get().notifications.filter(n => n.id !== id) });
+        },
+
+        clearNotifications: () => {
+          set({ notifications: [] });
+        },
+      }),
+      { name: 'app-store-devtools' }
+    ),
+    {
+      name: 'okarina-settings',
+      partialize: (state) => ({
+        experimentalFeatures: state.experimentalFeatures,
+      }),
+    }
   )
 );

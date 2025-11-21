@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Edit2, Trash2, Calendar, Flag, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AssigneeAvatar } from '@/components/ui/AssigneeAvatar';
 import type { Action, QuarterlyKeyResult, QuarterlyObjective, ActionStatus } from '@/types';
 import { Priority } from '@/types';
 import { formatDate } from '@/utils';
@@ -140,6 +141,9 @@ export const ActionsTableView: React.FC<ActionsTableViewProps> = ({
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Labels
             </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Assignés
+            </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
             </th>
@@ -200,6 +204,13 @@ export const ActionsTableView: React.FC<ActionsTableViewProps> = ({
                     <span className="text-gray-400 text-sm">-</span>
                   )}
                 </div>
+              </td>
+              <td className="px-6 py-4">
+                {action.assignees && action.assignees.length > 0 ? (
+                  <AssigneeAvatar assignees={action.assignees} maxDisplay={2} size="sm" />
+                ) : (
+                  <span className="text-gray-400 text-sm">-</span>
+                )}
               </td>
               <td className="px-6 py-4 text-right text-sm font-medium">
                 <div className="flex items-center justify-end space-x-2">
